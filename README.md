@@ -19,7 +19,7 @@ Line chart
 Pie chart
 
 ```erb
-<%= pie_chart Goal.group("goals.name").count %>
+<%= pie_chart Goal.group("name").count %>
 ```
 
 Column chart
