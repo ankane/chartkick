@@ -17,7 +17,7 @@ module Chartkick
     end
 
     def pie_chart(series, options = {})
-      series = series.to_a
+      series = series.map{|k,v| [k.to_s, v.to_f] }
       html, element_id = chartkick_div(options)
       html << content_tag(:script) do
         concat "new Chartkick.PieChart(#{element_id.to_json}, #{series.to_json});".html_safe
