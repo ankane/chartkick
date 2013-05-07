@@ -40,6 +40,27 @@ Customize (id and height)
 <%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
 ```
 
+For line charts, times can be a time or a string (strings are parsed)
+
+```erb
+<% line_chart({20.day.ago => 5, "2013-05-07 00:00:00 UTC" => 7}) %>
+```
+
+Pass data as a Hash or Array
+
+```erb
+<%= pie_chart({"Football" => 10, "Basketball" => 5}) %>
+<%= pie_chart [["Football", 10], ["Basketball", 5]] %>
+```
+
+For multiple series, use the format
+
+```erb
+<% series_a = {time_0 => 5, time_1 => 7} # Hash %>
+<% series_b = [[time_0, 8], [time_1, 9]] # or Array %>
+<%= line_chart [{:name => "Series A", :data => series_a, {:name => "Series B", :data => series_b}] %>
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
