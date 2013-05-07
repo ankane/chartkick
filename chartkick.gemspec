@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Chartkick::VERSION
   spec.authors       = ["Andrew Kane"]
   spec.email         = ["acekane1@gmail.com"]
-  spec.description   = %q{Create beautiful Javascript charts in one line of Ruby}
-  spec.summary       = %q{Create beautiful Javascript charts in one line of Ruby}
+  spec.description   = %q{Create beautiful Javascript charts with one line of Ruby}
+  spec.summary       = %q{Create beautiful Javascript charts with one line of Ruby}
   spec.homepage      = ""
   spec.license       = "MIT"
 

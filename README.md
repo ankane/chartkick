@@ -1,6 +1,6 @@
 # Chartkick
 
-Create beautiful Javascript charts in one line of Ruby
+Create beautiful Javascript charts with one line of Ruby
 
 [Demo](http://ankane.github.io/chartkick/)
 
