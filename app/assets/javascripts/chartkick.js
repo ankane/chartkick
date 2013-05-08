@@ -44,25 +44,33 @@
         fontSize: 12
       }
     }
-  }, Chartkick = {
+  }
+
+  var mergeSeries = function(data, rows, series) {
+    var i, j, s, d;
+    for (i = 0; i < series.length; i += 1) {
+      s = series[i];
+      data.addColumn("number", s.name);
+
+      for (j = 0; j < s.data.length; j += 1) {
+        d = s.data[j];
+        if (!rows[d[0]]) {
+          rows[d[0]] = new Array(series.length);
+        }
+        rows[d[0]][i] = d[1];
+      }
+    }
+  };
+
+  var Chartkick = {
     LineChart: function(elementId, series) {
       google.setOnLoadCallback(function() {
         // Create the data table.
-        var data = new google.visualization.DataTable(), rows = {}, i, j, k, s, d, rows2 = [], options, chart;
+        var data = new google.visualization.DataTable(), rows = {}, k, rows2 = [], options, chart;
 
         data.addColumn("datetime", "");
-        for (i = 0; i < series.length; i += 1) {
-          s = series[i];
-          data.addColumn("number", s.name);
 
-          for (j = 0; j < s.data.length; j += 1) {
-            d = s.data[j];
-            if (!rows[d[0]]) {
-              rows[d[0]] = new Array(series.length);
-            }
-            rows[d[0]][i] = d[1];
-          }
-        }
+        mergeSeries(data, rows, series);
 
         // columns
         rows2 = [];
@@ -106,15 +114,26 @@
     },
     ColumnChart: function(elementId, series) {
       google.setOnLoadCallback(function() {
-        var data = new google.visualization.DataTable();
+        // Create the data table.
+        var data = new google.visualization.DataTable(), rows = {}, k, rows2 = [], options, chart;
+
+        data.addColumn("string", "");
+
+        mergeSeries(data, rows, series);
 
         // columns
-        data.addColumn("string", "");
-        data.addColumn("number", "Value");
-        data.addRows(series);
+        rows2 = [];
+        for (k in rows) {
+          rows2.push([k].concat(rows[k]));
+        }
+        data.addRows(rows2);
 
         var options = defaultOptions; // TODO clone
-        options.legend.position = "none";
+        if (series.length > 1) {
+          options.legend.position = "right";
+        } else {
+          options.legend.position = "none";
+        }
         options.chartArea = null;
 
         var chart = new google.visualization.ColumnChart(document.getElementById(elementId));

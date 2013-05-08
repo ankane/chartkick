@@ -2,13 +2,9 @@ module Chartkick
   module Helper
 
     def line_chart(series, options = {})
-      unless series.is_a?(Array) and series[0].is_a?(Hash)
-        series = [{:name => "Value", :data => series}]
+      series = chartkick_series(series) do |data|
+        data.map{|k, v| [k.is_a?(Time) ? k : Time.parse(k), v] }.sort_by{|k, v| k }.map{|k, v| [k.to_i, v.to_f] }
       end
-      series.each do |s|
-        s[:data] = s[:data].map{|k, v| [k.is_a?(Time) ? k : Time.parse(k), v] }.sort_by{|k, v| k }.map{|k, v| [k.to_i, v.to_f] }
-      end
-
       html, element_id = chartkick_div(options)
       html << content_tag(:script) do
         concat "new Chartkick.LineChart(#{element_id.to_json}, #{series.to_json});".html_safe
@@ -26,7 +22,9 @@ module Chartkick
     end
 
     def column_chart(series, options = {})
-      series = series.map{|k,v| [k.to_s, v.to_f] }
+      series = chartkick_series(series) do |data|
+        data.map{|k, v| [k.to_s, v.to_f] }
+      end
       html, element_id = chartkick_div(options)
       html << content_tag(:script) do
         concat "new Chartkick.ColumnChart(#{element_id.to_json}, #{series.to_json});".html_safe
@@ -35,6 +33,17 @@ module Chartkick
     end
 
     private
+
+    def chartkick_series(series, &block)
+      unless series.is_a?(Array) and series[0].is_a?(Hash)
+        series = [{:name => "Value", :data => series}]
+      end
+      series.each do |s|
+        s[:name] = s[:name].to_s
+        s[:data] = yield(s[:data])
+      end
+      series
+    end
 
     def chartkick_div(options)
       @chartkick_chart_id ||= 0

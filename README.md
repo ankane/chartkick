@@ -28,7 +28,7 @@ Column chart
 <%= column_chart Task.group_by_hour_of_day(:created_at).count %>
 ```
 
-Multiple series (line chart only)
+Multiple series (except pie chart)
 
 ```erb
 <%= line_chart Goal.all.map{|goal| {:name => goal.name, :data => goal.feats.group_by_week(:created_at).count } } %>
