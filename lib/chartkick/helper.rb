@@ -37,6 +37,8 @@ module Chartkick
       @chartkick_chart_id ||= 0
       element_id = options[:id] || "chart-#{@chartkick_chart_id += 1}"
       height = options[:height] || "300px"
+
+      # js options
       default_options = {
         :min => 0
       }
