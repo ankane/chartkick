@@ -108,7 +108,7 @@
   }
 
   var Chartkick = {
-    LineChart: function(elementId, series) {
+    LineChart: function(elementId, series, opts) {
       google.setOnLoadCallback(function() {
         var data = createDataTable(series, "datetime");
 
@@ -121,7 +121,7 @@
         chart.draw(data, options);
       });
     },
-    PieChart: function(elementId, series) {
+    PieChart: function(elementId, series, opts) {
       google.setOnLoadCallback(function() {
         var data = new google.visualization.DataTable();
         data.addColumn("string", "");
@@ -138,7 +138,7 @@
         chart.draw(data, options);
       });
     },
-    ColumnChart: function(elementId, series) {
+    ColumnChart: function(elementId, series, opts) {
       google.setOnLoadCallback(function() {
         var data = createDataTable(series, "string");
 
