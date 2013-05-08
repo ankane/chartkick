@@ -15,7 +15,8 @@
         fontSize: 12,
         color: "#444"
       },
-      alignment: "center"
+      alignment: "center",
+      position: "right"
     },
     curveType: "function",
     hAxis: {
@@ -46,8 +47,11 @@
     }
   }
 
-  var mergeSeries = function(data, rows, series) {
-    var i, j, s, d;
+  var createDataTable = function(series, columnType) {
+    var data = new google.visualization.DataTable()
+    data.addColumn(columnType, "");
+
+    var i, j, s, d, rows = [];
     for (i = 0; i < series.length; i += 1) {
       s = series[i];
       data.addColumn("number", s.name);
@@ -60,49 +64,71 @@
         rows[d[0]][i] = d[1];
       }
     }
+
+    var rows2 = [];
+    for (i in rows) {
+      rows2.push([columnType == "datetime" ? new Date(i * 1000) : i].concat(rows[i]));
+    }
+    data.addRows(rows2);
+
+    return data;
   };
+
+  // http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
+  var clone = function(obj) {
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj;
+
+    // Handle Date
+    if (obj instanceof Date) {
+        var copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        var copy = [];
+        for (var i = 0, len = obj.length; i < len; i++) {
+            copy[i] = clone(obj[i]);
+        }
+        return copy;
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        var copy = {};
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+        }
+        return copy;
+    }
+
+    throw new Error("Unable to copy obj! Its type isn't supported.");
+  }
 
   var Chartkick = {
     LineChart: function(elementId, series) {
       google.setOnLoadCallback(function() {
-        // Create the data table.
-        var data = new google.visualization.DataTable(), rows = {}, k, rows2 = [], options, chart;
+        var data = createDataTable(series, "datetime");
 
-        data.addColumn("datetime", "");
-
-        mergeSeries(data, rows, series);
-
-        // columns
-        rows2 = [];
-        for (k in rows) {
-          rows2.push([new Date(k * 1000)].concat(rows[k]));
-        }
-        data.addRows(rows2);
-
-        options = defaultOptions; // TODO clone
-        if (series.length > 1) {
-          options.legend.position = "right";
-        } else {
+        var options = clone(defaultOptions);
+        if (series.length == 1) {
           options.legend.position = "none";
         }
-        options.chartArea = null;
 
-        chart = new google.visualization.LineChart(document.getElementById(elementId));
+        var chart = new google.visualization.LineChart(document.getElementById(elementId));
         chart.draw(data, options);
       });
     },
     PieChart: function(elementId, series) {
       google.setOnLoadCallback(function() {
-        // Create the data table.
         var data = new google.visualization.DataTable();
-
-        // columns
         data.addColumn("string", "");
         data.addColumn("number", "Value");
         data.addRows(series);
 
-        var options = defaultOptions; // TODO clone
-        options.legend.position = "right";
+        var options = clone(defaultOptions);
         options.chartArea = {
           top: "10%",
           height: "80%"
@@ -114,27 +140,12 @@
     },
     ColumnChart: function(elementId, series) {
       google.setOnLoadCallback(function() {
-        // Create the data table.
-        var data = new google.visualization.DataTable(), rows = {}, k, rows2 = [], options, chart;
+        var data = createDataTable(series, "string");
 
-        data.addColumn("string", "");
-
-        mergeSeries(data, rows, series);
-
-        // columns
-        rows2 = [];
-        for (k in rows) {
-          rows2.push([k].concat(rows[k]));
-        }
-        data.addRows(rows2);
-
-        var options = defaultOptions; // TODO clone
-        if (series.length > 1) {
-          options.legend.position = "right";
-        } else {
+        var options = clone(defaultOptions);
+        if (series.length == 1) {
           options.legend.position = "none";
         }
-        options.chartArea = null;
 
         var chart = new google.visualization.ColumnChart(document.getElementById(elementId));
         chart.draw(data, options);
