@@ -34,11 +34,7 @@ Multiple series (except pie chart)
 <%= line_chart Goal.all.map{|goal| {:name => goal.name, :data => goal.feats.group_by_week(:created_at).count } } %>
 ```
 
-Customize (id and height)
-
-```erb
-<%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
-```
+### Data
 
 For line charts, times can be a time or a string (strings are parsed)
 
@@ -60,6 +56,22 @@ For multiple series, use the format
 <% series_b = [[time_0, 8], [time_1, 9]] # or Array %>
 <%= line_chart [{:name => "Series A", :data => series_a, {:name => "Series B", :data => series_b}] %>
 ```
+
+### Options
+
+id and height
+
+```erb
+<%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
+```
+
+min and max values (except pie chart)
+
+```erb
+<%= line_chart User.group_by_day(:created_at).count, :min => 1000, :max => 5000 %>
+```
+
+**Note:** min defaults to 0 - use `:min => nil` to allow the chart to choose the minimum.
 
 ## Installation
 

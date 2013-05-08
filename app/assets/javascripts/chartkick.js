@@ -35,9 +35,7 @@
         fontSize: 12
       },
       baselineColor: "#ccc",
-      viewWindow: {
-        min: 0
-      }
+      viewWindow: {}
     },
     tooltip: {
       textStyle: {
@@ -107,12 +105,23 @@
     throw new Error("Unable to copy obj! Its type isn't supported.");
   }
 
+  var jsOptions = function(opts) {
+    var options = clone(defaultOptions);
+    if ("min" in opts) {
+      options.vAxis.viewWindow.min = opts.min;
+    }
+    if ("max" in opts) {
+      options.vAxis.viewWindow.max = opts.max;
+    }
+    return options;
+  }
+
   var Chartkick = {
     LineChart: function(elementId, series, opts) {
       google.setOnLoadCallback(function() {
         var data = createDataTable(series, "datetime");
 
-        var options = clone(defaultOptions);
+        var options = jsOptions(opts);
         if (series.length == 1) {
           options.legend.position = "none";
         }
@@ -128,7 +137,7 @@
         data.addColumn("number", "Value");
         data.addRows(series);
 
-        var options = clone(defaultOptions);
+        var options = jsOptions(opts);
         options.chartArea = {
           top: "10%",
           height: "80%"
@@ -142,7 +151,7 @@
       google.setOnLoadCallback(function() {
         var data = createDataTable(series, "string");
 
-        var options = clone(defaultOptions);
+        var options = jsOptions(opts);
         if (series.length == 1) {
           options.legend.position = "none";
         }

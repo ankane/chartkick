@@ -37,7 +37,10 @@ module Chartkick
       @chartkick_chart_id ||= 0
       element_id = options[:id] || "chart-#{@chartkick_chart_id += 1}"
       height = options[:height] || "300px"
-      js_options = {}
+      default_options = {
+        :min => 0
+      }
+      js_options = default_options.deep_merge(options)
 
       html = content_tag(:div, :id => element_id, :style => "height: #{height};") {}
       html << content_tag(:script) do
