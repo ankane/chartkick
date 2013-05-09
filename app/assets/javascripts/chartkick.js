@@ -124,7 +124,7 @@
     }
 
     var Chartkick = {
-      LineChart: function(elementId, series, opts) {
+      LineChart: function(element, series, opts) {
         var options = jsOptions(opts), data, i, j;
         options.xAxis.type = "datetime";
         options.chart = {type: "spline"};
@@ -141,18 +141,18 @@
         if (series.length == 1) {
           options.legend = {enabled: false};
         }
-        $(document.getElementById(elementId)).highcharts(options);
+        $(element).highcharts(options);
       },
-      PieChart: function(elementId, series, opts) {
+      PieChart: function(element, series, opts) {
         var options = jsOptions(opts);
         options.series = [{
           type: "pie",
           name: "Value",
           data: series
         }];
-        $(document.getElementById(elementId)).highcharts(options);
+        $(element).highcharts(options);
       },
-      ColumnChart: function(elementId, series, opts) {
+      ColumnChart: function(element, series, opts) {
         var options = jsOptions(opts), data, i, j;
         options.chart = {type: "column"};
 
@@ -192,7 +192,7 @@
         if (series.length == 1) {
           options.legend.enabled = false;
         }
-        $(document.getElementById(elementId)).highcharts(options);
+        $(element).highcharts(options);
       }
     };
 
@@ -289,7 +289,7 @@
     }
 
     var Chartkick = {
-      LineChart: function(elementId, series, opts) {
+      LineChart: function(element, series, opts) {
         waitForLoaded(function() {
           var data = createDataTable(series, "datetime");
 
@@ -298,11 +298,11 @@
             options.legend.position = "none";
           }
 
-          var chart = new google.visualization.LineChart(document.getElementById(elementId));
+          var chart = new google.visualization.LineChart(element);
           chart.draw(data, options);
         });
       },
-      PieChart: function(elementId, series, opts) {
+      PieChart: function(element, series, opts) {
         waitForLoaded(function() {
           var data = new google.visualization.DataTable();
           data.addColumn("string", "");
@@ -315,11 +315,11 @@
             height: "80%"
           };
 
-          var chart = new google.visualization.PieChart(document.getElementById(elementId));
+          var chart = new google.visualization.PieChart(element);
           chart.draw(data, options);
         });
       },
-      ColumnChart: function(elementId, series, opts) {
+      ColumnChart: function(element, series, opts) {
         waitForLoaded(function() {
           var data = createDataTable(series, "string");
 
@@ -328,14 +328,14 @@
             options.legend.position = "none";
           }
 
-          var chart = new google.visualization.ColumnChart(document.getElementById(elementId));
+          var chart = new google.visualization.ColumnChart(element);
           chart.draw(data, options);
         });
       }
     };
   }
 
-  var getJSON = function(elementId, url, success) {
+  var getJSON = function(element, url, success) {
     // TODO no jquery
     // TODO parse JSON in older browsers
     // https://raw.github.com/douglascrockford/JSON-js/master/json2.js
@@ -344,28 +344,27 @@
       url: url,
       success: success,
       error: function() {
-        var ele = document.getElementById(elementId);
-        ele.innerHTML = "Error Loading Chart";
-        ele.style.color = "red";
+        element.innerHTML = "Error Loading Chart";
+        element.style.color = "red";
       }
     });
   }
 
-  Chartkick.RemoteLineChart = function(elementId, dataSource, opts) {
-    getJSON(elementId, dataSource, function(data, textStatus, jqXHR) {
-      new Chartkick.LineChart(elementId, standardSeries(data, true), opts);
+  Chartkick.RemoteLineChart = function(element, dataSource, opts) {
+    getJSON(element, dataSource, function(data, textStatus, jqXHR) {
+      new Chartkick.LineChart(element, standardSeries(data, true), opts);
     });
   };
 
-  Chartkick.RemoteColumnChart = function(elementId, dataSource, opts) {
-    getJSON(elementId, dataSource, function(data, textStatus, jqXHR) {
-      new Chartkick.ColumnChart(elementId, standardSeries(data, false), opts);
+  Chartkick.RemoteColumnChart = function(element, dataSource, opts) {
+    getJSON(element, dataSource, function(data, textStatus, jqXHR) {
+      new Chartkick.ColumnChart(element, standardSeries(data, false), opts);
     });
   };
 
-  Chartkick.RemotePieChart = function(elementId, dataSource, opts) {
-    getJSON(elementId, dataSource, function(data, textStatus, jqXHR) {
-      new Chartkick.PieChart(elementId, data, opts);
+  Chartkick.RemotePieChart = function(element, dataSource, opts) {
+    getJSON(element, dataSource, function(data, textStatus, jqXHR) {
+      new Chartkick.PieChart(element, data, opts);
     });
   };
 

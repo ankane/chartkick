@@ -51,7 +51,9 @@ module Chartkick
 
       html =
         content_tag :div, :id => element_id, :style => "height: #{height};#{extra_styles}" do
-          concat "Loading..."
+          if data_source.is_a?(String)
+            concat "Loading..."
+          end
         end
 
       if data_source.is_a?(String)
@@ -61,7 +63,7 @@ module Chartkick
       end
 
       html << content_tag(:script) do
-        concat "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{js_options.to_json});".html_safe
+        concat "new Chartkick.#{klass}(document.getElementById(#{element_id.to_json}), #{data_source.to_json}, #{js_options.to_json});".html_safe
       end
       html
     end
