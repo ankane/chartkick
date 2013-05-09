@@ -47,13 +47,10 @@ module Chartkick
       }
       js_options = default_options.deep_merge(options)
 
-      extra_styles = data_source.is_a?(String) ? " text-align: center; color: #999; line-height: #{height}; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;" : ""
-
+      # don't quote font-family names due to rails escaping
       html =
-        content_tag :div, :id => element_id, :style => "height: #{height};#{extra_styles}" do
-          if data_source.is_a?(String)
-            concat "Loading..."
-          end
+        content_tag :div, :id => element_id, :style => "height: #{height}; text-align: center; color: #999; line-height: #{height}; font-size: 14px; font-family: Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif;" do
+          concat "Loading..."
         end
 
       if data_source.is_a?(String)
