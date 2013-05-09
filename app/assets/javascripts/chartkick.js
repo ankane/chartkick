@@ -324,27 +324,36 @@
     };
   }
 
-  var getJSON = function(url, callback) {
+  var getJSON = function(elementId, url, success) {
     // TODO no jquery
     // TODO handle errors
     // TODO parse JSON
-    $.getJSON(url, {}, callback);
+    $.ajax({
+      dataType: "json",
+      url: url,
+      success: success,
+      error: function() {
+        var ele = document.getElementById(elementId);
+        ele.innerHTML = "Error Loading Chart";
+        ele.style.color = "red";
+      }
+    });
   }
 
   Chartkick.RemoteLineChart = function(elementId, dataSource, opts) {
-    getJSON(dataSource, function(data, textStatus, jqXHR) {
+    getJSON(elementId, dataSource, function(data, textStatus, jqXHR) {
       new Chartkick.LineChart(elementId, standardSeries(data, true), opts);
     });
   };
 
   Chartkick.RemoteColumnChart = function(elementId, dataSource, opts) {
-    getJSON(dataSource, function(data, textStatus, jqXHR) {
+    getJSON(elementId, dataSource, function(data, textStatus, jqXHR) {
       new Chartkick.ColumnChart(elementId, standardSeries(data, false), opts);
     });
   };
 
   Chartkick.RemotePieChart = function(elementId, dataSource, opts) {
-    getJSON(dataSource, function(data, textStatus, jqXHR) {
+    getJSON(elementId, dataSource, function(data, textStatus, jqXHR) {
       new Chartkick.PieChart(elementId, data, opts);
     });
   };
