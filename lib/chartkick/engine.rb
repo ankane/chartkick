@@ -3,8 +3,7 @@ module Chartkick
 
     initializer "precompile", :group => :all do |app|
       # use a proc instead of a string
-      assets = ["chartkick.js", "chartkick.highcharts.js"]
-      app.config.assets.precompile << Proc.new{|path| assets.include?(path) }
+      app.config.assets.precompile << Proc.new{|path| path == "chartkick.js" }
     end
 
     initializer "helper" do |app|

@@ -89,10 +89,10 @@ And add the javascript files to your views.
 <%= javascript_include_tag "//www.google.com/jsapi", "chartkick" %>
 ```
 
-For Highcharts, add this instead:
+If you prefer Highcharts, use
 
 ```erb
-<%= javascript_include_tag "path/to/highcharts.js", "chartkick.highcharts" %>
+<%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
 ```
 
 ## Contributing
