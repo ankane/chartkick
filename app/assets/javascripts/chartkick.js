@@ -41,7 +41,7 @@
     return Object.prototype.toString.call(variable) === "[object Array]"
   };
 
-  var standardSeries = function(series) {
+  var standardSeries = function(series, time) {
     var i, j, data, r, key;
 
     // clean data
@@ -56,12 +56,19 @@
         r = [];
         for (j in data) {
           key = j;
-          if (typeof key === "string") {
-            key = (new Date(key)).getTime() / 1000.0;
+          if (time) {
+            if (typeof key === "string") {
+              key = (new Date(key)).getTime() / 1000.0;
+            }
           }
-          r.push([key, data[j]]); // TODO typecast
+          else {
+            key = "" + key; // to string
+          }
+          r.push([key, data[j]]); // TODO cast to float
         }
-        r.sort(function(a,b){ return a[0] - b[0] });
+        if (time) {
+          r.sort(function(a,b){ return a[0] - b[0] });
+        }
         series[i].data = r;
       }
     }
@@ -317,15 +324,30 @@
     };
   }
 
-  Chartkick.RemoteLineChart = function(elementId, dataSource, opts) {
+  var getJSON = function(url, callback) {
     // TODO no jquery
     // TODO handle errors
-    $.getJSON(dataSource, {}, function(data, textStatus, jqXHR) {
-      // TODO parse JSON when jquery gone
-      var series = standardSeries(data);
-      new Chartkick.LineChart(elementId, series, opts);
-    });
+    // TODO parse JSON
+    $.getJSON(url, {}, callback);
   }
+
+  Chartkick.RemoteLineChart = function(elementId, dataSource, opts) {
+    getJSON(dataSource, function(data, textStatus, jqXHR) {
+      new Chartkick.LineChart(elementId, standardSeries(data, true), opts);
+    });
+  };
+
+  Chartkick.RemoteColumnChart = function(elementId, dataSource, opts) {
+    getJSON(dataSource, function(data, textStatus, jqXHR) {
+      new Chartkick.ColumnChart(elementId, standardSeries(data, false), opts);
+    });
+  };
+
+  Chartkick.RemotePieChart = function(elementId, dataSource, opts) {
+    getJSON(dataSource, function(data, textStatus, jqXHR) {
+      new Chartkick.PieChart(elementId, data, opts);
+    });
+  };
 
   window.Chartkick = Chartkick;
 })();
