@@ -5,10 +5,21 @@
   'use strict';
 
   var defaultOptions = {
-    xAxis: {},
+    xAxis: {
+      labels: {
+        style: {
+          fontSize: "12px"
+        }
+      }
+    },
     yAxis: {
       title: {
         text: null
+      },
+      labels: {
+        style: {
+          fontSize: "12px"
+        }
       }
     },
     title: {
@@ -19,6 +30,11 @@
     },
     legend: {
       borderWidth: 0
+    },
+    tooltip: {
+      style: {
+        fontSize: "12px"
+      }
     }
   };
 
@@ -77,6 +93,7 @@
         for (j = 0; j < data.length; j += 1) {
           data[j][0] = data[j][0] * 1000;
         }
+        series[i].marker = {symbol: "circle"};
       }
       options.series = series;
 
