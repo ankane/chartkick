@@ -37,6 +37,38 @@
     throw new Error("Unable to copy obj! Its type isn't supported.");
   }
 
+  var isArray = function(variable) {
+    return Object.prototype.toString.call(variable) === "[object Array]"
+  };
+
+  var standardSeries = function(series) {
+    var i, j, data, r, key;
+
+    // clean data
+    if (!isArray(series) || typeof series[0] !== "object") {
+      series = [{name: "Value", data: series}];
+    }
+
+    // right format
+    for (i = 0; i < series.length; i += 1) {
+      data = series[i].data;
+      if (!isArray(data)) {
+        r = [];
+        for (j in data) {
+          key = j;
+          if (typeof key === "string") {
+            key = (new Date(key)).getTime() / 1000.0;
+          }
+          r.push([key, data[j]]); // TODO typecast
+        }
+        r.sort(function(a,b){ return a[0] - b[0] });
+        series[i].data = r;
+      }
+    }
+
+    return series;
+  }
+
   if ("Highcharts" in window) {
 
     var defaultOptions = {
@@ -283,6 +315,16 @@
         });
       }
     };
+  }
+
+  Chartkick.RemoteLineChart = function(elementId, dataSource, opts) {
+    // TODO no jquery
+    // TODO handle errors
+    $.getJSON(dataSource, {}, function(data, textStatus, jqXHR) {
+      // TODO parse JSON when jquery gone
+      var series = standardSeries(data);
+      new Chartkick.LineChart(elementId, series, opts);
+    });
   }
 
   window.Chartkick = Chartkick;
