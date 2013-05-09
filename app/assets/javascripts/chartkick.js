@@ -198,7 +198,18 @@
 
   }
   else {
+    var loaded = false;
+    google.setOnLoadCallback( function() {
+      loaded = true;
+    });
     google.load("visualization", "1.0", {"packages": ["corechart"]});
+
+    var waitForLoaded = function(callback) {
+      google.setOnLoadCallback(callback); // always do this to prevent race conditions (watch out for other issues due to this)
+      if (loaded) {
+        callback();
+      }
+    }
 
     // Set chart options
     var defaultOptions = {
@@ -279,7 +290,7 @@
 
     var Chartkick = {
       LineChart: function(elementId, series, opts) {
-        google.setOnLoadCallback(function() {
+        waitForLoaded(function() {
           var data = createDataTable(series, "datetime");
 
           var options = jsOptions(opts);
@@ -292,7 +303,7 @@
         });
       },
       PieChart: function(elementId, series, opts) {
-        google.setOnLoadCallback(function() {
+        waitForLoaded(function() {
           var data = new google.visualization.DataTable();
           data.addColumn("string", "");
           data.addColumn("number", "Value");
@@ -309,7 +320,7 @@
         });
       },
       ColumnChart: function(elementId, series, opts) {
-        google.setOnLoadCallback(function() {
+        waitForLoaded(function() {
           var data = createDataTable(series, "string");
 
           var options = jsOptions(opts);
@@ -326,8 +337,8 @@
 
   var getJSON = function(elementId, url, success) {
     // TODO no jquery
-    // TODO handle errors
-    // TODO parse JSON
+    // TODO parse JSON in older browsers
+    // https://raw.github.com/douglascrockford/JSON-js/master/json2.js
     $.ajax({
       dataType: "json",
       url: url,
