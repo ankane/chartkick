@@ -123,13 +123,13 @@ If you prefer Highcharts, use
 <%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
 ```
 
-## Without Ruby
+## No Ruby? No Problem
 
 Chartkick doesn’t require Ruby.
 
 ```html
 <script src="/path/to/chartkick.js"></script>
-<div id="chart-1" style="height: 300px;">
+<div id="chart-1" style="height: 300px;"></div>
 <script>
   new Chartkick.PieChart("chart-1", {"Football": 45, "Soccer": 56, "Basketball": 98})
   // or ajax
@@ -137,7 +137,7 @@ Chartkick doesn’t require Ruby.
 </script>
 ```
 
-Download the javascript file here.
+[Download chartkick.js here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js).
 
 ## Contributing
 
