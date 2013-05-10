@@ -8,6 +8,12 @@ Create beautiful Javascript charts with one line of Ruby
 
 Works with Rails 3.0+
 
+Tested in Chrome, Firefox, Safari, IE 6+
+
+Supports AJAX data for fast page loads.
+
+Have lots of graphs without worrying about page timeouts!
+
 ## Usage
 
 Line chart
@@ -33,6 +39,26 @@ Multiple series (except pie chart)
 ```erb
 <%= line_chart Goal.all.map{|goal| {:name => goal.name, :data => goal.feats.group_by_week(:created_at).count } } %>
 ```
+
+## Ajax Charts
+
+Don’t sit around waiting for chart data.  For slow charts, use AJAX.
+
+```erb
+<%= line_chart completed_tasks_charts_path %>
+```
+
+And in your controller, pass the data as JSON.
+
+```
+class ChartsController < ApplicationController
+  def completed_tasks
+    render :json => Task.group_by_day(:completed_at).count
+  end
+end
+```
+
+**Note:** Requires JQuery at the moment.
 
 ### Data
 
@@ -94,6 +120,22 @@ If you prefer Highcharts, use
 ```erb
 <%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
 ```
+
+## Without Ruby
+
+Chartkick doesn’t require Ruby.
+
+```html
+<script src="/path/to/chartkick.js"></script>
+<div id="chart-1" style="height: 300px;">
+<script>
+  new Chartkick.PieChart("chart-1", {"Football": 45, "Soccer": 56, "Basketball": 98})
+  // or ajax
+  new Chartkick.LineChart("chart-1", "/charts/stocks")
+</script>
+```
+
+Download the javascript file here.
 
 ## Contributing
 
