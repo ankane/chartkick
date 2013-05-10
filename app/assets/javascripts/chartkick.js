@@ -86,7 +86,8 @@
           style: {
             fontSize: "12px"
           }
-        }
+        },
+        min: 0
       },
       title: {
         text: null
@@ -123,7 +124,7 @@
       for (i = 0; i < series.length; i += 1) {
         data = series[i].data;
         for (j = 0; j < data.length; j += 1) {
-          data[j][0] = data[j][0] * 1000;
+          data[j][0] = data[j][0].getTime();
         }
         series[i].marker = {symbol: "circle"};
       }
