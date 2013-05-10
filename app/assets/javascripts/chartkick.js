@@ -37,43 +37,35 @@
     throw new Error("Unable to copy obj! Its type isn't supported.");
   }
 
-  /**
-   * Date.parse with progressive enhancement for ISO 8601 <https://github.com/csnover/js-iso8601>
-   * © 2011 Colin Snover <http://zetafleet.com>
-   * Released under MIT license.
-   */
-  var parseISO8601 = function (date) {
-    var timestamp, struct, minutesOffset = 0, numericKeys = [ 1, 4, 5, 6, 7, 10, 11 ];
+  // https://github.com/Do/iso8601.js
+  var DECIMAL_SEPARATOR, ISO8601_PATTERN;
 
-    // ES5 §15.9.4.2 states that the string should attempt to be parsed as a Date Time String Format string
-    // before falling back to any implementation-specific date parsing, so that’s what we do, even if native
-    // implementations could be faster
-    //              1 YYYY                2 MM       3 DD           4 HH    5 mm       6 ss        7 msec        8 Z 9 ±    10 tzHH    11 tzmm
-    if ((struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?::(\d{2}))?)?)?$/.exec(date))) {
-      // avoid NaN timestamps caused by “undefined” values being passed to Date.UTC
-      for (var i = 0, k; (k = numericKeys[i]); ++i) {
-        struct[k] = +struct[k] || 0;
+  ISO8601_PATTERN = /(\d\d\d\d)(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)?(:)?(\d\d)?([\.,]\d+)?($|Z|([+-])(\d\d)(:)?(\d\d)?)/i;
+
+  DECIMAL_SEPARATOR = String(1.5).charAt(1);
+
+  var parseISO8601 = function(input) {
+    var day, hour, matches, milliseconds, minutes, month, offset, result, seconds, type, year;
+    type = Object.prototype.toString.call(input);
+    if (type === '[object Date]') return input;
+    if (type !== '[object String]') return;
+    if (matches = input.match(ISO8601_PATTERN)) {
+      year = parseInt(matches[1], 10);
+      month = parseInt(matches[3], 10) - 1;
+      day = parseInt(matches[5], 10);
+      hour = parseInt(matches[7], 10);
+      minutes = matches[9] ? parseInt(matches[9], 10) : 0;
+      seconds = matches[11] ? parseInt(matches[11], 10) : 0;
+      milliseconds = matches[12] ? parseFloat(DECIMAL_SEPARATOR + matches[12].slice(1)) * 1000 : 0;
+      result = Date.UTC(year, month, day, hour, minutes, seconds, milliseconds);
+      if (matches[13] && matches[14]) {
+        offset = matches[15] * 60;
+        if (matches[17]) offset += parseInt(matches[17], 10);
+        offset *= matches[14] === '-' ? -1 : 1;
+        result -= offset * 60 * 1000;
       }
-
-      // allow undefined days and months
-      struct[2] = (+struct[2] || 1) - 1;
-      struct[3] = +struct[3] || 1;
-
-      if (struct[8] !== 'Z' && struct[9] !== undefined) {
-        minutesOffset = struct[10] * 60 + struct[11];
-
-        if (struct[9] === '+') {
-          minutesOffset = 0 - minutesOffset;
-        }
-      }
-
-      timestamp = Date.UTC(struct[1], struct[2], struct[3], struct[4], struct[5] + minutesOffset, struct[6], struct[7]);
+      return new Date(result);
     }
-    else {
-      timestamp = Date.parse(date);
-    }
-
-    return new Date(timestamp);
   };
 
   if ("Highcharts" in window) {
@@ -429,8 +421,9 @@
       }
       else { // str
         // try our best to get the str into iso8601
+        // TODO be smarter about this
         var str = n.replace(/ /, "T").replace(" ", "").replace("UTC", "Z");
-        n = parseISO8601(str);
+        n = parseISO8601(str) || new Date(n);
       }
     }
     return n;
@@ -440,7 +433,9 @@
     if (!isArray(n)) {
       var arr = [], i;
       for (i in n) {
-        arr.push([i, n[i]]);
+        if (n.hasOwnProperty(i)) {
+          arr.push([i, n[i]]);
+        }
       }
       n = arr;
     }
@@ -458,7 +453,7 @@
   var processPieData = function(element, data, opts) {
     var perfectData = toArr(data), i;
     for (i = 0; i < perfectData.length; i++) {
-      perfectData[i] = [toStr(data[i][0]), toFloat(data[i][1])];
+      perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
     }
     renderPieChart(element, perfectData, opts);
   }
