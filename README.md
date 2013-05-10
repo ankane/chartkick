@@ -14,6 +14,8 @@ Supports AJAX data for fast page loads.
 
 Have lots of graphs without worrying about page timeouts!
 
+Smart - just give it your data and it figures things out.
+
 ## Usage
 
 Line chart
@@ -50,7 +52,7 @@ Don’t sit around waiting for chart data.  For slow charts, use AJAX.
 
 And in your controller, pass the data as JSON.
 
-```
+```ruby
 class ChartsController < ApplicationController
   def completed_tasks
     render :json => Task.group_by_day(:completed_at).count
