@@ -2,19 +2,15 @@
 
 Create beautiful Javascript charts with one line of Ruby
 
-[Demo](http://ankane.github.io/chartkick/)
+[See the demo](http://ankane.github.io/chartkick/)
 
-:two_hearts: A perfect companion to [groupdate](http://ankane.github.io/groupdate/)
+Chartkick is smart - give it data and it just works.
 
-Works with Rails 3.0+
+- Tested in Chrome, Firefox, Safari, IE 6+
+- Works with Rails 3.0+
+- Supports AJAX data - stop worrying about page timeouts!
 
-Tested in Chrome, Firefox, Safari, IE 6+
-
-Supports AJAX data for fast page loads.
-
-Have lots of graphs without worrying about page timeouts!
-
-Smart - just give it your data and it figures things out.
+A perfect companion to [groupdate](http://ankane.github.io/groupdate/) :two_hearts:
 
 ## Usage
 
@@ -62,12 +58,28 @@ end
 
 **Note:** Requires JQuery at the moment.
 
-### Data
+### Options
 
-For line charts, times can be a time or a string (strings are parsed)
+id and height
 
 ```erb
-<% line_chart({20.day.ago => 5, "2013-05-07 00:00:00 UTC" => 7}) %>
+<%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
+```
+
+min and max values (except pie chart)
+
+```erb
+<%= line_chart User.group_by_day(:created_at).count, :min => 1000, :max => 5000 %>
+```
+
+**Note:** min defaults to 0 - use `:min => nil` to allow the chart to choose the minimum.
+
+### Data
+
+For line charts, times can be a time, a string, or a timestamp (strings are parsed)
+
+```erb
+<% line_chart({20.day.ago => 5, "2013-05-07 00:00:00 UTC" => 7, 1368174456 => 4}) %>
 ```
 
 Pass data as a Hash or Array
@@ -85,22 +97,6 @@ For multiple series, use the format
 <%= line_chart [{:name => "Series A", :data => series_a, {:name => "Series B", :data => series_b}] %>
 ```
 
-### Options
-
-id and height
-
-```erb
-<%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
-```
-
-min and max values (except pie chart)
-
-```erb
-<%= line_chart User.group_by_day(:created_at).count, :min => 1000, :max => 5000 %>
-```
-
-**Note:** min defaults to 0 - use `:min => nil` to allow the chart to choose the minimum.
-
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -117,7 +113,7 @@ And add the javascript files to your views.
 <%= javascript_include_tag "//www.google.com/jsapi", "chartkick" %>
 ```
 
-If you prefer Highcharts, use
+If you prefer Highcharts, use:
 
 ```erb
 <%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
