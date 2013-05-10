@@ -197,7 +197,7 @@
       $(element).highcharts(options);
     };
   }
-  else { // Google charts
+  else if ("google" in window) { // Google charts
 
     var loaded = false;
     google.setOnLoadCallback( function() {
@@ -338,10 +338,15 @@
         chart.draw(data, options);
       });
     };
+  } else {
+    var renderLineChart, renderPieChart, renderColumnChart;
+    renderLineChart = renderPieChart = renderColumnChart = function(element, series, opts) {
+      throw new Error("Please install Google Charts or Highcharts");
+    }
   }
 
-  var chartError = function(element) {
-    element.innerHTML = "Error Loading Chart";
+  var chartError = function(element, message) {
+    element.innerHTML = "Error Loading Chart: " + message;
     element.style.color = "red";
   };
 
@@ -353,8 +358,8 @@
       dataType: "json",
       url: url,
       success: success,
-      error: function() {
-        chartError(element);
+      error: function(jqXHR, textStatus, errorThrown) {
+        chartError(element, errorThrown.message);
       }
     });
   };
@@ -364,7 +369,7 @@
     try {
       callback(element, data, opts);
     } catch (err) {
-      chartError(element);
+      chartError(element, err.message);
       throw err;
     }
   };
