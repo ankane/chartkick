@@ -254,7 +254,6 @@
 
     var renderLineChart = function(element, series, opts) {
       waitForLoaded(function() {
-        console.log(series);
         var data = createDataTable(series, "datetime");
 
         var options = jsOptions(opts);
@@ -355,24 +354,22 @@
 
     // right format
     for (i = 0; i < series.length; i += 1) {
-      data = series[i].data;
-      if (!isArray(data)) {
-        r = [];
-        for (j in data) {
-          key = j;
-          if (time) {
-            key = toDate(key);
-          }
-          else {
-            key = toStr(key);
-          }
-          r.push([key, toFloat(data[j])]);
-        }
+      data = toArr(series[i].data);
+      r = [];
+      for (j = 0; j < data.length; j += 1) {
+        key = data[j][0];
         if (time) {
-          r.sort(function(a,b){ return a[0].getTime() - b[0].getTime() });
+          key = toDate(key);
         }
-        series[i].data = r;
+        else {
+          key = toStr(key);
+        }
+        r.push([key, toFloat(data[j][1])]);
       }
+      if (time) {
+        r.sort(function(a,b){ return a[0].getTime() - b[0].getTime() });
+      }
+      series[i].data = r;
     }
 
     return series;
@@ -398,6 +395,17 @@
     return n;
   };
 
+  var toArr = function(n) {
+    if (!isArray(n)) {
+      var arr = [], i;
+      for (i in n) {
+        arr.push([i, n[i]]);
+      }
+      n = arr;
+    }
+    return n;
+  }
+
   var processLineData = function(element, data, opts) {
     renderLineChart(element, standardSeries(data, true), opts);
   }
@@ -407,18 +415,9 @@
   }
 
   var processPieData = function(element, data, opts) {
-    var perfectData = [], i;
-    // data could be an Object or Array
-    if (isArray(data)) {
-      // keep order
-      for (i = 0; i < data.length; i++) {
-        perfectData.push([toStr(data[i][0]), toFloat(data[i][1])]);
-      }
-    }
-    else {
-      for (i in data) {
-        perfectData.push([toStr(i), toFloat(data[i])]);
-      }
+    var perfectData = toArr(data), i;
+    for (i = 0; i < perfectData.length; i++) {
+      perfectData[i] = [toStr(data[i][0]), toFloat(data[i][1])];
     }
     renderPieChart(element, perfectData, opts);
   }
