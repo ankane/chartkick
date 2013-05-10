@@ -37,45 +37,6 @@
     throw new Error("Unable to copy obj! Its type isn't supported.");
   }
 
-  var isArray = function(variable) {
-    return Object.prototype.toString.call(variable) === "[object Array]"
-  };
-
-  var standardSeries = function(series, time) {
-    var i, j, data, r, key;
-
-    // clean data
-    if (!isArray(series) || typeof series[0] !== "object") {
-      series = [{name: "Value", data: series}];
-    }
-
-    // right format
-    for (i = 0; i < series.length; i += 1) {
-      data = series[i].data;
-      if (!isArray(data)) {
-        r = [];
-        for (j in data) {
-          key = j;
-          if (time) {
-            if (typeof key === "string") {
-              key = (new Date(key)).getTime() / 1000.0;
-            }
-          }
-          else {
-            key = "" + key; // to string
-          }
-          r.push([key, data[j]]); // TODO cast to float
-        }
-        if (time) {
-          r.sort(function(a,b){ return a[0] - b[0] });
-        }
-        series[i].data = r;
-      }
-    }
-
-    return series;
-  }
-
   if ("Highcharts" in window) {
 
     var defaultOptions = {
@@ -123,79 +84,78 @@
       return options;
     }
 
-    var Chartkick = {
-      LineChart: function(element, series, opts) {
-        var options = jsOptions(opts), data, i, j;
-        options.xAxis.type = "datetime";
-        options.chart = {type: "spline"};
+    var renderLineChart = function(element, series, opts) {
+      var options = jsOptions(opts), data, i, j;
+      options.xAxis.type = "datetime";
+      options.chart = {type: "spline"};
 
-        for (i = 0; i < series.length; i += 1) {
-          data = series[i].data;
-          for (j = 0; j < data.length; j += 1) {
-            data[j][0] = data[j][0] * 1000;
-          }
-          series[i].marker = {symbol: "circle"};
+      for (i = 0; i < series.length; i += 1) {
+        data = series[i].data;
+        for (j = 0; j < data.length; j += 1) {
+          data[j][0] = data[j][0] * 1000;
         }
-        options.series = series;
-
-        if (series.length == 1) {
-          options.legend = {enabled: false};
-        }
-        $(element).highcharts(options);
-      },
-      PieChart: function(element, series, opts) {
-        var options = jsOptions(opts);
-        options.series = [{
-          type: "pie",
-          name: "Value",
-          data: series
-        }];
-        $(element).highcharts(options);
-      },
-      ColumnChart: function(element, series, opts) {
-        var options = jsOptions(opts), data, i, j;
-        options.chart = {type: "column"};
-
-        var i, j, s, d, rows = [];
-        for (i = 0; i < series.length; i += 1) {
-          s = series[i];
-
-          for (j = 0; j < s.data.length; j += 1) {
-            d = s.data[j];
-            if (!rows[d[0]]) {
-              rows[d[0]] = new Array(series.length);
-            }
-            rows[d[0]][i] = d[1];
-          }
-        }
-
-        var categories = [];
-        for (i in rows) {
-          categories.push(i);
-        }
-        options.xAxis.categories = categories;
-
-        var newSeries = [];
-        for (i = 0; i < series.length; i += 1) {
-          d = [];
-          for (j = 0; j < categories.length; j += 1) {
-            d.push(rows[categories[j]][i]);
-          }
-
-          newSeries.push({
-            name: series[i].name,
-            data: d
-          });
-        }
-        options.series = newSeries;
-
-        if (series.length == 1) {
-          options.legend.enabled = false;
-        }
-        $(element).highcharts(options);
+        series[i].marker = {symbol: "circle"};
       }
+      options.series = series;
+
+      if (series.length == 1) {
+        options.legend = {enabled: false};
+      }
+      $(element).highcharts(options);
     };
 
+    var renderPieChart = function(element, series, opts) {
+      var options = jsOptions(opts);
+      options.series = [{
+        type: "pie",
+        name: "Value",
+        data: series
+      }];
+      $(element).highcharts(options);
+    };
+
+    var renderColumnChart = function(element, series, opts) {
+      var options = jsOptions(opts), data, i, j;
+      options.chart = {type: "column"};
+
+      var i, j, s, d, rows = [];
+      for (i = 0; i < series.length; i += 1) {
+        s = series[i];
+
+        for (j = 0; j < s.data.length; j += 1) {
+          d = s.data[j];
+          if (!rows[d[0]]) {
+            rows[d[0]] = new Array(series.length);
+          }
+          rows[d[0]][i] = d[1];
+        }
+      }
+
+      var categories = [];
+      for (i in rows) {
+        categories.push(i);
+      }
+      options.xAxis.categories = categories;
+
+      var newSeries = [];
+      for (i = 0; i < series.length; i += 1) {
+        d = [];
+        for (j = 0; j < categories.length; j += 1) {
+          d.push(rows[categories[j]][i]);
+        }
+
+        newSeries.push({
+          name: series[i].name,
+          data: d
+        });
+      }
+      options.series = newSeries;
+
+      if (series.length == 1) {
+        options.legend.enabled = false;
+      }
+      $(element).highcharts(options);
+    };
   }
   else {
     var loaded = false;
@@ -240,7 +200,9 @@
           fontSize: 12
         },
         baselineColor: "#ccc",
-        viewWindow: {}
+        viewWindow: {
+          min: 0
+        }
       },
       tooltip: {
         textStyle: {
@@ -288,50 +250,51 @@
       return options;
     }
 
-    var Chartkick = {
-      LineChart: function(element, series, opts) {
-        waitForLoaded(function() {
-          var data = createDataTable(series, "datetime");
+    var renderLineChart = function(element, series, opts) {
+      waitForLoaded(function() {
+        console.log(series);
+        var data = createDataTable(series, "datetime");
 
-          var options = jsOptions(opts);
-          if (series.length == 1) {
-            options.legend.position = "none";
-          }
+        var options = jsOptions(opts);
+        if (series.length == 1) {
+          options.legend.position = "none";
+        }
 
-          var chart = new google.visualization.LineChart(element);
-          chart.draw(data, options);
-        });
-      },
-      PieChart: function(element, series, opts) {
-        waitForLoaded(function() {
-          var data = new google.visualization.DataTable();
-          data.addColumn("string", "");
-          data.addColumn("number", "Value");
-          data.addRows(series);
+        var chart = new google.visualization.LineChart(element);
+        chart.draw(data, options);
+      })
+    };
 
-          var options = jsOptions(opts);
-          options.chartArea = {
-            top: "10%",
-            height: "80%"
-          };
+    var renderPieChart = function(element, series, opts) {
+      waitForLoaded(function() {
+        var data = new google.visualization.DataTable();
+        data.addColumn("string", "");
+        data.addColumn("number", "Value");
+        data.addRows(series);
 
-          var chart = new google.visualization.PieChart(element);
-          chart.draw(data, options);
-        });
-      },
-      ColumnChart: function(element, series, opts) {
-        waitForLoaded(function() {
-          var data = createDataTable(series, "string");
+        var options = jsOptions(opts);
+        options.chartArea = {
+          top: "10%",
+          height: "80%"
+        };
 
-          var options = jsOptions(opts);
-          if (series.length == 1) {
-            options.legend.position = "none";
-          }
+        var chart = new google.visualization.PieChart(element);
+        chart.draw(data, options);
+      });
+    };
 
-          var chart = new google.visualization.ColumnChart(element);
-          chart.draw(data, options);
-        });
-      }
+    var renderColumnChart = function(element, series, opts) {
+      waitForLoaded(function() {
+        var data = createDataTable(series, "string");
+
+        var options = jsOptions(opts);
+        if (series.length == 1) {
+          options.legend.position = "none";
+        }
+
+        var chart = new google.visualization.ColumnChart(element);
+        chart.draw(data, options);
+      });
     };
   }
 
@@ -348,24 +311,82 @@
         element.style.color = "red";
       }
     });
+  };
+
+  var fetchDataSource = function(element, dataSource, opts, callback) {
+    if (typeof dataSource === "string") {
+      getJSON(element, dataSource, function(data, textStatus, jqXHR) {
+        callback(element, data, opts);
+      });
+    }
+    else {
+      callback(element, dataSource, opts);
+    }
+  };
+
+  var isArray = function(variable) {
+    return Object.prototype.toString.call(variable) === "[object Array]"
+  };
+
+  var standardSeries = function(series, time) {
+    var i, j, data, r, key;
+
+    // clean data
+    if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
+      series = [{name: "Value", data: series}];
+    }
+
+    // right format
+    for (i = 0; i < series.length; i += 1) {
+      data = series[i].data;
+      if (!isArray(data)) {
+        r = [];
+        for (j in data) {
+          key = j;
+          if (time) {
+            if (typeof key === "string") {
+              key = (new Date(key)).getTime() / 1000.0;
+            }
+            // don't touch Date or integer
+          }
+          else {
+            key = "" + key; // to string
+          }
+          r.push([key, parseFloat(data[j])]);
+        }
+        if (time) {
+          r.sort(function(a,b){ return a[0] - b[0] });
+        }
+        series[i].data = r;
+      }
+    }
+
+    return series;
   }
 
-  Chartkick.RemoteLineChart = function(element, dataSource, opts) {
-    getJSON(element, dataSource, function(data, textStatus, jqXHR) {
-      new Chartkick.LineChart(element, standardSeries(data, true), opts);
-    });
-  };
+  var processLineData = function(element, data, opts) {
+    renderLineChart(element, standardSeries(data, true), opts);
+  }
 
-  Chartkick.RemoteColumnChart = function(element, dataSource, opts) {
-    getJSON(element, dataSource, function(data, textStatus, jqXHR) {
-      new Chartkick.ColumnChart(element, standardSeries(data, false), opts);
-    });
-  };
+  var processColumnData = function(element, data, opts) {
+    renderColumnChart(element, standardSeries(data, false), opts);
+  }
 
-  Chartkick.RemotePieChart = function(element, dataSource, opts) {
-    getJSON(element, dataSource, function(data, textStatus, jqXHR) {
-      new Chartkick.PieChart(element, data, opts);
-    });
+  // TODO process
+  var processPieData = function(element, data, opts) {
+    renderPieChart(element, data, opts);
+  }
+
+  var Chartkick = {
+    LineChart: function(element, dataSource, opts) {
+      fetchDataSource(element, dataSource, opts, processLineData);
+    },
+    ColumnChart: function(element, dataSource, opts) {
+      fetchDataSource(element, dataSource, opts, processColumnData);
+    },
+    PieChart: function(element, dataSource, opts) {
+      fetchDataSource(element, dataSource, opts, processPieData);
+    }
   };
 
   window.Chartkick = Chartkick;
