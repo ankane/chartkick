@@ -1,25 +1,31 @@
-/*jslint browser: true, indent: 2 */
+/*jslint browser: true, indent: 2, plusplus: true */
 /*global google*/
 
 (function() {
   'use strict';
 
+  // vendor
+
   // http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
   var clone = function(obj) {
+    var copy, i, attr, len;
+
     // Handle the 3 simple types, and null or undefined
-    if (null == obj || "object" != typeof obj) return obj;
+    if (null === obj || "object" !== typeof obj) {
+      return obj;
+    }
 
     // Handle Date
     if (obj instanceof Date) {
-      var copy = new Date();
+      copy = new Date();
       copy.setTime(obj.getTime());
       return copy;
     }
 
     // Handle Array
     if (obj instanceof Array) {
-      var copy = [];
-      for (var i = 0, len = obj.length; i < len; i++) {
+      copy = [];
+      for (i = 0, len = obj.length; i < len; i++) {
         copy[i] = clone(obj[i]);
       }
       return copy;
@@ -27,21 +33,21 @@
 
     // Handle Object
     if (obj instanceof Object) {
-      var copy = {};
-      for (var attr in obj) {
-        if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+      copy = {};
+      for (attr in obj) {
+        if (obj.hasOwnProperty(attr)) {
+          copy[attr] = clone(obj[attr]);
+        }
       }
       return copy;
     }
 
     throw new Error("Unable to copy obj! Its type isn't supported.");
-  }
+  };
 
   // https://github.com/Do/iso8601.js
   var DECIMAL_SEPARATOR, ISO8601_PATTERN;
-
-  ISO8601_PATTERN = /(\d\d\d\d)(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)?(:)?(\d\d)?([\.,]\d+)?($|Z|([+-])(\d\d)(:)?(\d\d)?)/i;
-
+  ISO8601_PATTERN = /(\d\d\d\d)(\-)?(\d\d)(\-)?(\d\d)(T)?(\d\d)(:)?(\d\d)?(:)?(\d\d)?([\.,]\d+)?($|Z|([\+\-])(\d\d)(:)?(\d\d)?)/i;
   DECIMAL_SEPARATOR = String(1.5).charAt(1);
 
   var parseISO8601 = function(input) {
@@ -67,6 +73,8 @@
       return new Date(result);
     }
   };
+
+  // source
 
   if ("Highcharts" in window) {
 
@@ -121,9 +129,9 @@
       options.xAxis.type = "datetime";
       options.chart = {type: "spline"};
 
-      for (i = 0; i < series.length; i += 1) {
+      for (i = 0; i < series.length; i++) {
         data = series[i].data;
-        for (j = 0; j < data.length; j += 1) {
+        for (j = 0; j < data.length; j++) {
           data[j][0] = data[j][0].getTime();
         }
         series[i].marker = {symbol: "circle"};
@@ -151,10 +159,10 @@
       options.chart = {type: "column"};
 
       var i, j, s, d, rows = [];
-      for (i = 0; i < series.length; i += 1) {
+      for (i = 0; i < series.length; i++) {
         s = series[i];
 
-        for (j = 0; j < s.data.length; j += 1) {
+        for (j = 0; j < s.data.length; j++) {
           d = s.data[j];
           if (!rows[d[0]]) {
             rows[d[0]] = new Array(series.length);
@@ -170,9 +178,9 @@
       options.xAxis.categories = categories;
 
       var newSeries = [];
-      for (i = 0; i < series.length; i += 1) {
+      for (i = 0; i < series.length; i++) {
         d = [];
-        for (j = 0; j < categories.length; j += 1) {
+        for (j = 0; j < categories.length; j++) {
           d.push(rows[categories[j]][i]);
         }
 
@@ -189,7 +197,8 @@
       $(element).highcharts(options);
     };
   }
-  else {
+  else { // Google charts
+
     var loaded = false;
     google.setOnLoadCallback( function() {
       loaded = true;
@@ -250,11 +259,11 @@
       data.addColumn(columnType, "");
 
       var i, j, s, d, key, rows = [];
-      for (i = 0; i < series.length; i += 1) {
+      for (i = 0; i < series.length; i++) {
         s = series[i];
         data.addColumn("number", s.name);
 
-        for (j = 0; j < s.data.length; j += 1) {
+        for (j = 0; j < s.data.length; j++) {
           d = s.data[j];
           key = (columnType === "datetime") ? d[0].getTime() : d[0];
           if (!rows[key]) {
@@ -385,10 +394,10 @@
     }
 
     // right format
-    for (i = 0; i < series.length; i += 1) {
+    for (i = 0; i < series.length; i++) {
       data = toArr(series[i].data);
       r = [];
-      for (j = 0; j < data.length; j += 1) {
+      for (j = 0; j < data.length; j++) {
         key = data[j][0];
         if (time) {
           key = toDate(key);
