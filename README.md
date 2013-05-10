@@ -1,16 +1,12 @@
 # Chartkick
 
-Create beautiful Javascript charts with one line of Ruby
+Create beautiful Javascript charts with one line of Ruby. No more fighting with charting libraries!
 
-[See the demo](http://ankane.github.io/chartkick/)
+[See it in action](http://ankane.github.io/chartkick/)
 
-Chartkick is smart - give it data and it just works.
+Works with Rails 3.1+ and most browsers (including IE 6)
 
-- Tested in Chrome, Firefox, Safari, IE 6+
-- Works with Rails 3.0+
-- Supports AJAX data - stop worrying about page timeouts!
-
-A perfect companion to [groupdate](http://ankane.github.io/groupdate/) :two_hearts:
+:two_hearts: A perfect companion to [groupdate](http://ankane.github.io/groupdate/)
 
 ## Usage
 
@@ -38,9 +34,9 @@ Multiple series (except pie chart)
 <%= line_chart Goal.all.map{|goal| {:name => goal.name, :data => goal.feats.group_by_week(:created_at).count } } %>
 ```
 
-## Ajax Charts
+### Say Goodbye To Timeouts
 
-Don’t sit around waiting for chart data.  For slow charts, use AJAX.
+Make your pages load super fast and stop worrying about timeouts.  Give each chart its own endpoint.
 
 ```erb
 <%= line_chart completed_tasks_charts_path %>
@@ -56,7 +52,7 @@ class ChartsController < ApplicationController
 end
 ```
 
-**Note:** Requires JQuery at the moment.
+**Note:** This feature requires jQuery at the moment.
 
 ### Options
 
@@ -76,12 +72,6 @@ min and max values (except pie chart)
 
 ### Data
 
-For line charts, times can be a time, a string, or a timestamp (strings are parsed)
-
-```erb
-<% line_chart({20.day.ago => 5, "2013-05-07 00:00:00 UTC" => 7, 1368174456 => 4}) %>
-```
-
 Pass data as a Hash or Array
 
 ```erb
@@ -95,6 +85,12 @@ For multiple series, use the format
 <% series_a = {time_0 => 5, time_1 => 7} # Hash %>
 <% series_b = [[time_0, 8], [time_1, 9]] # or Array %>
 <%= line_chart [{:name => "Series A", :data => series_a, {:name => "Series B", :data => series_b}] %>
+```
+
+Times can be a time, a timestamp, or a string (strings are parsed)
+
+```erb
+<% line_chart({20.day.ago => 5, 1368174456 => 4, "2013-05-07 00:00:00 UTC" => 7}) %>
 ```
 
 ## Installation
@@ -133,7 +129,7 @@ Chartkick doesn’t require Ruby.
 </script>
 ```
 
-[Download chartkick.js here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js).
+Download [chartkick.js](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
 
 ## Contributing
 
