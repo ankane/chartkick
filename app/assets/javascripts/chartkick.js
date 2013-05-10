@@ -461,13 +461,13 @@
 
   var Chartkick = {
     LineChart: function(element, dataSource, opts) {
-      fetchDataSource(element, dataSource, opts, processLineData);
+      fetchDataSource(element, dataSource, opts || {}, processLineData);
     },
     ColumnChart: function(element, dataSource, opts) {
-      fetchDataSource(element, dataSource, opts, processColumnData);
+      fetchDataSource(element, dataSource, opts || {}, processColumnData);
     },
     PieChart: function(element, dataSource, opts) {
-      fetchDataSource(element, dataSource, opts, processPieData);
+      fetchDataSource(element, dataSource, opts || {}, processPieData);
     }
   };
 
