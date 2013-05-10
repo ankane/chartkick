@@ -212,27 +212,29 @@
       }
     }
 
+    // cant use object as key
     var createDataTable = function(series, columnType) {
-      var data = new google.visualization.DataTable()
+      var data = new google.visualization.DataTable();
       data.addColumn(columnType, "");
 
-      var i, j, s, d, rows = [];
+      var i, j, s, d, key, rows = [];
       for (i = 0; i < series.length; i += 1) {
         s = series[i];
         data.addColumn("number", s.name);
 
         for (j = 0; j < s.data.length; j += 1) {
           d = s.data[j];
-          if (!rows[d[0]]) {
-            rows[d[0]] = new Array(series.length);
+          key = (columnType === "datetime") ? d[0].getTime() : d[0];
+          if (!rows[key]) {
+            rows[key] = new Array(series.length);
           }
-          rows[d[0]][i] = d[1];
+          rows[key][i] = toFloat(d[1]);
         }
       }
 
       var rows2 = [];
       for (i in rows) {
-        rows2.push([columnType == "datetime" ? new Date(i * 1000) : i].concat(rows[i]));
+        rows2.push([(columnType === "datetime") ? new Date(toFloat(i)) : i].concat(rows[i]));
       }
       data.addRows(rows2);
 
@@ -298,6 +300,11 @@
     };
   }
 
+  var chartError = function(element) {
+    element.innerHTML = "Error Loading Chart";
+    element.style.color = "red";
+  };
+
   var getJSON = function(element, url, success) {
     // TODO no jquery
     // TODO parse JSON in older browsers
@@ -307,20 +314,30 @@
       url: url,
       success: success,
       error: function() {
-        element.innerHTML = "Error Loading Chart";
-        element.style.color = "red";
+        chartError(element);
       }
     });
   };
 
+  // not working all the time
+  var errorCatcher = function(element, data, opts, callback) {
+    try {
+      callback(element, data, opts);
+    } catch (err) {
+      chartError(element);
+      throw err;
+    }
+  };
+
+  // TODO catch errors for callback
   var fetchDataSource = function(element, dataSource, opts, callback) {
     if (typeof dataSource === "string") {
       getJSON(element, dataSource, function(data, textStatus, jqXHR) {
-        callback(element, data, opts);
+        errorCatcher(element, data, opts, callback);
       });
     }
     else {
-      callback(element, dataSource, opts);
+      errorCatcher(element, dataSource, opts, callback);
     }
   };
 
@@ -344,18 +361,15 @@
         for (j in data) {
           key = j;
           if (time) {
-            if (typeof key === "string") {
-              key = (new Date(key)).getTime() / 1000.0;
-            }
-            // don't touch Date or integer
+            key = toDate(key);
           }
           else {
-            key = "" + key; // to string
+            key = toStr(key);
           }
-          r.push([key, parseFloat(data[j])]);
+          r.push([key, toFloat(data[j])]);
         }
         if (time) {
-          r.sort(function(a,b){ return a[0] - b[0] });
+          r.sort(function(a,b){ return a[0].getTime() - b[0].getTime() });
         }
         series[i].data = r;
       }
@@ -363,6 +377,26 @@
 
     return series;
   }
+
+  var toStr = function(n) {
+    return "" + n;
+  }
+
+  var toFloat = function(n) {
+    return parseFloat(n);
+  };
+
+  var toDate = function(n) {
+    if (typeof n !== "object") {
+      if (typeof n === "number") {
+        n = new Date(n * 1000); // ms
+      }
+      else { // str
+        n = new Date(n); // TODO parse
+      }
+    }
+    return n;
+  };
 
   var processLineData = function(element, data, opts) {
     renderLineChart(element, standardSeries(data, true), opts);
@@ -372,9 +406,21 @@
     renderColumnChart(element, standardSeries(data, false), opts);
   }
 
-  // TODO process
   var processPieData = function(element, data, opts) {
-    renderPieChart(element, data, opts);
+    var perfectData = [], i;
+    // data could be an Object or Array
+    if (isArray(data)) {
+      // keep order
+      for (i = 0; i < data.length; i++) {
+        perfectData.push([toStr(data[i][0]), toFloat(data[i][1])]);
+      }
+    }
+    else {
+      for (i in data) {
+        perfectData.push([toStr(i), toFloat(data[i])]);
+      }
+    }
+    renderPieChart(element, perfectData, opts);
   }
 
   var Chartkick = {
