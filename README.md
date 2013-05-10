@@ -123,9 +123,10 @@ Chartkick doesn’t require Ruby.
 <script src="/path/to/chartkick.js"></script>
 <div id="chart-1" style="height: 300px;"></div>
 <script>
-  new Chartkick.PieChart("chart-1", {"Football": 45, "Soccer": 56, "Basketball": 98})
-  // or ajax
-  new Chartkick.LineChart("chart-1", "/charts/stocks")
+  var chart = document.getElementById("chart-1");
+  new Chartkick.PieChart(chart, {"Football": 45, "Soccer": 56, "Basketball": 98});
+  // or remote
+  new Chartkick.LineChart(chart, "/charts/stocks");
 </script>
 ```
 
