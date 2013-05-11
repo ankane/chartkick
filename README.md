@@ -84,7 +84,10 @@ Pass data as a Hash or Array
 For multiple series, use the format
 
 ```erb
-<%= line_chart [{:name => "Series A", :data => series_a}, {:name => "Series B", :data => series_b}] %>
+<%= line_chart [
+  {:name => "Series A", :data => series_a},
+  {:name => "Series B", :data => series_b}
+] %>
 ```
 
 Times can be a time, a timestamp, or a string (strings are parsed)
