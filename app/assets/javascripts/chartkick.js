@@ -351,20 +351,17 @@
   };
 
   var getJSON = function(element, url, success) {
-    // TODO no jquery
-    // TODO parse JSON in older browsers
-    // https://raw.github.com/douglascrockford/JSON-js/master/json2.js
     $.ajax({
       dataType: "json",
       url: url,
       success: success,
       error: function(jqXHR, textStatus, errorThrown) {
-        chartError(element, errorThrown.message);
+        var message = (typeof errorThrown === "string") ? errorThrown : errorThrown.message;
+        chartError(element, errorThrown);
       }
     });
   };
 
-  // not working all the time
   var errorCatcher = function(element, data, opts, callback) {
     try {
       callback(element, data, opts);
@@ -374,7 +371,6 @@
     }
   };
 
-  // TODO catch errors for callback
   var fetchDataSource = function(element, dataSource, opts, callback) {
     if (typeof dataSource === "string") {
       getJSON(element, dataSource, function(data, textStatus, jqXHR) {
