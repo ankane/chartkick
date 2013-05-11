@@ -31,7 +31,9 @@ Column chart
 Multiple series (except pie chart)
 
 ```erb
-<%= line_chart Goal.all.map{|goal| {:name => goal.name, :data => goal.feats.group_by_week(:created_at).count } } %>
+<%= line_chart @goals.map{|goal|
+    {:name => goal.name, :data => goal.feats.group_by_week(:created_at).count }
+} %>
 ```
 
 ### Say Goodbye To Timeouts
