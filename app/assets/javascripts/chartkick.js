@@ -118,7 +118,7 @@
       }
     };
 
-    function jsOptions(opts) {
+    var jsOptions = function(opts) {
       var options = clone(defaultOptions);
       if ("min" in opts) {
         options.yAxis.min = opts.min;
@@ -127,7 +127,7 @@
         options.yAxis.max = opts.max;
       }
       return options;
-    }
+    };
 
     renderLineChart = function(element, series, opts) {
       var options = jsOptions(opts), data, i, j;
@@ -177,7 +177,9 @@
 
       var categories = [];
       for (i in rows) {
-        categories.push(i);
+        if (rows.hasOwnProperty(i)) {
+          categories.push(i);
+        }
       }
       options.xAxis.categories = categories;
 
@@ -208,12 +210,12 @@
     });
     google.load("visualization", "1.0", {"packages": ["corechart"]});
 
-    function waitForLoaded(callback) {
+    var waitForLoaded = function(callback) {
       google.setOnLoadCallback(callback); // always do this to prevent race conditions (watch out for other issues due to this)
       if (loaded) {
         callback();
       }
-    }
+    };
 
     // Set chart options
     var defaultOptions = {
@@ -257,7 +259,7 @@
     };
 
     // cant use object as key
-    function createDataTable(series, columnType) {
+    var createDataTable = function(series, columnType) {
       var data = new google.visualization.DataTable();
       data.addColumn(columnType, "");
 
@@ -278,14 +280,16 @@
 
       var rows2 = [];
       for (i in rows) {
-        rows2.push([(columnType === "datetime") ? new Date(toFloat(i)) : i].concat(rows[i]));
+        if (rows.hasOwnProperty(i)) {
+          rows2.push([(columnType === "datetime") ? new Date(toFloat(i)) : i].concat(rows[i]));
+        }
       }
       data.addRows(rows2);
 
       return data;
-    }
+    };
 
-    function jsOptions(opts) {
+    var jsOptions = function(opts) {
       var options = clone(defaultOptions);
       if ("min" in opts) {
         options.vAxis.viewWindow.min = opts.min;
@@ -294,7 +298,7 @@
         options.vAxis.viewWindow.max = opts.max;
       }
       return options;
-    }
+    };
 
     renderLineChart = function(element, series, opts) {
       waitForLoaded(function() {
@@ -342,9 +346,9 @@
       });
     };
   } else { // no chart library installed
-    renderLineChart = renderPieChart = renderColumnChart = function(element, series, opts) {
+    renderLineChart = renderPieChart = renderColumnChart = function() {
       throw new Error("Please install Google Charts or Highcharts");
-    }
+    };
   }
 
   function chartError(element, message) {
@@ -359,7 +363,7 @@
       success: success,
       error: function(jqXHR, textStatus, errorThrown) {
         var message = (typeof errorThrown === "string") ? errorThrown : errorThrown.message;
-        chartError(element, errorThrown);
+        chartError(element, message);
       }
     });
   }
@@ -386,7 +390,7 @@
   // helpers
 
   function isArray(variable) {
-    return Object.prototype.toString.call(variable) === "[object Array]"
+    return Object.prototype.toString.call(variable) === "[object Array]";
   }
 
   // type conversions
@@ -428,6 +432,10 @@
 
   // process data
 
+  function sortByTime(a, b) {
+    return a[0].getTime() - b[0].getTime();
+  }
+
   function processSeries(series, time) {
     var i, j, data, r, key;
 
@@ -446,8 +454,7 @@
         r.push([key, toFloat(data[j][1])]);
       }
       if (time) {
-        // sort the data
-        r.sort(function(a,b){ return a[0].getTime() - b[0].getTime() });
+        r.sort(sortByTime);
       }
       series[i].data = r;
     }
