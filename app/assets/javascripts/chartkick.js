@@ -353,7 +353,7 @@
 
   function chartError(element, message) {
     element.innerHTML = "Error Loading Chart: " + message;
-    element.style.color = "red";
+    element.style.color = "#ff0000";
   }
 
   function getJSON(element, url, success) {
