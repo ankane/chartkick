@@ -135,6 +135,10 @@ Chartkick doesn’t require Ruby.
 
 Download [chartkick.js](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
 
+## Credits
+
+Chartkick uses [iso8601.js](https://github.com/Do/iso8601.js) to parse dates and times.
+
 ## Contributing
 
 1. Fork it
