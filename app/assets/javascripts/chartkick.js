@@ -1,13 +1,11 @@
 /*jslint browser: true, indent: 2, plusplus: true */
-/*global google*/
+/*global google, $*/
 
 (function() {
   'use strict';
 
-  // vendor
-
   // http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
-  var clone = function(obj) {
+  function clone(obj) {
     var copy, i, attr, len;
 
     // Handle the 3 simple types, and null or undefined
@@ -43,18 +41,21 @@
     }
 
     throw new Error("Unable to copy obj! Its type isn't supported.");
-  };
+  }
 
   // https://github.com/Do/iso8601.js
-  var DECIMAL_SEPARATOR, ISO8601_PATTERN;
-  ISO8601_PATTERN = /(\d\d\d\d)(\-)?(\d\d)(\-)?(\d\d)(T)?(\d\d)(:)?(\d\d)?(:)?(\d\d)?([\.,]\d+)?($|Z|([\+\-])(\d\d)(:)?(\d\d)?)/i;
-  DECIMAL_SEPARATOR = String(1.5).charAt(1);
+  var ISO8601_PATTERN = /(\d\d\d\d)(\-)?(\d\d)(\-)?(\d\d)(T)?(\d\d)(:)?(\d\d)?(:)?(\d\d)?([\.,]\d+)?($|Z|([\+\-])(\d\d)(:)?(\d\d)?)/i;
+  var DECIMAL_SEPARATOR = String(1.5).charAt(1);
 
-  var parseISO8601 = function(input) {
+  function parseISO8601(input) {
     var day, hour, matches, milliseconds, minutes, month, offset, result, seconds, type, year;
     type = Object.prototype.toString.call(input);
-    if (type === '[object Date]') return input;
-    if (type !== '[object String]') return;
+    if (type === '[object Date]') {
+      return input;
+    }
+    if (type !== '[object String]') {
+      return;
+    }
     if (matches = input.match(ISO8601_PATTERN)) {
       year = parseInt(matches[1], 10);
       month = parseInt(matches[3], 10) - 1;
@@ -66,15 +67,19 @@
       result = Date.UTC(year, month, day, hour, minutes, seconds, milliseconds);
       if (matches[13] && matches[14]) {
         offset = matches[15] * 60;
-        if (matches[17]) offset += parseInt(matches[17], 10);
+        if (matches[17]) {
+          offset += parseInt(matches[17], 10);
+        }
         offset *= matches[14] === '-' ? -1 : 1;
         result -= offset * 60 * 1000;
       }
       return new Date(result);
     }
-  };
+  }
+  // end iso8601.js
 
-  // source
+  // only functions that need defined specific to charting library
+  var renderLineChart, renderPieChart, renderColumnChart;
 
   if ("Highcharts" in window) {
 
@@ -113,7 +118,7 @@
       }
     };
 
-    var jsOptions = function(opts) {
+    function jsOptions(opts) {
       var options = clone(defaultOptions);
       if ("min" in opts) {
         options.yAxis.min = opts.min;
@@ -124,7 +129,7 @@
       return options;
     }
 
-    var renderLineChart = function(element, series, opts) {
+    renderLineChart = function(element, series, opts) {
       var options = jsOptions(opts), data, i, j;
       options.xAxis.type = "datetime";
       options.chart = {type: "spline"};
@@ -138,13 +143,13 @@
       }
       options.series = series;
 
-      if (series.length == 1) {
+      if (series.length === 1) {
         options.legend = {enabled: false};
       }
       $(element).highcharts(options);
     };
 
-    var renderPieChart = function(element, series, opts) {
+    renderPieChart = function(element, series, opts) {
       var options = jsOptions(opts);
       options.series = [{
         type: "pie",
@@ -154,11 +159,10 @@
       $(element).highcharts(options);
     };
 
-    var renderColumnChart = function(element, series, opts) {
-      var options = jsOptions(opts), data, i, j;
+    renderColumnChart = function(element, series, opts) {
+      var options = jsOptions(opts), i, j, s, d, rows = [];
       options.chart = {type: "column"};
 
-      var i, j, s, d, rows = [];
       for (i = 0; i < series.length; i++) {
         s = series[i];
 
@@ -191,21 +195,20 @@
       }
       options.series = newSeries;
 
-      if (series.length == 1) {
+      if (series.length === 1) {
         options.legend.enabled = false;
       }
       $(element).highcharts(options);
     };
-  }
-  else if ("google" in window) { // Google charts
-
+  } else if ("google" in window) { // Google charts
+    // load from google
     var loaded = false;
-    google.setOnLoadCallback( function() {
+    google.setOnLoadCallback(function() {
       loaded = true;
     });
     google.load("visualization", "1.0", {"packages": ["corechart"]});
 
-    var waitForLoaded = function(callback) {
+    function waitForLoaded(callback) {
       google.setOnLoadCallback(callback); // always do this to prevent race conditions (watch out for other issues due to this)
       if (loaded) {
         callback();
@@ -251,10 +254,10 @@
           fontSize: 12
         }
       }
-    }
+    };
 
     // cant use object as key
-    var createDataTable = function(series, columnType) {
+    function createDataTable(series, columnType) {
       var data = new google.visualization.DataTable();
       data.addColumn(columnType, "");
 
@@ -280,9 +283,9 @@
       data.addRows(rows2);
 
       return data;
-    };
+    }
 
-    var jsOptions = function(opts) {
+    function jsOptions(opts) {
       var options = clone(defaultOptions);
       if ("min" in opts) {
         options.vAxis.viewWindow.min = opts.min;
@@ -293,21 +296,21 @@
       return options;
     }
 
-    var renderLineChart = function(element, series, opts) {
+    renderLineChart = function(element, series, opts) {
       waitForLoaded(function() {
         var data = createDataTable(series, "datetime");
 
         var options = jsOptions(opts);
-        if (series.length == 1) {
+        if (series.length === 1) {
           options.legend.position = "none";
         }
 
         var chart = new google.visualization.LineChart(element);
         chart.draw(data, options);
-      })
+      });
     };
 
-    var renderPieChart = function(element, series, opts) {
+    renderPieChart = function(element, series, opts) {
       waitForLoaded(function() {
         var data = new google.visualization.DataTable();
         data.addColumn("string", "");
@@ -325,12 +328,12 @@
       });
     };
 
-    var renderColumnChart = function(element, series, opts) {
+    renderColumnChart = function(element, series, opts) {
       waitForLoaded(function() {
         var data = createDataTable(series, "string");
 
         var options = jsOptions(opts);
-        if (series.length == 1) {
+        if (series.length === 1) {
           options.legend.position = "none";
         }
 
@@ -338,19 +341,18 @@
         chart.draw(data, options);
       });
     };
-  } else {
-    var renderLineChart, renderPieChart, renderColumnChart;
+  } else { // no chart library installed
     renderLineChart = renderPieChart = renderColumnChart = function(element, series, opts) {
       throw new Error("Please install Google Charts or Highcharts");
     }
   }
 
-  var chartError = function(element, message) {
+  function chartError(element, message) {
     element.innerHTML = "Error Loading Chart: " + message;
     element.style.color = "red";
-  };
+  }
 
-  var getJSON = function(element, url, success) {
+  function getJSON(element, url, success) {
     $.ajax({
       dataType: "json",
       url: url,
@@ -360,77 +362,48 @@
         chartError(element, errorThrown);
       }
     });
-  };
+  }
 
-  var errorCatcher = function(element, data, opts, callback) {
+  function errorCatcher(element, data, opts, callback) {
     try {
       callback(element, data, opts);
     } catch (err) {
       chartError(element, err.message);
       throw err;
     }
-  };
+  }
 
-  var fetchDataSource = function(element, dataSource, opts, callback) {
+  function fetchDataSource(element, dataSource, opts, callback) {
     if (typeof dataSource === "string") {
       getJSON(element, dataSource, function(data, textStatus, jqXHR) {
         errorCatcher(element, data, opts, callback);
       });
-    }
-    else {
+    } else {
       errorCatcher(element, dataSource, opts, callback);
     }
-  };
-
-  var isArray = function(variable) {
-    return Object.prototype.toString.call(variable) === "[object Array]"
-  };
-
-  var standardSeries = function(series, time) {
-    var i, j, data, r, key;
-
-    // clean data
-    if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
-      series = [{name: "Value", data: series}];
-    }
-
-    // right format
-    for (i = 0; i < series.length; i++) {
-      data = toArr(series[i].data);
-      r = [];
-      for (j = 0; j < data.length; j++) {
-        key = data[j][0];
-        if (time) {
-          key = toDate(key);
-        }
-        else {
-          key = toStr(key);
-        }
-        r.push([key, toFloat(data[j][1])]);
-      }
-      if (time) {
-        r.sort(function(a,b){ return a[0].getTime() - b[0].getTime() });
-      }
-      series[i].data = r;
-    }
-
-    return series;
   }
 
-  var toStr = function(n) {
+  // helpers
+
+  function isArray(variable) {
+    return Object.prototype.toString.call(variable) === "[object Array]"
+  }
+
+  // type conversions
+
+  function toStr(n) {
     return "" + n;
   }
 
-  var toFloat = function(n) {
+  function toFloat(n) {
     return parseFloat(n);
-  };
+  }
 
-  var toDate = function(n) {
+  function toDate(n) {
     if (typeof n !== "object") {
       if (typeof n === "number") {
         n = new Date(n * 1000); // ms
-      }
-      else { // str
+      } else { // str
         // try our best to get the str into iso8601
         // TODO be smarter about this
         var str = n.replace(/ /, "T").replace(" ", "").replace("UTC", "Z");
@@ -438,9 +411,9 @@
       }
     }
     return n;
-  };
+  }
 
-  var toArr = function(n) {
+  function toArr(n) {
     if (!isArray(n)) {
       var arr = [], i;
       for (i in n) {
@@ -453,21 +426,52 @@
     return n;
   }
 
-  var processLineData = function(element, data, opts) {
-    renderLineChart(element, standardSeries(data, true), opts);
+  // process data
+
+  function processSeries(series, time) {
+    var i, j, data, r, key;
+
+    // see if one series or multiple
+    if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
+      series = [{name: "Value", data: series}];
+    }
+
+    // right format
+    for (i = 0; i < series.length; i++) {
+      data = toArr(series[i].data);
+      r = [];
+      for (j = 0; j < data.length; j++) {
+        key = data[j][0];
+        key = time ? toDate(key) : toStr(key);
+        r.push([key, toFloat(data[j][1])]);
+      }
+      if (time) {
+        // sort the data
+        r.sort(function(a,b){ return a[0].getTime() - b[0].getTime() });
+      }
+      series[i].data = r;
+    }
+
+    return series;
   }
 
-  var processColumnData = function(element, data, opts) {
-    renderColumnChart(element, standardSeries(data, false), opts);
+  function processLineData(element, data, opts) {
+    renderLineChart(element, processSeries(data, true), opts);
   }
 
-  var processPieData = function(element, data, opts) {
+  function processColumnData(element, data, opts) {
+    renderColumnChart(element, processSeries(data, false), opts);
+  }
+
+  function processPieData(element, data, opts) {
     var perfectData = toArr(data), i;
     for (i = 0; i < perfectData.length; i++) {
       perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
     }
     renderPieChart(element, perfectData, opts);
   }
+
+  // define classes
 
   var Chartkick = {
     LineChart: function(element, dataSource, opts) {
