@@ -351,8 +351,17 @@
     };
   }
 
+  var hasInnerText = (document.getElementsByTagName("body")[0].innerText !== undefined) ? true : false;
+  function setText(element, text) {
+    if (hasInnerText) {
+      element.innerText = text;
+    } else {
+      element.textContent = text;
+    }
+  }
+
   function chartError(element, message) {
-    element.innerHTML = "Error Loading Chart: " + message;
+    setText(element, "Error Loading Chart: " + message);
     element.style.color = "#ff0000";
   }
 
