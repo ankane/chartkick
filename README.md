@@ -104,11 +104,11 @@ Add this line to your application's Gemfile:
 gem "chartkick"
 ```
 
-And add the javascript files to your views.
+And add the javascript files to your views.  chartkick.js runs as a Rails engine - no need to install it.
+
+For Google Charts, use:
 
 ```erb
-<!-- 1. Google Charts first -->
-<!-- 2. chartkick.js runs as a Rails engine - no need to install it -->
 <%= javascript_include_tag "//www.google.com/jsapi", "chartkick" %>
 ```
 
