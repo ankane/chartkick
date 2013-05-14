@@ -78,6 +78,45 @@
   }
   // end iso8601.js
 
+  function negativeValues(series) {
+    var i, j, data;
+    for (i = 0; i < series.length; i++) {
+      data = series[i].data;
+      for (j = 0; j < data.length; j++) {
+        if (data[j][1] < 0) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax) {
+    return function(series, opts) {
+      var options = clone(defaultOptions);
+
+      // hide legend
+      if (series.length === 1) {
+        hideLegend(options);
+      }
+
+      // min
+      if ("min" in opts) {
+        setMin(options, opts.min);
+      }
+      else if (!negativeValues(series)) {
+        setMin(options, 0);
+      }
+
+      // max
+      if ("max" in opts) {
+        setMax(options, opts.max);
+      }
+
+      return options;
+    };
+  }
+
   // only functions that need defined specific to charting library
   var renderLineChart, renderPieChart, renderColumnChart;
 
@@ -99,8 +138,7 @@
           style: {
             fontSize: "12px"
           }
-        },
-        min: 0
+        }
       },
       title: {
         text: null
@@ -118,19 +156,22 @@
       }
     };
 
-    var jsOptions = function(opts) {
-      var options = clone(defaultOptions);
-      if ("min" in opts) {
-        options.yAxis.min = opts.min;
-      }
-      if ("max" in opts) {
-        options.yAxis.max = opts.max;
-      }
-      return options;
+    var hideLegend = function(options) {
+      options.legend.enabled = false;
     };
 
+    var setMin = function(options, min) {
+      options.yAxis.min = min;
+    };
+
+    var setMax = function(options, max) {
+      options.yAxis.max = max;
+    };
+
+    var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax);
+
     renderLineChart = function(element, series, opts) {
-      var options = jsOptions(opts), data, i, j;
+      var options = jsOptions(series, opts), data, i, j;
       options.xAxis.type = "datetime";
       options.chart = {type: "spline"};
 
@@ -142,15 +183,11 @@
         series[i].marker = {symbol: "circle"};
       }
       options.series = series;
-
-      if (series.length === 1) {
-        options.legend = {enabled: false};
-      }
       $(element).highcharts(options);
     };
 
     renderPieChart = function(element, series, opts) {
-      var options = jsOptions(opts);
+      var options = clone(defaultOptions);
       options.series = [{
         type: "pie",
         name: "Value",
@@ -160,7 +197,7 @@
     };
 
     renderColumnChart = function(element, series, opts) {
-      var options = jsOptions(opts), i, j, s, d, rows = [];
+      var options = jsOptions(series, opts), i, j, s, d, rows = [];
       options.chart = {type: "column"};
 
       for (i = 0; i < series.length; i++) {
@@ -197,9 +234,6 @@
       }
       options.series = newSeries;
 
-      if (series.length === 1) {
-        options.legend.enabled = false;
-      }
       $(element).highcharts(options);
     };
   } else if ("google" in window) { // Google charts
@@ -246,9 +280,7 @@
           fontSize: 12
         },
         baselineColor: "#ccc",
-        viewWindow: {
-          min: 0
-        }
+        viewWindow: {}
       },
       tooltip: {
         textStyle: {
@@ -257,6 +289,20 @@
         }
       }
     };
+
+    var hideLegend = function(options) {
+      options.legend.position = "none";
+    };
+
+    var setMin = function(options, min) {
+      options.vAxis.viewWindow.min = min;
+    };
+
+    var setMax = function(options, max) {
+      options.vAxis.viewWindow.max = max;
+    };
+
+    var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax);
 
     // cant use object as key
     var createDataTable = function(series, columnType) {
@@ -289,26 +335,10 @@
       return data;
     };
 
-    var jsOptions = function(opts) {
-      var options = clone(defaultOptions);
-      if ("min" in opts) {
-        options.vAxis.viewWindow.min = opts.min;
-      }
-      if ("max" in opts) {
-        options.vAxis.viewWindow.max = opts.max;
-      }
-      return options;
-    };
-
     renderLineChart = function(element, series, opts) {
       waitForLoaded(function() {
+        var options = jsOptions(series, opts);
         var data = createDataTable(series, "datetime");
-
-        var options = jsOptions(opts);
-        if (series.length === 1) {
-          options.legend.position = "none";
-        }
-
         var chart = new google.visualization.LineChart(element);
         chart.draw(data, options);
       });
@@ -316,16 +346,16 @@
 
     renderPieChart = function(element, series, opts) {
       waitForLoaded(function() {
-        var data = new google.visualization.DataTable();
-        data.addColumn("string", "");
-        data.addColumn("number", "Value");
-        data.addRows(series);
-
-        var options = jsOptions(opts);
+        var options = clone(defaultOptions);
         options.chartArea = {
           top: "10%",
           height: "80%"
         };
+
+        var data = new google.visualization.DataTable();
+        data.addColumn("string", "");
+        data.addColumn("number", "Value");
+        data.addRows(series);
 
         var chart = new google.visualization.PieChart(element);
         chart.draw(data, options);
@@ -334,13 +364,8 @@
 
     renderColumnChart = function(element, series, opts) {
       waitForLoaded(function() {
+        var options = jsOptions(series, opts);
         var data = createDataTable(series, "string");
-
-        var options = jsOptions(opts);
-        if (series.length === 1) {
-          options.legend.position = "none";
-        }
-
         var chart = new google.visualization.ColumnChart(element);
         chart.draw(data, options);
       });
