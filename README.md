@@ -106,6 +106,8 @@ gem "chartkick"
 
 And add the javascript files to your views. `chartkick.js` runs as a Rails engine - no need to install it.
 
+**Note:** These files must be included **before** the helper methods.
+
 For Google Charts, use:
 
 ```erb
