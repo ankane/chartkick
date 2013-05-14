@@ -351,9 +351,8 @@
     };
   }
 
-  var hasInnerText = (document.getElementsByTagName("body")[0].innerText !== undefined) ? true : false;
   function setText(element, text) {
-    if (hasInnerText) {
+    if (document.body.innerText) {
       element.innerText = text;
     } else {
       element.textContent = text;
