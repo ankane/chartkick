@@ -122,20 +122,7 @@ If you prefer Highcharts, use:
 
 ## No Ruby? No Problem
 
-Chartkick doesn’t require Ruby.
-
-```html
-<script src="/path/to/chartkick.js"></script>
-<div id="chart-1" style="height: 300px;"></div>
-<script>
-  var chart = document.getElementById("chart-1");
-  new Chartkick.PieChart(chart, {"Football": 45, "Soccer": 56, "Basketball": 98});
-  // or remote
-  new Chartkick.LineChart(chart, "/charts/stocks");
-</script>
-```
-
-Download [chartkick.js](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
+Check out [chartkick.js](https://github.com/ankane/chartkick.js).
 
 ## Credits
 
