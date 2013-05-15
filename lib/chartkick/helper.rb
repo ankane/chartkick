@@ -26,7 +26,7 @@ module Chartkick
         concat "Loading..."
       end
       html += javascript_tag do
-        concat "new Chartkick.#{klass}(document.getElementById(#{element_id.to_json}), #{data_source.to_json}, #{options.to_json});".html_safe
+        concat "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{options.to_json});".html_safe
       end
     end
 

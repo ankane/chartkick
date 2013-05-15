@@ -70,8 +70,6 @@ min and max values (except pie chart)
 <%= line_chart User.group_by_day(:created_at).count, :min => 1000, :max => 5000 %>
 ```
 
-**Note:** min defaults to 0 - use `:min => nil` to allow the chart to choose the minimum.
-
 ### Data
 
 Pass data as a Hash or Array

@@ -1,3 +1,11 @@
+/*
+ * Chartkick.js
+ * Create beautiful Javascript charts with minimal code
+ * https://github.com/ankane/chartkick.js
+ * v0.0.5
+ * MIT License
+ */
+
 /*jslint browser: true, indent: 2, plusplus: true */
 /*global google, $*/
 
@@ -96,7 +104,8 @@
       var options = clone(defaultOptions);
 
       // hide legend
-      if (series.length === 1) {
+      // this is *not* an external option!
+      if (opts.hideLegend) {
         hideLegend(options);
       }
 
@@ -469,12 +478,16 @@
     return a[0].getTime() - b[0].getTime();
   }
 
-  function processSeries(series, time) {
+  function processSeries(series, opts, time) {
     var i, j, data, r, key;
 
     // see if one series or multiple
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
       series = [{name: "Value", data: series}];
+      opts.hideLegend = true;
+    }
+    else {
+      opts.hideLegend = false;
     }
 
     // right format
@@ -496,11 +509,11 @@
   }
 
   function processLineData(element, data, opts) {
-    renderLineChart(element, processSeries(data, true), opts);
+    renderLineChart(element, processSeries(data, opts, true), opts);
   }
 
   function processColumnData(element, data, opts) {
-    renderColumnChart(element, processSeries(data, false), opts);
+    renderColumnChart(element, processSeries(data, opts, false), opts);
   }
 
   function processPieData(element, data, opts) {
@@ -511,17 +524,24 @@
     renderPieChart(element, perfectData, opts);
   }
 
+  function setElement(element, data, opts, callback) {
+    if (typeof element === "string") {
+      element = document.getElementById(element);
+    }
+    fetchDataSource(element, data, clone(opts || {}), callback);
+  }
+
   // define classes
 
   var Chartkick = {
     LineChart: function(element, dataSource, opts) {
-      fetchDataSource(element, dataSource, opts || {}, processLineData);
+      setElement(element, dataSource, opts, processLineData);
     },
     ColumnChart: function(element, dataSource, opts) {
-      fetchDataSource(element, dataSource, opts || {}, processColumnData);
+      setElement(element, dataSource, opts, processColumnData);
     },
     PieChart: function(element, dataSource, opts) {
-      fetchDataSource(element, dataSource, opts || {}, processPieData);
+      setElement(element, dataSource, opts, processPieData);
     }
   };
 
