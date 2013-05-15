@@ -97,7 +97,10 @@
 
       // hide legend
       if (series.length === 1) {
-        hideLegend(options);
+		// hide legend only if no name is specified
+		if (typeof series[0].name === 'undefined') {
+			hideLegend(options);
+		}       
       }
 
       // min
