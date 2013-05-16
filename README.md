@@ -126,6 +126,12 @@ Check out [chartkick.js](https://github.com/ankane/chartkick.js).
 
 Chartkick uses [iso8601.js](https://github.com/Do/iso8601.js) to parse dates and times.
 
+## History
+
+View the [changelog](https://github.com/ankane/chartkick/blob/master/CHANGELOG.md)
+
+Chartkick follows [Semantic Versioning](http://semver.org/)
+
 ## Contributing
 
 1. Fork it

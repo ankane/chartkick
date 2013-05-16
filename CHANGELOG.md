@@ -1,3 +1,7 @@
+## 1.0.0
+
+- Use semantic versioning (no changes)
+
 ## 0.0.5
 
 - Removed `:min => 0` default for charts with negative values
