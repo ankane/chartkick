@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful Javascript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.0.0
+ * v1.0.1
  * MIT License
  */
 
@@ -182,7 +182,7 @@
     renderLineChart = function(element, series, opts) {
       var options = jsOptions(series, opts), data, i, j;
       options.xAxis.type = "datetime";
-      options.chart = {type: "spline"};
+      options.chart = {type: "spline", renderTo: element.id};
 
       for (i = 0; i < series.length; i++) {
         data = series[i].data;
@@ -192,22 +192,23 @@
         series[i].marker = {symbol: "circle"};
       }
       options.series = series;
-      $(element).highcharts(options);
+      new Highcharts.Chart(options);
     };
 
     renderPieChart = function(element, series, opts) {
       var options = clone(defaultOptions);
+      options.chart = {renderTo: element.id};
       options.series = [{
         type: "pie",
         name: "Value",
         data: series
       }];
-      $(element).highcharts(options);
+      new Highcharts.Chart(options);
     };
 
     renderColumnChart = function(element, series, opts) {
       var options = jsOptions(series, opts), i, j, s, d, rows = [];
-      options.chart = {type: "column"};
+      options.chart = {type: "column", renderTo: element.id};
 
       for (i = 0; i < series.length; i++) {
         s = series[i];
@@ -243,7 +244,7 @@
       }
       options.series = newSeries;
 
-      $(element).highcharts(options);
+      new Highcharts.Chart(options);
     };
   } else if ("google" in window) { // Google charts
     // load from google
@@ -313,6 +314,10 @@
 
     var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax);
 
+    var sortByNumber = function(a, b) {
+      return a[0] - b[0];
+    };
+
     // cant use object as key
     var createDataTable = function(series, columnType) {
       var data = new google.visualization.DataTable();
@@ -338,6 +343,9 @@
         if (rows.hasOwnProperty(i)) {
           rows2.push([(columnType === "datetime") ? new Date(toFloat(i)) : i].concat(rows[i]));
         }
+      }
+      if (columnType === "datetime") {
+        rows2.sort(sortByNumber);
       }
       data.addRows(rows2);
 
@@ -485,8 +493,7 @@
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
       series = [{name: "Value", data: series}];
       opts.hideLegend = true;
-    }
-    else {
+    } else {
       opts.hideLegend = false;
     }
 
