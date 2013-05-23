@@ -1,3 +1,7 @@
+## 1.0.1
+
+Updated chartkick.js to v1.0.1
+
 ## 1.0.0
 
 - Use semantic versioning (no changes)
