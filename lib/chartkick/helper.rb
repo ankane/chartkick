@@ -1,3 +1,5 @@
+require "json"
+
 module Chartkick
   module Helper
 
@@ -25,10 +27,10 @@ module Chartkick
       div_tag = content_tag :div, :id => element_id, :style => "height: #{height}; text-align: center; color: #999; line-height: #{height}; font-size: 14px; font-family: Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif;" do
         concat "Loading..."
       end
-      script_tag = javascript_tag do
+      script_tag = content_tag :script do
         concat "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{options.to_json});".html_safe
       end
-      div_tag + script_tag
+      div_tag + script_tag if div_tag # nil for padrino
     end
 
   end
