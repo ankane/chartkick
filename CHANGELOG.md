@@ -1,6 +1,10 @@
+## 1.1.0
+
+- Added support for Padrino and Rails 2.3+
+
 ## 1.0.1
 
-Updated chartkick.js to v1.0.1
+- Updated chartkick.js to v1.0.1
 
 ## 1.0.0
 
