@@ -120,9 +120,19 @@ If you prefer Highcharts, use:
 
 `chartkick.js` runs as a Rails engine - no need to install it.
 
-### For Rails 3.0, 2.3 and Padrino
+### For Rails 2.3 and 3.0
 
 You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
+
+### For Padrino
+
+You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
+
+In addition, you must specify `http` or `https` if you use Google Charts, since Padrino tries to append `.js` to protocol relative urls.
+
+```erb
+<%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
+```
 
 ## No Ruby? No Problem
 
