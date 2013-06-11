@@ -4,7 +4,7 @@ Create beautiful Javascript charts with one line of Ruby. No more fighting with 
 
 [See it in action](http://ankane.github.io/chartkick/)
 
-Works with Rails, Padrino and most browsers (including IE 6)
+Works with Rails, Sinatra and most browsers (including IE 6)
 
 :two_hearts: A perfect companion to [groupdate](http://ankane.github.io/groupdate/)
 
@@ -123,6 +123,15 @@ If you prefer Highcharts, use:
 ### For Rails 2.3 and 3.0
 
 You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
+
+### For Sinatra
+
+You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
+
+```html
+<script src="//www.google.com/jsapi"></script>
+<script src="chartkick.js"></script>
+```
 
 ### For Padrino
 

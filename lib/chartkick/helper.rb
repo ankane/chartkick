@@ -23,14 +23,16 @@ module Chartkick
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
 
-      # don't quote font-family names due to rails escaping
-      div_tag = content_tag :div, :id => element_id, :style => "height: #{height}; text-align: center; color: #999; line-height: #{height}; font-size: 14px; font-family: Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif;" do
-        concat "Loading..."
-      end
-      script_tag = content_tag :script do
-        concat "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{options.to_json});".html_safe
-      end
-      div_tag + script_tag if div_tag # nil for padrino
+      html = <<HTML
+<div id="#{ERB::Util.html_escape(element_id)}" style="height: #{ERB::Util.html_escape(height)}; text-align: center; color: #999; line-height: #{ERB::Util.html_escape(height)}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">
+  Loading...
+</div>
+<script type="text/javascript">
+  new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{options.to_json});
+</script>
+HTML
+
+      html.respond_to?(:html_safe) ? html.html_safe : html
     end
 
   end

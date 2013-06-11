@@ -1,3 +1,3 @@
-class Padrino::Application
+class Sinatra::Base
   helpers Chartkick::Helper
 end
