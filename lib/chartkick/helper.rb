@@ -1,4 +1,5 @@
 require "json"
+require "erb"
 
 module Chartkick
   module Helper
