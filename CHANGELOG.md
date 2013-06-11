@@ -1,3 +1,7 @@
+## 1.1.1
+
+- Added support for Sinatra
+
 ## 1.1.0
 
 - Added support for Padrino and Rails 2.3+
