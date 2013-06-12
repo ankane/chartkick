@@ -1,3 +1,7 @@
+## 1.1.2
+
+- Updated chartkick.js to v1.0.1
+
 ## 1.1.1
 
 - Added support for Sinatra
