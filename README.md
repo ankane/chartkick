@@ -58,7 +58,7 @@ end
 
 ### Options
 
-id and height
+Id and height
 
 ```erb
 <%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
