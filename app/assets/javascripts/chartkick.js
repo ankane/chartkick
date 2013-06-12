@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful Javascript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.0.1
+ * v1.0.2
  * MIT License
  */
 
@@ -12,43 +12,40 @@
 (function() {
   'use strict';
 
-  // http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
-  function clone(obj) {
-    var copy, i, attr, len;
+  // helpers
 
-    // Handle the 3 simple types, and null or undefined
-    if (null === obj || "object" !== typeof obj) {
-      return obj;
-    }
+  function isArray(variable) {
+    return Object.prototype.toString.call(variable) === "[object Array]";
+  }
 
-    // Handle Date
-    if (obj instanceof Date) {
-      copy = new Date();
-      copy.setTime(obj.getTime());
-      return copy;
-    }
+  function isPlainObject(variable) {
+    return variable instanceof Object;
+  }
 
-    // Handle Array
-    if (obj instanceof Array) {
-      copy = [];
-      for (i = 0, len = obj.length; i < len; i++) {
-        copy[i] = clone(obj[i]);
-      }
-      return copy;
-    }
-
-    // Handle Object
-    if (obj instanceof Object) {
-      copy = {};
-      for (attr in obj) {
-        if (obj.hasOwnProperty(attr)) {
-          copy[attr] = clone(obj[attr]);
+  // https://github.com/madrobby/zepto/blob/master/src/zepto.js
+  function extend(target, source) {
+    var key;
+    for (key in source) {
+      if (isPlainObject(source[key]) || isArray(source[key])) {
+        if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
+          target[key] = {};
         }
+        if (isArray(source[key]) && !isArray(target[key])) {
+          target[key] = [];
+        }
+        extend(target[key], source[key]);
       }
-      return copy;
+      else if (source[key] !== undefined) {
+        target[key] = source[key];
+      }
     }
+  }
 
-    throw new Error("Unable to copy obj! Its type isn't supported.");
+  function merge(obj1, obj2) {
+    var target = {};
+    extend(target, obj1);
+    extend(target, obj2);
+    return target;
   }
 
   // https://github.com/Do/iso8601.js
@@ -101,7 +98,7 @@
 
   function jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax) {
     return function(series, opts) {
-      var options = clone(defaultOptions);
+      var options = merge({}, defaultOptions);
 
       // hide legend
       // this is *not* an external option!
@@ -121,6 +118,9 @@
       if ("max" in opts) {
         setMax(options, opts.max);
       }
+
+      // merge library last
+      options = merge(options, opts.library || {});
 
       return options;
     };
@@ -196,7 +196,7 @@
     };
 
     renderPieChart = function(element, series, opts) {
-      var options = clone(defaultOptions);
+      var options = merge(defaultOptions, opts.library || {});
       options.chart = {renderTo: element.id};
       options.series = [{
         type: "pie",
@@ -314,10 +314,6 @@
 
     var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax);
 
-    var sortByNumber = function(a, b) {
-      return a[0] - b[0];
-    };
-
     // cant use object as key
     var createDataTable = function(series, columnType) {
       var data = new google.visualization.DataTable();
@@ -345,7 +341,7 @@
         }
       }
       if (columnType === "datetime") {
-        rows2.sort(sortByNumber);
+        rows2.sort(sortByTime);
       }
       data.addRows(rows2);
 
@@ -363,7 +359,7 @@
 
     renderPieChart = function(element, series, opts) {
       waitForLoaded(function() {
-        var options = clone(defaultOptions);
+        var options = merge(defaultOptions, opts.library || {});
         options.chartArea = {
           top: "10%",
           height: "80%"
@@ -435,12 +431,6 @@
     } else {
       errorCatcher(element, dataSource, opts, callback);
     }
-  }
-
-  // helpers
-
-  function isArray(variable) {
-    return Object.prototype.toString.call(variable) === "[object Array]";
   }
 
   // type conversions
@@ -535,7 +525,7 @@
     if (typeof element === "string") {
       element = document.getElementById(element);
     }
-    fetchDataSource(element, data, clone(opts || {}), callback);
+    fetchDataSource(element, data, opts || {}, callback);
   }
 
   // define classes

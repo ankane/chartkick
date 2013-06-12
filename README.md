@@ -64,10 +64,16 @@ id and height
 <%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
 ```
 
-min and max values (except pie chart)
+Min and max values (except pie chart)
 
 ```erb
 <%= line_chart User.group_by_day(:created_at).count, :min => 1000, :max => 5000 %>
+```
+
+You can pass options directly to the charting library with:
+
+```erb
+<%= line_chart User.group_by_day(:created_at).count, :library => {:backgroundColor => "#eee"} %>
 ```
 
 ### Data
