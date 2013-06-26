@@ -76,14 +76,16 @@ You can pass options directly to the charting library with:
 <%= line_chart User.group_by_day(:created_at).count, :library => {:backgroundColor => "#eee"} %>
 ```
 
-You can also pass a content_for option, this will put the initializing javascripts in the content_block you specify:
+You can also pass a content_for option, which will put the javascript in a content block.  This is great if you want to include all of your javascript at the bottom of the page.
 
 ```erb
 <%= line_chart User.group_by_day(:created_at).count, :content_for => :js_initialization %>
 ```
 Then, in your layout:
+
 ```erb
-<%= content_for :js_initialization %>
+<%= yield :js_initialization # Rails %>
+<%= yield_content :js_initialization # Padrino %>
 ```
 
 ### Data
@@ -118,7 +120,7 @@ Add this line to your application's Gemfile:
 gem "chartkick"
 ```
 
-And add the javascript files to your views.  These files must be included **before** the helper methods, unless using the content_for option to the helper. 
+And add the javascript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option.
 
 For Google Charts, use:
 
