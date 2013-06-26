@@ -1,3 +1,7 @@
+## 1.1.3
+
+- Added content_for option
+
 ## 1.1.2
 
 - Updated chartkick.js to v1.0.1
