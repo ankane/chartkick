@@ -84,8 +84,8 @@ You can also pass a content_for option, which will put the javascript in a conte
 Then, in your layout:
 
 ```erb
-<%= yield :js_initialization # Rails %>
-<%= yield_content :js_initialization # Padrino %>
+<%= yield :js_initialization %> <%# Rails %>
+<%= yield_content :js_initialization %> <%# Padrino %>
 ```
 
 ### Data
