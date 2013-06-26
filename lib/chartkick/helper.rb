@@ -28,10 +28,17 @@ module Chartkick
 <div id="#{ERB::Util.html_escape(element_id)}" style="height: #{ERB::Util.html_escape(height)}; text-align: center; color: #999; line-height: #{ERB::Util.html_escape(height)}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">
   Loading...
 </div>
+HTML
+     js = <<JS
 <script type="text/javascript">
   new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{options.to_json});
 </script>
-HTML
+JS
+      if options[:content_for]
+        content_for(options[:content_for]) { js.respond_to?(:html_safe) ? js.html_safe : js }
+      else
+        html += js
+      end
 
       html.respond_to?(:html_safe) ? html.html_safe : html
     end
