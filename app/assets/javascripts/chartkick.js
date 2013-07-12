@@ -234,7 +234,7 @@
       for (i = 0; i < series.length; i++) {
         d = [];
         for (j = 0; j < categories.length; j++) {
-          d.push(rows[categories[j]][i]);
+          d.push(rows[categories[j]][i] || 0);
         }
 
         newSeries.push({
@@ -243,7 +243,6 @@
         });
       }
       options.series = newSeries;
-
       new Highcharts.Chart(options);
     };
   } else if ("google" in window) { // Google charts
