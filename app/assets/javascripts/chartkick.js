@@ -243,6 +243,7 @@
         });
       }
       options.series = newSeries;
+
       new Highcharts.Chart(options);
     };
   } else if ("google" in window) { // Google charts
