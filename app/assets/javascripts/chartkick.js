@@ -132,6 +132,7 @@
   if ("Highcharts" in window) {
 
     var defaultOptions = {
+      chart: {},
       xAxis: {
         labels: {
           style: {
@@ -182,7 +183,8 @@
     renderLineChart = function(element, series, opts) {
       var options = jsOptions(series, opts), data, i, j;
       options.xAxis.type = "datetime";
-      options.chart = {type: "spline", renderTo: element.id};
+      options.chart.type = "spline";
+      options.chart.renderTo = element.id;
 
       for (i = 0; i < series.length; i++) {
         data = series[i].data;
@@ -197,7 +199,7 @@
 
     renderPieChart = function(element, series, opts) {
       var options = merge(defaultOptions, opts.library || {});
-      options.chart = {renderTo: element.id};
+      options.chart.renderTo = element.id;
       options.series = [{
         type: "pie",
         name: "Value",
@@ -208,7 +210,8 @@
 
     renderColumnChart = function(element, series, opts) {
       var options = jsOptions(series, opts), i, j, s, d, rows = [];
-      options.chart = {type: "column", renderTo: element.id};
+      options.chart.type = "column";
+      options.chart.renderTo = element.id;
 
       for (i = 0; i < series.length; i++) {
         s = series[i];
@@ -234,7 +237,7 @@
       for (i = 0; i < series.length; i++) {
         d = [];
         for (j = 0; j < categories.length; j++) {
-          d.push(rows[categories[j]][i]);
+          d.push(rows[categories[j]][i] || 0);
         }
 
         newSeries.push({
@@ -263,6 +266,7 @@
 
     // Set chart options
     var defaultOptions = {
+      chartArea: {},
       fontName: "'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif",
       pointSize: 6,
       legend: {
@@ -359,11 +363,13 @@
 
     renderPieChart = function(element, series, opts) {
       waitForLoaded(function() {
-        var options = merge(defaultOptions, opts.library || {});
-        options.chartArea = {
-          top: "10%",
-          height: "80%"
+        var chartOptions = {
+          chartArea: {
+            top: "10%",
+            height: "80%"
+          }
         };
+        var options = merge(merge(defaultOptions, chartOptions), opts.library || {});
 
         var data = new google.visualization.DataTable();
         data.addColumn("string", "");
