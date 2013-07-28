@@ -31,7 +31,7 @@ Column chart
 Bar chart
 
 ```erb
-<%= column_chart Event.group_by_day_of_week(:starts_at).count %>
+<%= bar_chart Event.group_by_day_of_week(:starts_at).count %>
 ```
 
 Area chart
