@@ -16,6 +16,14 @@ module Chartkick
       chartkick_chart "ColumnChart", data_source, options
     end
 
+    def bar_chart(data_source, options = {})
+      chartkick_chart "BarChart", data_source, options
+    end
+
+    def area_chart(data_source, options = {})
+      chartkick_chart "AreaChart", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options, &block)
