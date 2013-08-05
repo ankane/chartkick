@@ -6,7 +6,7 @@ Create beautiful Javascript charts with one line of Ruby. No more fighting with 
 
 Works with Rails, Sinatra and most browsers (including IE 6)
 
-:two_hearts: A perfect companion to [groupdate](http://ankane.github.io/groupdate/)
+:two_hearts: A perfect companion to [groupdate](http://ankane.github.io/groupdate/) and [active_median](https://github.com/ankane/active_median)
 
 ## Usage
 
@@ -31,13 +31,13 @@ Column chart
 Bar chart
 
 ```erb
-<%= bar_chart Shirt.group("size").count %>
+<%= bar_chart Shirt.group("size").sum(:price) %>
 ```
 
 Area chart
 
 ```erb
-<%= area_chart Visit.group_by_minute(:created_at).count %>
+<%= area_chart Visit.group_by_minute(:created_at).maximum(:load_time) %>
 ```
 
 Multiple series (except pie chart)
