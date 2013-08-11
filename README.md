@@ -73,25 +73,25 @@ end
 Id and height
 
 ```erb
-<%= line_chart User.group_by_day(:created_at).count, :id => "users-chart", :height => "500px" %>
+<%= line_chart data, :id => "users-chart", :height => "500px" %>
 ```
 
 Min and max values (except pie chart)
 
 ```erb
-<%= line_chart User.group_by_day(:created_at).count, :min => 1000, :max => 5000 %>
+<%= line_chart data, :min => 1000, :max => 5000 %>
 ```
 
 You can pass options directly to the charting library with:
 
 ```erb
-<%= line_chart User.group_by_day(:created_at).count, :library => {:backgroundColor => "#eee"} %>
+<%= line_chart data, :library => {:backgroundColor => "#eee"} %>
 ```
 
 You can also pass a content_for option, which will put the javascript in a content block.  This is great for including all of your javascript at the bottom of the page.
 
 ```erb
-<%= line_chart User.group_by_day(:created_at).count, :content_for => :js_initialization %>
+<%= line_chart data, :content_for => :js_initialization %>
 ```
 Then, in your layout:
 
