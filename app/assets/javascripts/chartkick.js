@@ -18,8 +18,12 @@
     return Object.prototype.toString.call(variable) === "[object Array]";
   }
 
+  function isFunction(variable) {
+    return variable instanceof Function;
+  }
+
   function isPlainObject(variable) {
-    return variable instanceof Object;
+    return !isFunction(variable) && variable instanceof Object;
   }
 
   // https://github.com/madrobby/zepto/blob/master/src/zepto.js
