@@ -132,7 +132,7 @@
   }
 
   // only functions that need defined specific to charting library
-  var renderLineChart, renderPieChart, renderColumnChart, renderBarChart, renderAreaChart;
+  var renderLineChart, renderPieChart, renderColumnChart, renderBarChart, renderAreaChart, renderAnnotatedTimeLine;
 
   if ("Highcharts" in window) {
 
@@ -291,7 +291,7 @@
     google.setOnLoadCallback(function() {
       loaded = true;
     });
-    google.load("visualization", "1.0", {"packages": ["corechart"]});
+    google.load("visualization", "1.0", {"packages": ["corechart", "annotatedtimeline"]});
 
     var waitForLoaded = function(callback) {
       google.setOnLoadCallback(callback); // always do this to prevent race conditions (watch out for other issues due to this)
@@ -484,9 +484,24 @@
         });
       });
     };
+
+    renderAnnotatedTimeLine = function(element, series, opts) {
+      waitForLoaded(function() {
+        var options = jsOptions(series, opts);
+        var data = createDataTable(series, "datetime");
+        var chart = new google.visualization.AnnotatedTimeLine(element);
+        resize( function() {
+          chart.draw(data, options);
+        });
+      });
+    };
+
   } else { // no chart library installed
     renderLineChart = renderPieChart = renderColumnChart = renderBarChart = renderAreaChart = function() {
       throw new Error("Please install Google Charts or Highcharts");
+    };
+    renderAnnotatedTimeLine = function() {
+      throw new Error("Please install Google Charts");
     };
   }
 
@@ -610,6 +625,10 @@
     renderLineChart(element, processSeries(data, opts, true), opts);
   }
 
+  function processAnnotatedTimeLine(element, data, opts) {
+    renderAnnotatedTimeLine(element, processSeries(data, opts, true), opts);
+  }
+
   function processColumnData(element, data, opts) {
     renderColumnChart(element, processSeries(data, opts, false), opts);
   }
@@ -654,6 +673,9 @@
     },
     AreaChart: function(element, dataSource, opts) {
       setElement(element, dataSource, opts, processAreaData);
+    },
+    AnnotatedTimeLine: function(element, dataSource, opts) {
+      setElement(element, dataSource, opts, processAnnotatedTimeLine);
     }
   };
 

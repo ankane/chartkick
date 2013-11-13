@@ -24,6 +24,10 @@ module Chartkick
       chartkick_chart "AreaChart", data_source, options
     end
 
+    def annotated_time_line(data_source, options = {})
+      chartkick_chart "AnnotatedTimeLine", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options, &block)
