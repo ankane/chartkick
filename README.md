@@ -173,6 +173,18 @@ In addition, you must specify `http` or `https` if you use Google Charts, since 
 <%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
 ```
 
+### Localization
+
+To specify a language for Google Charts, add:
+
+```html
+<script>
+  var Chartkick = {"language": "de"};
+</script>
+```
+
+**before** the javascript files.
+
 ## No Ruby? No Problem
 
 Check out [chartkick.js](https://github.com/ankane/chartkick.js)
