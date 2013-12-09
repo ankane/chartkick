@@ -1,3 +1,7 @@
+## 1.2.1
+
+- Added localization for Google Charts
+
 ## 1.2.0
 
 - Added bar chart and area chart
