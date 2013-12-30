@@ -677,6 +677,8 @@
     }
   };
 
+  Chartkick.onload = waitForLoaded;
+
   // storage of references to Highcharts, or Google chart objects
 
   Chartkick.charts = {};

@@ -79,7 +79,9 @@ Id and height
 Then in javascript, you can reference the google visualization object with the same id.
 
 ```javascript
-var chart = Chartkick.charts['users-chart']; // google visualization object
+Chartkick.onload(function() {
+  var chart = Chartkick.charts['users-chart']; // google visualization object
+});
 ```
 
 Min and max values (except pie chart)
