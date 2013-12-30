@@ -677,7 +677,7 @@
     }
   };
 
-  Chartkick.onload = waitForLoaded;
+  Chartkick.onload = waitForLoaded || function(callback) {callback();};
 
   // storage of references to Highcharts, or Google chart objects
 
