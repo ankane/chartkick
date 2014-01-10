@@ -1,3 +1,7 @@
+## 1.2.2 [unreleased]
+
+- Added `stacked` option
+
 ## 1.2.1
 
 - Added localization for Google Charts
