@@ -97,13 +97,13 @@ You can pass options directly to the charting library with:
 You can also pass a content_for option, which will put the javascript in a content block.  This is great for including all of your javascript at the bottom of the page.
 
 ```erb
-<%= line_chart data, :content_for => :js_initialization %>
+<%= line_chart data, :content_for => :charts_js %>
 ```
 Then, in your layout:
 
 ```erb
-<%= yield :js_initialization %> <%# Rails %>
-<%= yield_content :js_initialization %> <%# Padrino %>
+<%= yield :charts_js %> <%# Rails %>
+<%= yield_content :charts_js %> <%# Padrino %>
 ```
 
 ### Data
