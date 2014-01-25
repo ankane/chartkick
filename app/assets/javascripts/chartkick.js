@@ -153,7 +153,7 @@
   }
 
   function getJSON(element, url, success) {
-    $.ajax({
+    jQuery.ajax({
       dataType: "json",
       url: url,
       success: success,
