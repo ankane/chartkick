@@ -31,9 +31,10 @@ module Chartkick
       options = options.dup
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
+      font_family = options.delete(:font_family) || (options[:library].nil? ? nil : options[:library][:fontName]) || "'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif"
 
       html = <<HTML
-<div id="#{ERB::Util.html_escape(element_id)}" style="height: #{ERB::Util.html_escape(height)}; text-align: center; color: #999; line-height: #{ERB::Util.html_escape(height)}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">
+<div id="#{ERB::Util.html_escape(element_id)}" style="height: #{ERB::Util.html_escape(height)}; text-align: center; color: #999; line-height: #{ERB::Util.html_escape(height)}; font-size: 14px; font-family: #{ERB::Util.html_escape(font_family)};">
   Loading...
 </div>
 HTML
