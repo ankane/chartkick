@@ -30,10 +30,16 @@ module Chartkick
       @chartkick_chart_id ||= 0
       options = options.dup
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
-      height = options.delete(:height) || "300px"
+      style = { "height" => "300px",
+                "text-align" => "center",
+                "color" => "#999",
+                "line-height" => "300px",
+                "font-size" => "14px",
+                "font-family" => "'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif"
+              }.merge(options.delete(:style) || {}).to_a.map{|attr| attr.join(': ') }.join('; ')
 
       html = <<HTML
-<div id="#{ERB::Util.html_escape(element_id)}" style="height: #{ERB::Util.html_escape(height)}; text-align: center; color: #999; line-height: #{ERB::Util.html_escape(height)}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">
+<div id="#{ERB::Util.html_escape(element_id)}" style="#{ERB::Util.html_escape(style)}">
   Loading...
 </div>
 HTML
