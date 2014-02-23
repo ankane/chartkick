@@ -315,7 +315,8 @@
         series[i].marker = {symbol: "circle"};
       }
       options.series = series;
-      new Highcharts.Chart(options);
+
+      Chartkick.charts[element.id] = new Highcharts.Chart(options);
     };
 
     renderPieChart = function (element, series, opts) {
@@ -326,7 +327,7 @@
         name: "Value",
         data: series
       }];
-      new Highcharts.Chart(options);
+      Chartkick.charts[element.id] = new Highcharts.Chart(options);
     };
 
     renderColumnChart = function (element, series, opts, chartType) {
@@ -369,7 +370,7 @@
       }
       options.series = newSeries;
 
-      new Highcharts.Chart(options);
+      Chartkick.charts[element.id] = new Highcharts.Chart(options);
     };
 
     renderBarChart = function (element, series, opts) {
@@ -514,6 +515,9 @@
         var options = jsOptions(series, opts);
         var data = createDataTable(series, "datetime");
         var chart = new google.visualization.LineChart(element);
+
+        Chartkick.charts[element.id] = chart;
+
         resize(function () {
           chart.draw(data, options);
         });
@@ -536,6 +540,8 @@
         data.addRows(series);
 
         var chart = new google.visualization.PieChart(element);
+        Chartkick.charts[element.id] = chart;
+
         resize(function () {
           chart.draw(data, options);
         });
@@ -547,6 +553,9 @@
         var options = jsOptions(series, opts);
         var data = createDataTable(series, "string");
         var chart = new google.visualization.ColumnChart(element);
+
+        Chartkick.charts[element.id] = chart;
+
         resize(function () {
           chart.draw(data, options);
         });
@@ -565,6 +574,9 @@
         var options = jsOptionsFunc(defaultOptions, hideLegend, setBarMin, setBarMax, setStacked)(series, opts, chartOptions);
         var data = createDataTable(series, "string");
         var chart = new google.visualization.BarChart(element);
+
+        Chartkick.charts[element.id] = chart;
+
         resize(function () {
           chart.draw(data, options);
         });
@@ -581,6 +593,9 @@
         var options = jsOptions(series, opts, chartOptions);
         var data = createDataTable(series, "datetime");
         var chart = new google.visualization.AreaChart(element);
+
+        Chartkick.charts[element.id] = chart;
+
         resize(function () {
           chart.draw(data, options);
         });
@@ -673,6 +688,12 @@
       setElement(element, dataSource, opts, processAreaData);
     }
   };
+
+  Chartkick.onload = waitForLoaded || function(callback) {callback();};
+
+  // storage of references to Highcharts, or Google chart objects
+
+  Chartkick.charts = {};
 
   window.Chartkick = Chartkick;
 }());
