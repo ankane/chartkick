@@ -66,7 +66,7 @@ class ChartsController < ApplicationController
 end
 ```
 
-**Note:** This feature requires jQuery at the moment.
+**Note:** This feature requires [jQuery](http://jquery.com/) or [Zepto](http://zeptojs.com/) at the moment.
 
 ### Options
 
