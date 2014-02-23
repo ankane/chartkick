@@ -106,6 +106,12 @@ Then, in your layout:
 <%= yield_content :charts_js %> <%# Padrino %>
 ```
 
+To make this the default, create an initializer with:
+
+```ruby
+Chartkick.content_for = :charts_js
+```
+
 ### Data
 
 Pass data as a Hash or Array

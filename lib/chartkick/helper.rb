@@ -31,6 +31,8 @@ module Chartkick
       options = options.dup
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
+      # content_for: nil must override default
+      content_for = options.has_key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
       html = <<HTML
 <div id="#{ERB::Util.html_escape(element_id)}" style="height: #{ERB::Util.html_escape(height)}; text-align: center; color: #999; line-height: #{ERB::Util.html_escape(height)}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">
@@ -42,8 +44,8 @@ HTML
   new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{options.to_json});
 </script>
 JS
-      if options[:content_for]
-        content_for(options[:content_for]) { js.respond_to?(:html_safe) ? js.html_safe : js }
+      if content_for
+        content_for(content_for) { js.respond_to?(:html_safe) ? js.html_safe : js }
       else
         html += js
       end
