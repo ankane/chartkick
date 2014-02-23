@@ -82,7 +82,7 @@ Min and max values (except pie chart)
 <%= line_chart data, :min => 1000, :max => 5000 %>
 ```
 
-Stacked columns or bars [master]
+Stacked columns or bars
 
 ```erb
 <%= column_chart data, :stacked => true %>

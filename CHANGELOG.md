@@ -1,5 +1,6 @@
-## 1.2.2 [unreleased]
+## 1.2.2
 
+- Added global `content_for` option
 - Added `stacked` option
 
 ## 1.2.1
