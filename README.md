@@ -112,6 +112,54 @@ To make this the default, create an initializer with:
 Chartkick.content_for = :charts_js
 ```
 
+### Google Charts customisation
+
+Here are a couple of examples of how you might use Chartkick with Google Charts. 
+
+Changing fonts and graph colours: 
+
+```erb
+<%= line_chart data, :library => { fontName: "Verdana", colors: ["#80cd30", "#99CCFF"]} %>
+```
+
+Chart layout/position: 
+
+```erb
+<%= line_chart data, :library => { chartArea: { top: 40, left: 50, width: '85%', height: '70%' }} %>
+```
+
+Formatting the axis: 
+
+```erb
+<%= line_chart data, :library => { hAxis: { textStyle: { color: "#072982", fontSize: 13 }}} %>
+```
+
+For more formatting options, see the [Google Charts Configuration Options](https://developers.google.com/chart/interactive/docs/gallery/areachart#Configuration_Options) and follow the pattern above.
+
+### Highcharts customisation
+
+Here are a couple of examples of how you might use Chartkick with Highcharts. 
+
+Changing graph colours (font can be changed when formatting the axis, below): 
+
+```erb
+<%= line_chart data, :library => { colors: ["#80cd30", "#99CCFF"]} %>
+```
+
+Chart layout/position: 
+
+```erb
+<%= line_chart data, :library => { chart: { marginLeft: 100, marginTop: 50, height: 500 }} %>
+```
+
+Formatting the axis: 
+
+```erb
+<%= line_chart data, :library => { xAxis: { labels: { style: { color: "#072982", fontSize: "15px", fontFamily: "Verdana" }}}} %>
+```
+
+For more formatting options, see the [Highcharts Options Reference](http://api.highcharts.com/highcharts) and follow the pattern above.
+
 ### Data
 
 Pass data as a Hash or Array
