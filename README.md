@@ -106,6 +106,8 @@ You can pass options directly to the charting library with:
 <%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
+See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery) and [Highcharts](http://api.highcharts.com/highcharts) for more information.
+
 You can also pass a content_for option, which will put the javascript in a content block.  This is great for including all of your javascript at the bottom of the page.
 
 ```erb
