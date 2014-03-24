@@ -327,7 +327,11 @@
       };
 
       this.renderPieChart = function (chart) {
-        var options = merge(defaultOptions, chart.options.library || {});
+        var chartOptions = {};
+        if (chart.options.colors) {
+          chartOptions.colors = chart.options.colors;
+        }
+        var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
         options.chart.renderTo = chart.element.id;
         options.series = [{
           type: "pie",
@@ -540,6 +544,9 @@
               height: "80%"
             }
           };
+          if (chart.options.colors) {
+            chartOptions.colors = chart.options.colors;
+          }
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
           var data = new google.visualization.DataTable();
