@@ -24,6 +24,10 @@ module Chartkick
       chartkick_chart "AreaChart", data_source, options
     end
 
+    def geo_chart(data_source, options = {})
+      chartkick_chart "GeoChart", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options, &block)

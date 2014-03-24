@@ -40,6 +40,12 @@ Area chart
 <%= area_chart Visit.group_by_minute(:created_at).maximum(:load_time) %>
 ```
 
+Geo chart [master]
+
+```erb
+<%= geo_chart Medal.group(:country).count %>
+```
+
 Multiple series (except pie chart)
 
 ```erb
