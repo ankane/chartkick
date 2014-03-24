@@ -88,7 +88,7 @@ Min and max values (except pie chart)
 <%= line_chart data, min: 1000, max: 5000 %>
 ```
 
-Colors [master]
+Colors
 
 ```erb
 <%= line_chart data, colors: ["pink", "#999"] %>
@@ -126,7 +126,7 @@ Then, in your layout:
 <%= yield_content :charts_js %> <%# Padrino %>
 ```
 
-### Global Options [master]
+### Global Options
 
 To set options for all of your charts, create an initializer with:
 

@@ -1,7 +1,7 @@
-## 1.2.4 [unreleased]
+## 1.2.4
 
-- Added `colors` option
 - Added global options
+- Added `colors` option
 
 ## 1.2.3
 
