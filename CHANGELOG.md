@@ -1,5 +1,6 @@
 ## 1.2.3 [unreleased]
 
+- Added geo chart
 - Added `discrete` option
 
 ## 1.2.2
