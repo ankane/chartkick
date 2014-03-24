@@ -19,19 +19,19 @@ Line chart
 Pie chart
 
 ```erb
-<%= pie_chart Goal.group("name").count %>
+<%= pie_chart Goal.group(:name).count %>
 ```
 
 Column chart
 
 ```erb
-<%= column_chart Task.group_by_hour_of_day(:created_at).count %>
+<%= column_chart Task.group_by_hour_of_day(:created_at, format: "%l %P").count %>
 ```
 
 Bar chart
 
 ```erb
-<%= bar_chart Shirt.group("size").sum(:price) %>
+<%= bar_chart Shirt.group(:size).sum(:price) %>
 ```
 
 Area chart
@@ -44,7 +44,7 @@ Multiple series (except pie chart)
 
 ```erb
 <%= line_chart @goals.map{|goal|
-    {:name => goal.name, :data => goal.feats.group_by_week(:created_at).count }
+    {name: goal.name, data: goal.feats.group_by_week(:created_at).count}
 } %>
 ```
 
@@ -61,7 +61,7 @@ And in your controller, pass the data as JSON.
 ```ruby
 class ChartsController < ApplicationController
   def completed_tasks
-    render :json => Task.group_by_day(:completed_at).count
+    render json: Task.group_by_day(:completed_at).count
   end
 end
 ```
@@ -73,37 +73,37 @@ end
 Id and height
 
 ```erb
-<%= line_chart data, :id => "users-chart", :height => "500px" %>
+<%= line_chart data, id: "users-chart", height: "500px" %>
 ```
 
 Min and max values (except pie chart)
 
 ```erb
-<%= line_chart data, :min => 1000, :max => 5000 %>
+<%= line_chart data, min: 1000, max: 5000 %>
 ```
 
 Stacked columns or bars
 
 ```erb
-<%= column_chart data, :stacked => true %>
+<%= column_chart data, stacked: true %>
 ```
 
 Discrete axis [master]
 
 ```erb
-<%= line_chart data, :discrete => true %>
+<%= line_chart data, discrete: true %>
 ```
 
 You can pass options directly to the charting library with:
 
 ```erb
-<%= line_chart data, :library => {:backgroundColor => "#eee"} %>
+<%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
 You can also pass a content_for option, which will put the javascript in a content block.  This is great for including all of your javascript at the bottom of the page.
 
 ```erb
-<%= line_chart data, :content_for => :charts_js %>
+<%= line_chart data, content_for: :charts_js %>
 ```
 Then, in your layout:
 
@@ -131,8 +131,8 @@ For multiple series, use the format
 
 ```erb
 <%= line_chart [
-  {:name => "Series A", :data => series_a},
-  {:name => "Series B", :data => series_b}
+  {name: "Series A", data: series_a},
+  {name: "Series B", data: series_b}
 ] %>
 ```
 
