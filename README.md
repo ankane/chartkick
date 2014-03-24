@@ -40,7 +40,7 @@ Area chart
 <%= area_chart Visit.group_by_minute(:created_at).maximum(:load_time) %>
 ```
 
-Geo chart [master]
+Geo chart
 
 ```erb
 <%= geo_chart Medal.group(:country).count %>
@@ -94,7 +94,7 @@ Stacked columns or bars
 <%= column_chart data, stacked: true %>
 ```
 
-Discrete axis [master]
+Discrete axis
 
 ```erb
 <%= line_chart data, discrete: true %>
