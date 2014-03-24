@@ -1,3 +1,7 @@
+## 1.2.3 [unreleased]
+
+- Added `discrete` option
+
 ## 1.2.2
 
 - Added global `content_for` option

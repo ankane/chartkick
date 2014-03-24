@@ -88,6 +88,12 @@ Stacked columns or bars
 <%= column_chart data, :stacked => true %>
 ```
 
+Discrete axis [master]
+
+```erb
+<%= line_chart data, :discrete => true %>
+```
+
 You can pass options directly to the charting library with:
 
 ```erb
