@@ -32,7 +32,7 @@ module Chartkick
 
     def chartkick_chart(klass, data_source, options, &block)
       @chartkick_chart_id ||= 0
-      options = options.dup
+      options = chartkick_deep_merge(Chartkick.options, options)
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
       # content_for: nil must override default
@@ -55,6 +55,16 @@ JS
       end
 
       html.respond_to?(:html_safe) ? html.html_safe : html
+    end
+
+    # https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/hash/deep_merge.rb
+    def chartkick_deep_merge(hash_a, hash_b)
+      hash_a = hash_a.dup
+      hash_b.each_pair do |k,v|
+        tv = hash_a[k]
+        hash_a[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? tv.deep_merge(v) : v
+      end
+      hash_a
     end
 
   end

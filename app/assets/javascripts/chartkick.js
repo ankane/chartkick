@@ -129,6 +129,10 @@
         setStacked(options);
       }
 
+      if (opts.colors) {
+        options.colors = opts.colors;
+      }
+
       // merge library last
       options = merge(options, opts.library || {});
 
@@ -600,7 +604,7 @@
           var chartOptions = {
             legend: "none",
             colorAxis: {
-              colors: ["#f6c7b6", "#ce502d"]
+              colors: chart.options.colors || ["#f6c7b6", "#ce502d"]
             }
           };
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});

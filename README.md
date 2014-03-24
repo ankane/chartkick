@@ -88,6 +88,12 @@ Min and max values (except pie chart)
 <%= line_chart data, min: 1000, max: 5000 %>
 ```
 
+Colors [master]
+
+```erb
+<%= line_chart data, colors: ["pink", "#999"] %>
+```
+
 Stacked columns or bars
 
 ```erb
@@ -120,10 +126,16 @@ Then, in your layout:
 <%= yield_content :charts_js %> <%# Padrino %>
 ```
 
-To make this the default, create an initializer with:
+### Global Options [master]
+
+To set options for all of your charts, create an initializer with:
 
 ```ruby
-Chartkick.content_for = :charts_js
+Chartkick.options = {
+  height: "400px",
+  colors: ["pink", "#999"],
+  content_for: :charts_js
+}
 ```
 
 ### Data

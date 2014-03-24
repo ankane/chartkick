@@ -1,3 +1,8 @@
+## 1.2.4 [unreleased]
+
+- Added `colors` option
+- Added global options
+
 ## 1.2.3
 
 - Added geo chart
