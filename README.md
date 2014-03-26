@@ -8,6 +8,8 @@ Works with Rails, Sinatra and most browsers (including IE 6)
 
 :two_hearts: A perfect companion to [groupdate](https://github.com/ankane/groupdate) and [active_median](https://github.com/ankane/active_median)
 
+:inbox_tray: Get [handcrafted updates](http://chartkick.us7.list-manage.com/subscribe?u=952c861f99eb43084e0a49f98&id=6ea6541e8e&group[0][1]=true) for new features
+
 ## Usage
 
 Line chart
