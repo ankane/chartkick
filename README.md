@@ -48,7 +48,7 @@ Geo chart
 <%= geo_chart Medal.group(:country).count %>
 ```
 
-Multiple series (except pie chart)
+Multiple series
 
 ```erb
 <%= line_chart @goals.map{|goal|
@@ -84,11 +84,13 @@ Id and height
 <%= line_chart data, id: "users-chart", height: "500px" %>
 ```
 
-Min and max values (except pie chart)
+Min and max values
 
 ```erb
 <%= line_chart data, min: 1000, max: 5000 %>
 ```
+
+`min` defaults to 0 for charts with non-negative values. Use `nil` to let the charting library decide.
 
 Colors
 
