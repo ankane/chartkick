@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful Javascript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.2.1
+ * v1.2.2
  * MIT License
  */
 
@@ -406,7 +406,8 @@
       google.setOnLoadCallback(function () {
         loaded = true;
       });
-      google.load("visualization", "1.0", {"packages": ["corechart"]});
+      google.load("visualization", "1.1", {"packages": ["corechart"]});
+      google.load('visualization', '1.1', {'packages':['annotationchart']}); //how to do this only when needed?
 
       var waitForLoaded = function (callback) {
         google.setOnLoadCallback(callback); // always do this to prevent race conditions (watch out for other issues due to this)
@@ -496,10 +497,22 @@
             d = s.data[j];
             key = (columnType === "datetime") ? d[0].getTime() : d[0];
             if (!rows[key]) {
-              rows[key] = new Array(series.length);
+              rows[key] = new Array(2*series.length);
             }
-            rows[key][i] = toFloat(d[1]);
+            rows[key][2*i] = toFloat(d[1]);
           }
+
+	  // add annotations
+	  data.addColumn({type: 'string', role: 'annotation'})
+	  for (j=0; j< s.annotations.length; j++){
+	    d = s.annotations[j];
+ 	    key = (columnType === "datetime") ? d[0].getTime() : d[0];
+            if (!rows[key]) {
+	      rows[key] = new Array(2*series.length);
+	    }		                 
+	    rows[key][2*i+1] = d[1];
+	  }
+
         }
 
         var rows2 = [];
@@ -530,6 +543,17 @@
           var options = jsOptions(chart.data, chart.options);
           var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
           chart.chart = new google.visualization.LineChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
+      this.renderAnnotationChart = function (chart) {
+        waitForLoaded(function () {
+          var options = jsOptions(chart.data, chart.options);
+          var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
+          chart.chart = new google.visualization.AnnotationChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
           });
@@ -677,6 +701,20 @@
       }
       series[i].data = r;
     }
+    // right format for annotations
+    for (i = 0; i < series.length; i++) {
+      data = toArr(series[i].annotations);
+      r = [];
+      for (j = 0; j < data.length; j++) {
+        key = data[j][0];
+        key = time ? toDate(key) : toStr(key);
+        r.push([key, data[j][1]]);
+      }
+      if (time) {
+        r.sort(sortByTime);
+      }
+      series[i].annotations = r;
+    }
 
     return series;
   }
@@ -692,6 +730,11 @@
   function processLineData(chart) {
     chart.data = processSeries(chart.data, chart.options, true);
     renderChart("Line", chart);
+  }
+
+  function processAnnotationData(chart){
+    chart.data = processSeries(chart.data, chart.options, true);
+    renderChart("Annotation", chart);
   }
 
   function processColumnData(chart) {
@@ -750,6 +793,9 @@
     },
     GeoChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processGeoData);
+    },
+    AnnotationChart: function (element, dataSource, opts){
+      setElement(this, element, dataSource, opts, processAnnotationData);
     },
     charts: {}
   };
