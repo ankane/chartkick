@@ -135,6 +135,7 @@ Then, in your layout:
 To set options for all of your charts, create an initializer with:
 
 ```ruby
+# config/initializers/chartkick.rb
 Chartkick.options = {
   height: "400px",
   colors: ["pink", "#999"],
