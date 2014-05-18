@@ -397,7 +397,7 @@
     };
     adapters.push(HighchartsAdapter);
   }
-  if ("google" in window) {
+  if (window.google && window.google.setOnLoadCallback) {
     var GoogleChartsAdapter = new function () {
       var google = window.google;
 
