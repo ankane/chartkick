@@ -1,3 +1,7 @@
+## 1.2.5 [unreleased]
+
+- Added support for multiple groups
+
 ## 1.2.4
 
 - Added global options

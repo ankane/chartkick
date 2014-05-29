@@ -56,6 +56,12 @@ Multiple series
 } %>
 ```
 
+or [master]
+
+```erb
+<%= line_chart Feat.group(:goal_id).group_by_week(:created_at).count %>
+```
+
 ### Say Goodbye To Timeouts
 
 Make your pages load super fast and stop worrying about timeouts.  Give each chart its own endpoint.
@@ -75,6 +81,12 @@ end
 ```
 
 **Note:** This feature requires [jQuery](http://jquery.com/) or [Zepto](http://zeptojs.com/) at the moment.
+
+For multiple series, add `chart_json` at the end. [master]
+
+```ruby
+render json: Task.group(:goal_id).group_by_day(:completed_at).count.chart_json
+```
 
 ### Options
 

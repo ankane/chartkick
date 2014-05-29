@@ -45,7 +45,7 @@ module Chartkick
 HTML
      js = <<JS
 <script type="text/javascript">
-  new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.to_json}, #{options.to_json});
+  new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json}, #{options.to_json});
 </script>
 JS
       if content_for
