@@ -43,7 +43,7 @@ module Chartkick
           controller.chartkick_blocks ||= {}
           controller.chartkick_blocks[@chartkick_chart_id] = block
         else
-          data_source = url_for(_chartkick_chart_id: @chartkick_chart_id, format: :json)
+          data_source = url_for(params.merge(_chartkick_chart_id: @chartkick_chart_id, format: :json))
         end
       else
         data_source = block.call if block_given?
