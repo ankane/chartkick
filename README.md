@@ -88,6 +88,21 @@ For multiple series, add `chart_json` at the end. [master]
 render json: Task.group(:goal_id).group_by_day(:completed_at).count.chart_json
 ```
 
+You can even embed a query that generates remotely fetched json directly in your view template:
+
+```ruby
+<%= line_chart(remote: true) { Task.group_by_day(:completed_at).count } %>
+```
+
+This requires specifying
+
+```ruby
+include Chartkick::Remote
+chartkick_remote
+```
+
+in your controller.
+
 ### Options
 
 Id and height

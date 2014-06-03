@@ -21,4 +21,15 @@ class TestChartkick < Minitest::Test
     assert column_chart(@data)
   end
 
+  def controller
+    @controller ||= Class.new do
+      attr_accessor :chartkick_blocks, :params
+    end.new
+  end
+
+  def test_remote_chart_sets_chartkick_block
+    controller.params = {_chartkick_chart_id: 1}
+    assert column_chart(remote: true) { [[1,2]] }
+    assert controller.chartkick_blocks[1].call == [[1,2]]
+  end
 end

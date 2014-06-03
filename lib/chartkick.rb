@@ -1,5 +1,6 @@
 require "chartkick/version"
 require "chartkick/helper"
+require "chartkick/remote" if defined?(Rails)
 require "chartkick/rails" if defined?(Rails)
 require "chartkick/sinatra" if defined?(Sinatra)
 
