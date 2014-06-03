@@ -4,36 +4,52 @@ require "erb"
 module Chartkick
   module Helper
 
-    def line_chart(data_source, options = {})
-      chartkick_chart "LineChart", data_source, options
+    def line_chart(data_source = nil, options = {}, &block)
+      chartkick_chart "LineChart", data_source, options, &block
     end
 
-    def pie_chart(data_source, options = {})
-      chartkick_chart "PieChart", data_source, options
+    def pie_chart(data_source = nil, options = {}, &block)
+      chartkick_chart "PieChart", data_source, options, &block
     end
 
-    def column_chart(data_source, options = {})
-      chartkick_chart "ColumnChart", data_source, options
+    def column_chart(data_source = nil, options = {}, &block)
+      chartkick_chart "ColumnChart", data_source, options, &block
     end
 
-    def bar_chart(data_source, options = {})
-      chartkick_chart "BarChart", data_source, options
+    def bar_chart(data_source = nil, options = {}, &block)
+      chartkick_chart "BarChart", data_source, options, &block
     end
 
-    def area_chart(data_source, options = {})
-      chartkick_chart "AreaChart", data_source, options
+    def area_chart(data_source = nil, options = {}, &block)
+      chartkick_chart "AreaChart", data_source, options, &block
     end
 
-    def geo_chart(data_source, options = {})
-      chartkick_chart "GeoChart", data_source, options
+    def geo_chart(data_source = nil, options = {}, &block)
+      chartkick_chart "GeoChart", data_source, options, &block
     end
 
     private
 
     def chartkick_chart(klass, data_source, options, &block)
-      @chartkick_chart_id ||= 0
+      if block_given? && data_source.is_a?(Hash)
+        options = data_source
+      end
+
+      @chartkick_chart_id = (@chartkick_chart_id || 0) + 1
       options = chartkick_deep_merge(Chartkick.options, options)
-      element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
+
+      if options.delete(:remote)
+        if controller.params[:_chartkick_chart_id] # json request
+          controller.chartkick_blocks ||= {}
+          controller.chartkick_blocks[@chartkick_chart_id] = block
+        else
+          data_source = url_for(params.merge(_chartkick_chart_id: @chartkick_chart_id, format: :json))
+        end
+      else
+        data_source = block.call if block_given?
+      end
+
+      element_id = options.delete(:id) || "chart-#{@chartkick_chart_id}"
       height = options.delete(:height) || "300px"
       # content_for: nil must override default
       content_for = options.has_key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
