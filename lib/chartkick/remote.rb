@@ -6,7 +6,8 @@ module Chartkick
     module Responder
       def to_json
         controller.render_to_string(options.merge(formats: [:html], layout: false))
-        render json: controller.chartkick_blocks[controller.params[:_chartkick_chart_id].to_i].call
+        data_source = controller.chartkick_blocks[controller.params[:_chartkick_chart_id].to_i].call
+        render json: data_source.chart_json
       end
     end
 
