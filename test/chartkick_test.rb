@@ -21,6 +21,10 @@ class TestChartkick < Minitest::Test
     assert column_chart(@data)
   end
 
+  def test_column_chart_with_block
+    assert column_chart { @data }
+  end
+
   def controller
     @controller ||= Class.new do
       attr_accessor :chartkick_blocks, :params

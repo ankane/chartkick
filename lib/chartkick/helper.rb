@@ -45,6 +45,8 @@ module Chartkick
         else
           data_source = url_for(_chartkick_chart_id: @chartkick_chart_id, format: :json)
         end
+      else
+        data_source = block.call if block_given?
       end
 
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id}"
