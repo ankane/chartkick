@@ -138,6 +138,12 @@ You can pass options directly to the charting library with:
 <%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
+For remote data sources, you can pass options to the $.ajax call with:
+
+```erb
+<%= line_chart data, ajaxOptions: {<ajax options>} %>
+```
+
 See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery) and [Highcharts](http://api.highcharts.com/highcharts) for more info.
 
 ### Global Options
