@@ -269,6 +269,16 @@ To specify a language for Google Charts, add:
 
 **before** the javascript files.
 
+### Limiting the Number of Simultaneous Ajax Requests
+
+To limit the number of ajax requests made simultaneously, you could include an extension to jquery ajax that provides this feature (see https://gist.github.com/dontfidget/1ad9ab33971b64fe6fef for an example) and then set the global chartkick options to enable this feature for your chartkick remote data requests:
+
+```ruby
+Chartkick.options = {
+  ajaxOptions: {queue: true, queueMaxConcurrency: 2} 
+}
+```
+
 ## No Ruby? No Problem
 
 Check out [chartkick.js](https://github.com/ankane/chartkick.js)
