@@ -56,7 +56,7 @@ Multiple series
 } %>
 ```
 
-or [master]
+or
 
 ```erb
 <%= line_chart Feat.group(:goal_id).group_by_week(:created_at).count %>
@@ -82,7 +82,7 @@ end
 
 **Note:** This feature requires [jQuery](http://jquery.com/) or [Zepto](http://zeptojs.com/) at the moment.
 
-For multiple series, add `chart_json` at the end. [master]
+For multiple series, add `chart_json` at the end.
 
 ```ruby
 render json: Task.group(:goal_id).group_by_day(:completed_at).count.chart_json
@@ -141,7 +141,7 @@ Chartkick.options = {
 }
 ```
 
-Customize the html [master]
+Customize the html
 
 ```ruby
 Chartkick.options[:html] = '<div id="%{id}" style="height: %{height};">Loading...</div>'

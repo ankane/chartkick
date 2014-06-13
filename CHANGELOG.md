@@ -1,4 +1,4 @@
-## 1.2.5 [unreleased]
+## 1.2.5
 
 - Added support for multiple groups
 - Added `html` option
