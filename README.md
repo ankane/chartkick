@@ -130,18 +130,6 @@ You can pass options directly to the charting library with:
 
 See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery) and [Highcharts](http://api.highcharts.com/highcharts) for more info.
 
-You can also pass a content_for option, which will put the javascript in a content block.  This is great for including all of your javascript at the bottom of the page.
-
-```erb
-<%= line_chart data, content_for: :charts_js %>
-```
-Then, in your layout:
-
-```erb
-<%= yield :charts_js %> <%# Rails %>
-<%= yield_content :charts_js %> <%# Padrino %>
-```
-
 ### Global Options
 
 To set options for all of your charts, create an initializer `config/initializers/chartkick.rb` with:
@@ -149,9 +137,27 @@ To set options for all of your charts, create an initializer `config/initializer
 ```ruby
 Chartkick.options = {
   height: "400px",
-  colors: ["pink", "#999"],
-  content_for: :charts_js
+  colors: ["pink", "#999"]
 }
+```
+
+Customize the html [master]
+
+```ruby
+Chartkick.options[:html] = '<div id="%{id}" style="height: %{height};">Loading...</div>'
+```
+
+You can also pass a `content_for` option, which will put the javascript in a content block.  This is great for including all of your javascript at the bottom of the page.
+
+```ruby
+Chartkick.options[:content_for] = :charts_js
+```
+
+Then, in your layout:
+
+```erb
+<%= yield :charts_js %> <%# Rails %>
+<%= yield_content :charts_js %> <%# Padrino %>
 ```
 
 ### Data

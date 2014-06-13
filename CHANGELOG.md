@@ -1,6 +1,7 @@
 ## 1.2.5 [unreleased]
 
 - Added support for multiple groups
+- Added `html` option
 
 ## 1.2.4
 
