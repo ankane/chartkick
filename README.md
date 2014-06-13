@@ -147,7 +147,7 @@ Customize the html [master]
 Chartkick.options[:html] = '<div id="%{id}" style="height: %{height};">Loading...</div>'
 ```
 
-You can also pass a `content_for` option, which will put the javascript in a content block.  This is great for including all of your javascript at the bottom of the page.
+You capture the javascript in a content block with:
 
 ```ruby
 Chartkick.options[:content_for] = :charts_js
@@ -159,6 +159,8 @@ Then, in your layout:
 <%= yield :charts_js %> <%# Rails %>
 <%= yield_content :charts_js %> <%# Padrino %>
 ```
+
+This is great for including all of your javascript at the bottom of the page.
 
 ### Data
 
