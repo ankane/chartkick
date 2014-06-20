@@ -21,4 +21,8 @@ class TestChartkick < Minitest::Test
     assert column_chart(@data)
   end
 
+  def test_annotation_chart
+    assert annotation_chart(@data)
+  end
+
 end

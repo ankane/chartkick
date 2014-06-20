@@ -4,28 +4,11 @@ require "erb"
 module Chartkick
   module Helper
 
-    def line_chart(data_source, options = {})
-      chartkick_chart "LineChart", data_source, options
-    end
-
-    def pie_chart(data_source, options = {})
-      chartkick_chart "PieChart", data_source, options
-    end
-
-    def column_chart(data_source, options = {})
-      chartkick_chart "ColumnChart", data_source, options
-    end
-
-    def bar_chart(data_source, options = {})
-      chartkick_chart "BarChart", data_source, options
-    end
-
-    def area_chart(data_source, options = {})
-      chartkick_chart "AreaChart", data_source, options
-    end
-
-    def geo_chart(data_source, options = {})
-      chartkick_chart "GeoChart", data_source, options
+    ["LineChart","PieChart","ColumnChart","BarChart","AreaChart","GeoChart","AnnotationChart"].each do |chart|
+	    underscored_name = chart.scan(/[A-Z][a-z]*/).join("_").downcase
+	    define_method(underscored_name){ |data_source, options = {} |
+		    chartkick_chart chart, data_source, options
+	    }
     end
 
     private
