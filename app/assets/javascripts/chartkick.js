@@ -651,7 +651,7 @@
         });
       };
 
-s    };
+    };
 
     adapters.push(GoogleChartsAdapter);
   }
@@ -716,7 +716,12 @@ s    };
 
   function processTime(data)
   {
-    //todo
+    var i;
+    for (i = 0; i < data.length; i++) {
+      data[i][1] = new Date(Date.parse(data[i][1]));
+      data[i][2] = new Date(Date.parse(data[i][2]));
+    }
+    return data;
   }
 
   function processLineData(chart) {
