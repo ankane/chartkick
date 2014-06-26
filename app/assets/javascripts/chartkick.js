@@ -627,7 +627,32 @@
           });
         });
       };
-    };
+
+      this.renderTimelineChart = function (chart) {
+        waitForLoaded(function () {
+          var chartOptions = {
+            legend: "none",
+            colorAxis: {
+              colors: chart.options.colors || ["#f6c7b6", "#ce502d"]
+            }
+          };
+          var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+
+          var data = new google.visualization.DataTable();
+          data.addColumn( { type: "string", id: "Name" } );
+          data.addColumn( { type: "date", id: "start" } );
+          data.addColumn( { type: "date", id: "end" } );
+          data.addRows(chart.data);
+
+          chart.chart = new google.visualization.Timeline(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
+s    };
+
     adapters.push(GoogleChartsAdapter);
   }
 
@@ -689,6 +714,11 @@
     return perfectData;
   }
 
+  function processTime(data)
+  {
+    //todo
+  }
+
   function processLineData(chart) {
     chart.data = processSeries(chart.data, chart.options, true);
     renderChart("Line", chart);
@@ -717,6 +747,11 @@
   function processGeoData(chart) {
     chart.data = processSimple(chart.data);
     renderChart("Geo", chart);
+  }
+
+  function processTimelineData(chart) {
+    chart.data = processTime(chart.data);
+    renderChart("Timeline", chart);
   }
 
   function setElement(chart, element, dataSource, opts, callback) {
@@ -750,6 +785,9 @@
     },
     GeoChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processGeoData);
+    },
+    Timeline: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processTimelineData);
     },
     charts: {}
   };

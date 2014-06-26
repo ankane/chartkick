@@ -28,6 +28,10 @@ module Chartkick
       chartkick_chart "GeoChart", data_source, options
     end
 
+    def timeline(data_source, options = {})
+      chartkick_chart "Timeline", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options, &block)
