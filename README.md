@@ -48,6 +48,12 @@ Geo chart
 <%= geo_chart Medal.group(:country).count %>
 ```
 
+Timeline
+
+```erb
+<%= timeline Leaders.order_by_time %>
+```
+
 Multiple series
 
 ```erb
