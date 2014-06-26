@@ -406,7 +406,7 @@
       google.setOnLoadCallback(function () {
         loaded = true;
       });
-      google.load("visualization", "1.0", {"packages": ["corechart"]});
+      google.load("visualization", "1.0", {"packages": ["corechart", "timeline"]});
 
       var waitForLoaded = function (callback) {
         google.setOnLoadCallback(callback); // always do this to prevent race conditions (watch out for other issues due to this)
@@ -640,11 +640,11 @@
 
           var data = new google.visualization.DataTable();
           data.addColumn( { type: "string", id: "Name" } );
-          data.addColumn( { type: "date", id: "start" } );
-          data.addColumn( { type: "date", id: "end" } );
+          data.addColumn( { type: "date", id: "Start" } );
+          data.addColumn( { type: "date", id: "End" } );
           data.addRows(chart.data);
-
           chart.chart = new google.visualization.Timeline(chart.element);
+
           resize(function () {
             chart.chart.draw(data, options);
           });
