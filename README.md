@@ -200,7 +200,7 @@ Add this line to your application's Gemfile:
 gem "chartkick"
 ```
 
-And add the javascript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option, and after jQuery or Zepto for remote charts.
+And add the javascript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option.
 
 For Google Charts, use:
 
