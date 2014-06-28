@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful Javascript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.2.1
+ * v1.2.2
  * MIT License
  */
 
@@ -12,8 +12,6 @@
   'use strict';
 
   var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
-
-  var $ = window.jQuery || window.Zepto || window.$;
 
   // helpers
 
@@ -154,6 +152,7 @@
   }
 
   function getJSON(element, url, success) {
+    var $ = window.jQuery || window.Zepto || window.$;
     $.ajax({
       dataType: "json",
       url: url,
@@ -401,17 +400,37 @@
     var GoogleChartsAdapter = new function () {
       var google = window.google;
 
-      // load from google
-      var loaded = false;
-      google.setOnLoadCallback(function () {
-        loaded = true;
-      });
-      google.load("visualization", "1.0", {"packages": ["corechart", "timeline"]});
+      var loaded = {};
+      var callbacks = [];
 
-      var waitForLoaded = function (callback) {
-        google.setOnLoadCallback(callback); // always do this to prevent race conditions (watch out for other issues due to this)
-        if (loaded) {
-          callback();
+      var runCallbacks = function() {
+        var cb, call;
+        for (var i = 0; i < callbacks.length; i++) {
+          cb = callbacks[i];
+          call = (cb.pack == "corechart" && isFunction(google.visualization.LineChart)) || (cb.pack == "timeline" && isFunction(google.visualization.Timeline))
+          if (call) {
+            cb.callback();
+            callbacks.splice(i, 1);
+            i--;
+          }
+        }
+      };
+
+      google.setOnLoadCallback(runCallbacks);
+
+      var waitForLoaded = function (pack, callback) {
+        if (!callback) {
+          callback = pack;
+          pack = "corechart";
+        }
+
+        callbacks.push({pack: pack, callback: callback});
+
+        if (loaded[pack]) {
+          runCallbacks();
+        } else {
+          loaded[pack] = true;
+          google.load("visualization", "1.0", {"packages": [pack]});
         }
       };
 
@@ -628,21 +647,23 @@
         });
       };
 
-      this.renderTimelineChart = function (chart) {
-        waitForLoaded(function () {
+      this.renderTimeline = function (chart) {
+        waitForLoaded("timeline", function () {
           var chartOptions = {
-            legend: "none",
-            colorAxis: {
-              colors: chart.options.colors || ["#f6c7b6", "#ce502d"]
-            }
+            legend: "none"
           };
+
+          if (chart.options.colors) {
+            chartOptions.colorAxis.colors = chart.options.colors;
+          }
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
           var data = new google.visualization.DataTable();
-          data.addColumn( { type: "string", id: "Name" } );
-          data.addColumn( { type: "date", id: "Start" } );
-          data.addColumn( { type: "date", id: "End" } );
+          data.addColumn({type: "string", id: "Name"});
+          data.addColumn({type: "date", id: "Start"});
+          data.addColumn({type: "date", id: "End"});
           data.addRows(chart.data);
+
           chart.chart = new google.visualization.Timeline(chart.element);
 
           resize(function () {
@@ -650,7 +671,6 @@
           });
         });
       };
-
     };
 
     adapters.push(GoogleChartsAdapter);
@@ -661,7 +681,7 @@
   // to get the name of the chart class
   function renderChart(chartType, chart) {
     var i, adapter, fnName;
-    fnName = "render" + chartType + "Chart";
+    fnName = "render" + chartType;
 
     for (i = 0; i < adapters.length; i++) {
       adapter = adapters[i];
@@ -718,40 +738,40 @@
   {
     var i;
     for (i = 0; i < data.length; i++) {
-      data[i][1] = new Date(Date.parse(data[i][1]));
-      data[i][2] = new Date(Date.parse(data[i][2]));
+      data[i][1] = toDate(data[i][1]);
+      data[i][2] = toDate(data[i][2]);
     }
     return data;
   }
 
   function processLineData(chart) {
     chart.data = processSeries(chart.data, chart.options, true);
-    renderChart("Line", chart);
+    renderChart("LineChart", chart);
   }
 
   function processColumnData(chart) {
     chart.data = processSeries(chart.data, chart.options, false);
-    renderChart("Column", chart);
+    renderChart("ColumnChart", chart);
   }
 
   function processPieData(chart) {
     chart.data = processSimple(chart.data);
-    renderChart("Pie", chart);
+    renderChart("PieChart", chart);
   }
 
   function processBarData(chart) {
     chart.data = processSeries(chart.data, chart.options, false);
-    renderChart("Bar", chart);
+    renderChart("BarChart", chart);
   }
 
   function processAreaData(chart) {
     chart.data = processSeries(chart.data, chart.options, true);
-    renderChart("Area", chart);
+    renderChart("AreaChart", chart);
   }
 
   function processGeoData(chart) {
     chart.data = processSimple(chart.data);
-    renderChart("Geo", chart);
+    renderChart("GeoChart", chart);
   }
 
   function processTimelineData(chart) {

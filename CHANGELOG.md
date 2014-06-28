@@ -1,3 +1,7 @@
+## 1.3.0 [unreleased]
+
+- Added timelines
+
 ## 1.2.5
 
 - Added support for multiple groups
