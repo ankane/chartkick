@@ -48,7 +48,7 @@ Geo chart
 <%= geo_chart Medal.group(:country).count %>
 ```
 
-Timeline [master]
+Timeline
 
 ```erb
 <%= timeline [["Washington", "1789-04-29", "1797-03-03"], ["Adams", "1797-03-03", "1801-03-03"]] %>
