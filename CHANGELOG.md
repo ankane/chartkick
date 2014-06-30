@@ -1,3 +1,8 @@
+## 1.3.1
+
+- Fixed blank screen bug
+- Fixed language support
+
 ## 1.3.0
 
 - Added timelines

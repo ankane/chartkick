@@ -11,6 +11,7 @@
 (function (window) {
   'use strict';
 
+  var config = window.Chartkick || {};
   var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
 
   // helpers
@@ -403,11 +404,11 @@
       var loaded = {};
       var callbacks = [];
 
-      var runCallbacks = function() {
+      var runCallbacks = function () {
         var cb, call;
         for (var i = 0; i < callbacks.length; i++) {
           cb = callbacks[i];
-          call = (cb.pack == "corechart" && isFunction(google.visualization.LineChart)) || (cb.pack == "timeline" && isFunction(google.visualization.Timeline))
+          call = google.visualization && ((cb.pack == "corechart" && google.visualization.LineChart) || (cb.pack == "timeline" && google.visualization.Timeline))
           if (call) {
             cb.callback();
             callbacks.splice(i, 1);
@@ -415,8 +416,6 @@
           }
         }
       };
-
-      google.setOnLoadCallback(runCallbacks);
 
       var waitForLoaded = function (pack, callback) {
         if (!callback) {
@@ -430,7 +429,16 @@
           runCallbacks();
         } else {
           loaded[pack] = true;
-          google.load("visualization", "1.0", {"packages": [pack]});
+
+          // https://groups.google.com/forum/#!topic/google-visualization-api/fMKJcyA2yyI
+          var loadOptions = {
+            packages: [pack],
+            callback: runCallbacks
+          };
+          if (config.language) {
+            loadOptions.language = config.language;
+          }
+          google.load("visualization", "1", loadOptions);
         }
       };
 
