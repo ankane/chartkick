@@ -1,3 +1,7 @@
+## 1.3.2
+
+- Fixed `except` error when not using Rails
+
 ## 1.3.1
 
 - Fixed blank screen bug
