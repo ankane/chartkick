@@ -664,7 +664,7 @@
                 0: { 
                   lineWidth: 2,
                   pointSize: 0,
-                  pacity: 0.5,
+                  opacity: 0.5,
                   color: 'red'
                 }
               },
