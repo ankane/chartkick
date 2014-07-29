@@ -669,10 +669,15 @@
       this.renderTrendline = function (chart) {
         waitForLoaded(function () {
           var chartOptions = {
-            trendline: {0:{}},
-            lineWidth: 2,
-            opacity: 0.5,
-            color: 'red'
+            trendlines: { 
+              0: { 
+                    lineWidth: 2,
+                    pointSize: 0,
+                    opacity: 0.5,
+                    color: 'red'
+                  } 
+            },
+            lineWidth: 0,
           };
           var options = jsOptions(chart.data, chart.options, chartOptions);
           var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");

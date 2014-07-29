@@ -57,7 +57,7 @@ Scatter chart
 Trendline chart
 
 ```erb
-<%= scatter_chart Purchase.group_by_minute(:created_at).count, library{ trendline: { 0 => {}}} %>
+<%= trendline Purchase.group_by_minute(:created_at).count %>
 ```
 
 Timeline
@@ -154,19 +154,19 @@ See the documentation for [Google Charts](https://developers.google.com/chart/in
 
 ### Trendlines
 
-Trendlines can be made by passing the option directly to the google library through scatter_chart.
+Trendline options can be changed through the library.
 Make sure to use the syntax ```0 =>``` rather than ```0:``` to specify the data series for the trendline.
 
 Exponetial trendlines
 
 ```erb
-<%= scatter_chart data, library: { trendlines: { 0 => { type: 'exponential' } } %>
+<%= trendline data, library: { trendlines: { 0 => { type: 'exponential' } } %>
 ```
 
 Polynomial trendlines
 
 ```erb
-<%= scatter_chart data, library: { trendlines: { 0 => { type: 'polynomial', degree: 3 } } %>
+<%= trendline data, library: { trendlines: { 0 => { type: 'polynomial', degree: 3, color: 'blue' } } %>
 ```
 
 All options can be found at [Google Trendlines](https://developers.google.com/chart/interactive/docs/gallery/trendlines)
