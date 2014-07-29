@@ -32,6 +32,10 @@ module Chartkick
       chartkick_chart "ScatterChart", data_source, options
     end
 
+    def trendline(data_source, options = {})
+      chartkick_chart "Trendline", data_source, options
+    end
+
     def timeline(data_source, options = {})
       chartkick_chart "Timeline", data_source, options
     end

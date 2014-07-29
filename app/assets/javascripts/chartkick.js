@@ -666,6 +666,23 @@
         });
       };
 
+      this.renderTrendline = function (chart) {
+        waitForLoaded(function () {
+          var chartOptions = {
+            trendline: {0:{}},
+            lineWidth: 2,
+            opacity: 0.5,
+            color: 'red'
+          };
+          var options = jsOptions(chart.data, chart.options, chartOptions);
+          var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
+          chart.chart = new google.visualization.ScatterChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
       this.renderTimeline = function (chart) {
         waitForLoaded("timeline", function () {
           var chartOptions = {
@@ -798,6 +815,11 @@
     renderChart("ScatterChart", chart);
   }
 
+  function processTrendlineData(chart) {
+    chart.data = processSeries(chart.data, chart.options, true);
+    renderChart("Trendline", chart);
+  }
+
   function processTimelineData(chart) {
     chart.data = processTime(chart.data);
     renderChart("Timeline", chart);
@@ -837,6 +859,9 @@
     },
     ScatterChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processScatterData);
+    },
+    Trendline: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processTrendlineData);
     },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
