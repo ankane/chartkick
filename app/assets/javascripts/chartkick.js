@@ -514,18 +514,39 @@
         var data = new google.visualization.DataTable();
         data.addColumn(columnType, "");
 
-        var i, j, s, d, key, rows = [];
+        var i, j, s, d, rows = [], pos, rowPos = [], columns;
+        for (i = 0, columns = 0; i < series.length; i++, columns++) {
+          rowPos[i] = columns;
+          if (series[i].tooltip) {
+            columns++;
+          }
+        }
+
+        function setData(key, value, pos, valueIsString) {
+          var newKey = (columnType === "datetime") ? key.getTime() : key;
+          if (!rows[newKey]) {
+            rows[newKey] = new Array(columns);
+          }
+          if (!valueIsString) {
+            value = toFloat(value);
+          }
+          rows[newKey][pos] = value;
+        }
+
         for (i = 0; i < series.length; i++) {
+          pos = rowPos[i];
           s = series[i];
           data.addColumn("number", s.name);
-
           for (j = 0; j < s.data.length; j++) {
             d = s.data[j];
-            key = (columnType === "datetime") ? d[0].getTime() : d[0];
-            if (!rows[key]) {
-              rows[key] = new Array(series.length);
+            setData(d[0], toFloat(d[1]), pos);
+          }
+          if (s.tooltip) {
+            data.addColumn({type: 'string', role: 'tooltip'});
+            for (j = 0; j < s.tooltip.length; j++) {
+              d = s.tooltip[j];
+              setData(d[0], d[1], pos + 1, true);
             }
-            rows[key][i] = toFloat(d[1]);
           }
         }
 
@@ -703,7 +724,7 @@
   // process data
 
   function processSeries(series, opts, time) {
-    var i, j, data, r, key;
+    var i, data, key;
 
     // see if one series or multiple
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
@@ -716,19 +737,31 @@
       time = false;
     }
 
-    // right format
-    for (i = 0; i < series.length; i++) {
-      data = toArr(series[i].data);
-      r = [];
+    function formatData(inputData, valueIsString) {
+      var j, r = [], data = toArr(inputData), value;
       for (j = 0; j < data.length; j++) {
         key = data[j][0];
         key = time ? toDate(key) : toStr(key);
-        r.push([key, toFloat(data[j][1])]);
+        value = data[j][1];
+        if (valueIsString) {
+          value = toStr(value)
+        } else {
+          value = toFloat(value);
+        }
+        r.push([key, value]);
       }
       if (time) {
         r.sort(sortByTime);
       }
-      series[i].data = r;
+      return r;
+    }
+
+    // right format
+    for (i = 0; i < series.length; i++) {
+      series[i].data = formatData(series[i].data);
+      if (series[i].tooltip) {
+        series[i].tooltip = formatData(series[i].tooltip, true);
+      }
     }
 
     return series;
