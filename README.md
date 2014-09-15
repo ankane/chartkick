@@ -138,7 +138,13 @@ You can pass options directly to the charting library with:
 <%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
-See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery) and [Highcharts](http://api.highcharts.com/highcharts) for more info.
+For Chart.js, you can specify the canvas size in this way:
+
+```erb
+<%= line_chart data, canvasDimensions: {width: 800, height: 300} %>
+```
+
+See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), [Highcharts](http://api.highcharts.com/highcharts), and [Chart.js](http://www.chartjs.org/) for more info.
 
 ### Global Options
 
@@ -216,6 +222,12 @@ If you prefer Highcharts, use:
 
 ```erb
 <%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
+```
+
+For Chart.js date labels, you'll need moment.js as well:
+
+```erb
+<%= javascript_include_tag "path/to/chart.js", "path/to/moment.js", "chartkick" %>
 ```
 
 ### For Rails 3.1+
