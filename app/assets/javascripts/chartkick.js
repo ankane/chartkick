@@ -564,9 +564,27 @@
         callback();
       };
 
+      var convertHAxisTicksToDates = function(options) {
+        var i, ticks = options && options.hAxis && options.hAxis.ticks;
+        if (ticks) {
+          for (i = 0; i < ticks.length; i++) {
+            if (ticks[i].v) {
+              ticks[i].v = toDate(ticks[i].v)
+            } else if (ticks[i]) {
+              ticks[i] = toDate(ticks[i])
+            }
+          }
+        }
+      };
+
       this.renderLineChart = function (chart) {
         waitForLoaded(function () {
           var options = jsOptions(chart.data, chart.options);
+
+          if (!chart.options.discrete) {
+            convertHAxisTicksToDates(options);
+          }
+
           var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
           chart.chart = new google.visualization.LineChart(chart.element);
           resize(function () {
