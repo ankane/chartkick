@@ -141,7 +141,7 @@ You can pass options directly to the charting library with:
 For Chart.js, you can specify the canvas size in this way:
 
 ```erb
-<%= line_chart data, canvasDimensions: {width: 800, height: 300} %>
+<%= line_chart data, library: {canvasDimensions: {width: 800, height: 300}} %>
 ```
 
 See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), [Highcharts](http://api.highcharts.com/highcharts), and [Chart.js](http://www.chartjs.org/) for more info.
