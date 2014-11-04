@@ -31,6 +31,10 @@ module Chartkick
     def timeline(data_source, options = {})
       chartkick_chart "Timeline", data_source, options
     end
+    
+    def bubble_chart(data_source, options = {})
+      chartkick_chart "BubbleChart", data_source, options
+    end
 
     private
 

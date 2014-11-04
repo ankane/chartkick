@@ -506,7 +506,7 @@
       var setStacked = function (options) {
         options.isStacked = true;
       };
-
+      
       var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked);
 
       // cant use object as key
@@ -679,6 +679,35 @@
           });
         });
       };
+      
+      this.renderBubbleChart = function (chart) {
+        waitForLoaded(function () {
+          var chartOptions = {
+            vAxis: { ticks: chart.vAxis_ticks,
+              minValue: chart.vAxis_min,
+              baseline: chart.vAxis_min },
+            hAxis: { ticks: chart.hAxis_ticks },
+          };
+          if (chart.options.colors) {
+            chartOptions.colors = chart.options.colors;
+          }
+          var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+          // one number in each data set: y coordinate only,
+          var data = new google.visualization.DataTable();
+          data.addColumn("string", "Bubble ID");
+          data.addColumn("number", "");
+          data.addColumn("number", "Value");
+          data.addColumn("string", "Scope");
+          var i
+          for (i = 0; i < chart.data.length; i++) {
+            data.addRows(chart.data[i].data);
+          }
+          chart.chart = new google.visualization.BubbleChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
     };
 
     adapters.push(GoogleChartsAdapter);
@@ -751,6 +780,83 @@
     }
     return data;
   }
+  
+  function deriveBubbleVaxisTicks(min_vAxis_val, max_vAxis_val) {
+    // the max y axis value will be the max value displayed rounded up 
+    // to the nearest 1000, and the ticks will be in jumps of 500
+    // (these numbers enable good visibility when the chart size is the default)
+    var vAxis_tick_jump = 500;
+    var vAxis_max_round = 1000;
+    var vAxis_min = 0;
+    var vAxis_max = Math.ceil(max_vAxis_val / vAxis_max_round) * vAxis_max_round;
+    // if the min/max values are too close to the edge of the chart, 
+    // we want to leave some space so that the entire marker is always displayed
+    vAxis_min = (min_vAxis_val <= vAxis_tick_jump) ? -vAxis_tick_jump : 0;
+    vAxis_max = (vAxis_max - max_vAxis_val <= vAxis_tick_jump) ? (vAxis_max + vAxis_tick_jump) : vAxis_max;
+    var tick_val = 0;
+    var vAxis_ticks = [vAxis_min]; // pack the min chart scope here
+    while (tick_val < vAxis_max) {
+      vAxis_ticks.push(tick_val);
+      tick_val += vAxis_tick_jump;
+    }
+    vAxis_ticks.push(vAxis_max);
+    return vAxis_ticks;
+  }
+  
+  function processBubble(chart)
+  {
+    var series = chart.data;
+    var series_bool = true;
+    // see if one series or multiple
+    if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
+      // no series, single data array -- not supported yet
+      // series = [{name: "Value", data: series}];
+      series_bool = false;
+    }
+
+    var hAxis_ticks = [ { v: 0, f: '' } ];
+    var y_min, y_max;
+    var i, data;
+    for (i = 0; i < series.length; i++) {
+      data = toArr(series[i].data);
+      if (i == 0) {  
+        y_min = data[0][2];
+        y_max = data[0][2];
+      }  // init min/max with first series first values
+      var category_counter = 0;
+      var j, r = [];
+      for (j = 0; j < data.length; j++) {
+        var bubble_id = data[j][0];
+        var x_coor = data[j][1];
+        // the x "coordinate" can't be a string when passed to Googlecharts; if
+        // it was passed as a string here that means we want to define it as a 
+        // category 
+        if (typeof x_coor === "string") {
+          category_counter++;
+          // only do this for the first series to avoid repetitions!
+          if (i == 0) {
+            hAxis_ticks.push({ v: category_counter, f: x_coor });
+          }
+          x_coor = category_counter;
+        }
+        var y_coor = data[j][2];
+        // keep track of min/max values for y axis min/max definitions
+        y_min = y_min < y_coor ? y_min : y_coor;
+        y_max = y_max > y_coor ? y_max : y_coor;
+        var series_id = data[j][3];
+        r.push([toStr(bubble_id), toFloat(x_coor), toFloat(y_coor), toStr(series_id)]);
+      }
+      series[i].data = r;
+    }
+    hAxis_ticks.push({ v: hAxis_ticks.length, f: '' }); // fix chart spacing
+    chart.hAxis_ticks = hAxis_ticks;
+    
+    var vAxis_ticks = deriveBubbleVaxisTicks(y_min, y_max);
+    chart.vAxis_min = vAxis_ticks.shift();
+    chart.vAxis_ticks = vAxis_ticks;
+    
+    return series;
+  }
 
   function processLineData(chart) {
     chart.data = processSeries(chart.data, chart.options, true);
@@ -787,6 +893,11 @@
     renderChart("Timeline", chart);
   }
 
+  function processBubbleData(chart) {
+    chart.data = processBubble(chart);
+    renderChart("BubbleChart", chart);
+  }
+  
   function setElement(chart, element, dataSource, opts, callback) {
     if (typeof element === "string") {
       element = document.getElementById(element);
@@ -821,6 +932,9 @@
     },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
+    },
+    BubbleChart: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processBubbleData);
     },
     charts: {}
   };
