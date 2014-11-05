@@ -227,6 +227,11 @@
     return a[0].getTime() - b[0].getTime();
   }
 
+  function capitalize(s)
+  {
+    return s[0].toUpperCase() + s.slice(1);
+  }
+  
   if ("Highcharts" in window) {
     var HighchartsAdapter = new function () {
       var Highcharts = window.Highcharts;
@@ -642,11 +647,17 @@
             }
           };
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
-
           var data = new google.visualization.DataTable();
-          data.addColumn("string", "");
-          data.addColumn("number", "Value");
-          data.addRows(chart.data);
+          
+          // column labels are preincluded for double series rendering
+          if ((typeof chart.data[0][1] !== "string") || (typeof chart.data[0][2] !== "string")) {
+            data.addColumn("string", "");
+            data.addColumn("number", "Value");
+            data.addRows(chart.data);
+          }
+          else {
+            data = google.visualization.arrayToDataTable(chart.data);
+          }
 
           chart.chart = new google.visualization.GeoChart(chart.element);
           resize(function () {
@@ -771,6 +782,39 @@
     return perfectData;
   }
 
+  function processGeo(chart)
+  {
+    var series = chart.data;
+    // see if one series or multiple
+    if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
+      // single series, single data array -- use processSimple as before!
+      var chartData = processSimple(chart.data);
+      return chartData;
+    }
+    else {
+      // NOTE that googlecharts does not currently support multi-series geo
+      // charts so this is kind of a hack
+      // NOTE that more than 2 series is currently not supported!
+      // ...we actually utilize the googlecharts data input definitions which  
+      // allow assigning of two values for each geo marker, and "flatten" the 
+      // two series into a single one 
+      // we want to name the series', so we use the names in the data received
+      var flattened_series = [["", capitalize(series[0].name), capitalize(series[1].name)]];
+      var i, j;      
+      for (j = 0; j < series[0].data.length; j++) {
+        var r = [];
+        var key = toStr(series[0].data[j][0]);
+        r.push(key);
+        for (i = 0; i < series.length; i++) {
+          r.push(toFloat(series[i].data[j][1]));
+        }
+        flattened_series.push(r);
+      }
+
+      return flattened_series;
+    }
+  }
+
   function processTime(data)
   {
     var i;
@@ -809,51 +853,52 @@
     var series_bool = true;
     // see if one series or multiple
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
-      // no series, single data array -- not supported yet
+      // one series, single data array -- not supported yet
       // series = [{name: "Value", data: series}];
       series_bool = false;
     }
-
-    var hAxis_ticks = [ { v: 0, f: '' } ];
-    var y_min, y_max;
-    var i, data;
-    for (i = 0; i < series.length; i++) {
-      data = toArr(series[i].data);
-      if (i == 0) {  
-        y_min = data[0][2];
-        y_max = data[0][2];
-      }  // init min/max with first series first values
-      var category_counter = 0;
-      var j, r = [];
-      for (j = 0; j < data.length; j++) {
-        var bubble_id = data[j][0];
-        var x_coor = data[j][1];
-        // the x "coordinate" can't be a string when passed to Googlecharts; if
-        // it was passed as a string here that means we want to define it as a 
-        // category 
-        if (typeof x_coor === "string") {
-          category_counter++;
-          // only do this for the first series to avoid repetitions!
-          if (i == 0) {
-            hAxis_ticks.push({ v: category_counter, f: x_coor });
+    else {
+      var hAxis_ticks = [ { v: 0, f: '' } ];
+      var y_min, y_max;
+      var i, data;
+      for (i = 0; i < series.length; i++) {
+        data = toArr(series[i].data);
+        if (i == 0) {  
+          y_min = data[0][2];
+          y_max = data[0][2];
+        }  // init min/max with first series first values
+        var category_counter = 0;
+        var j, r = [];
+        for (j = 0; j < data.length; j++) {
+          var bubble_id = data[j][0];
+          var x_coor = data[j][1];
+          // the x "coordinate" can't be a string when passed to Googlecharts; if
+          // it was passed as a string here that means we want to define it as a 
+          // category 
+          if (typeof x_coor === "string") {
+            category_counter++;
+            // only do this for the first series to avoid repetitions!
+            if (i == 0) {
+              hAxis_ticks.push({ v: category_counter, f: x_coor });
+            }
+            x_coor = category_counter;
           }
-          x_coor = category_counter;
+          var y_coor = data[j][2];
+          // keep track of min/max values for y axis min/max definitions
+          y_min = y_min < y_coor ? y_min : y_coor;
+          y_max = y_max > y_coor ? y_max : y_coor;
+          var series_id = capitalize(data[j][3]);
+          r.push([toStr(bubble_id), toFloat(x_coor), toFloat(y_coor), toStr(series_id)]);
         }
-        var y_coor = data[j][2];
-        // keep track of min/max values for y axis min/max definitions
-        y_min = y_min < y_coor ? y_min : y_coor;
-        y_max = y_max > y_coor ? y_max : y_coor;
-        var series_id = data[j][3];
-        r.push([toStr(bubble_id), toFloat(x_coor), toFloat(y_coor), toStr(series_id)]);
+        series[i].data = r;
       }
-      series[i].data = r;
+      hAxis_ticks.push({ v: hAxis_ticks.length, f: '' }); // fix chart spacing
+      chart.hAxis_ticks = hAxis_ticks;
+      
+      var vAxis_ticks = deriveBubbleVaxisTicks(y_min, y_max);
+      chart.vAxis_min = vAxis_ticks.shift();
+      chart.vAxis_ticks = vAxis_ticks;
     }
-    hAxis_ticks.push({ v: hAxis_ticks.length, f: '' }); // fix chart spacing
-    chart.hAxis_ticks = hAxis_ticks;
-    
-    var vAxis_ticks = deriveBubbleVaxisTicks(y_min, y_max);
-    chart.vAxis_min = vAxis_ticks.shift();
-    chart.vAxis_ticks = vAxis_ticks;
     
     return series;
   }
@@ -884,7 +929,7 @@
   }
 
   function processGeoData(chart) {
-    chart.data = processSimple(chart.data);
+    chart.data = processGeo(chart);
     renderChart("GeoChart", chart);
   }
 
