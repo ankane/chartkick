@@ -231,6 +231,9 @@
   {
     return s[0].toUpperCase() + s.slice(1);
   }
+
+  var CUSTOM_TOOLTIP_LABEL = "tooltip_string";
+  
   
   if ("Highcharts" in window) {
     var HighchartsAdapter = new function () {
@@ -580,10 +583,15 @@
             chartOptions.colors = chart.options.colors;
           }
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
-
+          
           var data = new google.visualization.DataTable();
           data.addColumn("string", "");
           data.addColumn("number", "Value");
+          // handle supplied custom tooltips
+          if (chart.custom_tooltip_bool) {
+            data.addColumn({type:"string", role:"tooltip"});
+          }
+          
           data.addRows(chart.data);
 
           chart.chart = new google.visualization.PieChart(chart.element);
@@ -595,8 +603,18 @@
 
       this.renderColumnChart = function (chart) {
         waitForLoaded(function () {
+          var data;
           var options = jsOptions(chart.data, chart.options);
-          var data = createDataTable(chart.data, "string");
+          if (chart.custom_tooltip_bool) {
+            var chart_data = chart.data[0].data;
+            var num_columns = chart_data[0].length;
+            data = google.visualization.arrayToDataTable(chart_data);
+            data.setColumnProperty(num_columns - 1, 'role', 'tooltip');
+            data.setColumnProperty(num_columns - 1, 'type', 'string');
+          }
+          else {
+            data = createDataTable(chart.data, "string");
+          }
           chart.chart = new google.visualization.ColumnChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -653,12 +671,21 @@
           if ((typeof chart.data[0][1] !== "string") || (typeof chart.data[0][2] !== "string")) {
             data.addColumn("string", "");
             data.addColumn("number", "Value");
+            // handle supplied custom tooltips
+            if (chart.custom_tooltip_bool) {
+              data.addColumn({type:"string", role:"tooltip"});
+            }
             data.addRows(chart.data);
           }
           else {
             data = google.visualization.arrayToDataTable(chart.data);
+            // handle supplied custom tooltips
+            if (chart.custom_tooltip_bool) {
+              data.setColumnProperty(chart.data.length - 1, 'role', 'tooltip');
+              data.setColumnProperty(chart.data.length - 1, 'type', 'string');
+            }
           }
-
+          
           chart.chart = new google.visualization.GeoChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -709,6 +736,12 @@
           data.addColumn("number", "");
           data.addColumn("number", "Value");
           data.addColumn("string", "Scope");
+          
+          // handle supplied custom tooltips
+          if (chart.custom_tooltip_bool) {
+            data.addColumn({type:"string", role:"tooltip"});
+          }
+          
           var i
           for (i = 0; i < chart.data.length; i++) {
             data.addRows(chart.data[i].data);
@@ -742,9 +775,9 @@
 
   // process data
 
-  function processSeries(series, opts, time) {
-    var i, j, data, r, key;
-
+  function processSeries(chart, time) {
+    var series = chart.data;
+    var opts = chart.options;
     // see if one series or multiple
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
       series = [{name: "Value", data: series}];
@@ -755,29 +788,62 @@
     if (opts.discrete) {
       time = false;
     }
-
+  
+    // check if the data returned is packed with custom tooltip info, and if so
+    // pass it along as well!    
+    chart.custom_tooltip_bool = false;
+    if (isArray(series[0].data[0]) && (series[0].data[0][2] == CUSTOM_TOOLTIP_LABEL)) {
+      chart.custom_tooltip_bool = true;
+    }
+    
     // right format
+    var i, j, data, r, key;
     for (i = 0; i < series.length; i++) {
+      j = 0;
       data = toArr(series[i].data);
       r = [];
-      for (j = 0; j < data.length; j++) {
+      if (chart.custom_tooltip_bool) {
+        j = 1;
+        r.push([toStr(data[0][0]), toStr(data[0][1]), toStr(data[0][2])]);
+      }
+        
+      for (j; j < data.length; j++) {
         key = data[j][0];
         key = time ? toDate(key) : toStr(key);
-        r.push([key, toFloat(data[j][1])]);
+        if (chart.custom_tooltip_bool) {
+          r.push([key, toFloat(data[j][1]), toStr(data[j][2])]);
+        }
+        else {
+          r.push([key, toFloat(data[j][1])]);
+        }
       }
       if (time) {
         r.sort(sortByTime);
       }
       series[i].data = r;
     }
-
+    
     return series;
   }
 
-  function processSimple(data) {
-    var perfectData = toArr(data), i;
-    for (i = 0; i < perfectData.length; i++) {
-      perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+  function processSimple(chart) {
+    var perfectData = toArr(chart.data), i = 0;
+    chart.custom_tooltip_bool = false;
+    
+    // check if the data returned is packed with custom tooltip info, and if so
+    // pass it along as well!
+    if ((typeof perfectData[0][2] === "string") && (perfectData[0][2] == CUSTOM_TOOLTIP_LABEL)) {
+      chart.custom_tooltip_bool = true;
+      i = 1;
+      perfectData[0] = [toStr(perfectData[0][0]), toStr(perfectData[0][1]), toStr(perfectData[0][2])];
+    }
+    for (i; i < perfectData.length; i++) {
+      if (chart.custom_tooltip_bool) {
+        perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1]), toStr(perfectData[i][2])];
+      }
+      else {
+        perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+      }
     }
     return perfectData;
   }
@@ -788,7 +854,7 @@
     // see if one series or multiple
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
       // single series, single data array -- use processSimple as before!
-      var chartData = processSimple(chart.data);
+      var chartData = processSimple(chart);
       return chartData;
     }
     else {
@@ -801,12 +867,26 @@
       // we want to name the series', so we use the names in the data received
       var flattened_series = [["", capitalize(series[0].name), capitalize(series[1].name)]];
       var i, j;      
+      
+      // check if the data returned is packed with custom tooltip info, and if so
+      // pass it along as well!
+      chart.custom_tooltip_bool = false;
+      
+      if ((typeof series[0].data[0][2] === "string") && (series[0].data[0][2] == CUSTOM_TOOLTIP_LABEL)) {
+        chart.custom_tooltip_bool = true;
+      }
+      
       for (j = 0; j < series[0].data.length; j++) {
         var r = [];
         var key = toStr(series[0].data[j][0]);
         r.push(key);
         for (i = 0; i < series.length; i++) {
           r.push(toFloat(series[i].data[j][1]));
+        }
+        // single tooltip string (as both values will be represented in the 
+        // same data point) is taken from series[0]
+        if (chart.custom_tooltip_bool) {
+          r.push(toStr(series[0].data[j][2]));
         }
         flattened_series.push(r);
       }
@@ -815,9 +895,11 @@
     }
   }
 
-  function processTime(data)
+  function processTime(chart)
   {
+    var data = chart.data;
     var i;
+    
     for (i = 0; i < data.length; i++) {
       data[i][1] = toDate(data[i][1]);
       data[i][2] = toDate(data[i][2]);
@@ -904,27 +986,27 @@
   }
 
   function processLineData(chart) {
-    chart.data = processSeries(chart.data, chart.options, true);
+    chart.data = processSeries(chart, true);
     renderChart("LineChart", chart);
   }
 
   function processColumnData(chart) {
-    chart.data = processSeries(chart.data, chart.options, false);
+    chart.data = processSeries(chart, false);
     renderChart("ColumnChart", chart);
   }
 
   function processPieData(chart) {
-    chart.data = processSimple(chart.data);
+    chart.data = processSimple(chart);
     renderChart("PieChart", chart);
   }
 
   function processBarData(chart) {
-    chart.data = processSeries(chart.data, chart.options, false);
+    chart.data = processSeries(chart, false);
     renderChart("BarChart", chart);
   }
 
   function processAreaData(chart) {
-    chart.data = processSeries(chart.data, chart.options, true);
+    chart.data = processSeries(chart, true);
     renderChart("AreaChart", chart);
   }
 
@@ -934,7 +1016,7 @@
   }
 
   function processTimelineData(chart) {
-    chart.data = processTime(chart.data);
+    chart.data = processTime(chart);
     renderChart("Timeline", chart);
   }
 
