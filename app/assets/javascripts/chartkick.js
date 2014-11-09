@@ -227,6 +227,14 @@
     return a[0].getTime() - b[0].getTime();
   }
 
+  function capitalize(s)
+  {
+    return s[0].toUpperCase() + s.slice(1);
+  }
+
+  var CUSTOM_TOOLTIP_LABEL = "tooltip_string";
+  
+  
   if ("Highcharts" in window) {
     var HighchartsAdapter = new function () {
       var Highcharts = window.Highcharts;
@@ -506,7 +514,7 @@
       var setStacked = function (options) {
         options.isStacked = true;
       };
-
+      
       var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked);
 
       // cant use object as key
@@ -575,10 +583,15 @@
             chartOptions.colors = chart.options.colors;
           }
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
-
+          
           var data = new google.visualization.DataTable();
           data.addColumn("string", "");
           data.addColumn("number", "Value");
+          // handle supplied custom tooltips
+          if (chart.custom_tooltip_bool) {
+            data.addColumn({type:"string", role:"tooltip"});
+          }
+          
           data.addRows(chart.data);
 
           chart.chart = new google.visualization.PieChart(chart.element);
@@ -590,8 +603,18 @@
 
       this.renderColumnChart = function (chart) {
         waitForLoaded(function () {
+          var data;
           var options = jsOptions(chart.data, chart.options);
-          var data = createDataTable(chart.data, "string");
+          if (chart.custom_tooltip_bool) {
+            var chart_data = chart.data[0].data;
+            var num_columns = chart_data[0].length;
+            data = google.visualization.arrayToDataTable(chart_data);
+            data.setColumnProperty(num_columns - 1, 'role', 'tooltip');
+            data.setColumnProperty(num_columns - 1, 'type', 'string');
+          }
+          else {
+            data = createDataTable(chart.data, "string");
+          }
           chart.chart = new google.visualization.ColumnChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -642,12 +665,27 @@
             }
           };
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
-
           var data = new google.visualization.DataTable();
-          data.addColumn("string", "");
-          data.addColumn("number", "Value");
-          data.addRows(chart.data);
-
+          
+          // column labels are preincluded for double series rendering
+          if ((typeof chart.data[0][1] !== "string") || (typeof chart.data[0][2] !== "string")) {
+            data.addColumn("string", "");
+            data.addColumn("number", "Value");
+            // handle supplied custom tooltips
+            if (chart.custom_tooltip_bool) {
+              data.addColumn({type:"string", role:"tooltip"});
+            }
+            data.addRows(chart.data);
+          }
+          else {
+            data = google.visualization.arrayToDataTable(chart.data);
+            // handle supplied custom tooltips
+            if (chart.custom_tooltip_bool) {
+              data.setColumnProperty(chart.data[0].length - 1, 'role', 'tooltip');
+              data.setColumnProperty(chart.data[0].length - 1, 'type', 'string');
+            }
+          }
+          
           chart.chart = new google.visualization.GeoChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -679,6 +717,41 @@
           });
         });
       };
+      
+      this.renderBubbleChart = function (chart) {
+        waitForLoaded(function () {
+          var chartOptions = {
+            vAxis: { ticks: chart.vAxis_ticks,
+              minValue: chart.vAxis_min,
+              baseline: chart.vAxis_min },
+            hAxis: { ticks: chart.hAxis_ticks },
+          };
+          if (chart.options.colors) {
+            chartOptions.colors = chart.options.colors;
+          }
+          var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+          // one number in each data set: y coordinate only,
+          var data = new google.visualization.DataTable();
+          data.addColumn("string", "Bubble ID");
+          data.addColumn("number", "");
+          data.addColumn("number", "Value");
+          data.addColumn("string", "Scope");
+          
+          // handle supplied custom tooltips
+          if (chart.custom_tooltip_bool) {
+            data.addColumn({type:"string", role:"tooltip"});
+          }
+          
+          var i
+          for (i = 0; i < chart.data.length; i++) {
+            data.addRows(chart.data[i].data);
+          }
+          chart.chart = new google.visualization.BubbleChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
     };
 
     adapters.push(GoogleChartsAdapter);
@@ -702,9 +775,9 @@
 
   // process data
 
-  function processSeries(series, opts, time) {
-    var i, j, data, r, key;
-
+  function processSeries(chart, time) {
+    var series = chart.data;
+    var opts = chart.options;
     // see if one series or multiple
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
       series = [{name: "Value", data: series}];
@@ -715,78 +788,245 @@
     if (opts.discrete) {
       time = false;
     }
-
+  
+    // check if the data returned is packed with custom tooltip info, and if so
+    // pass it along as well!    
+    chart.custom_tooltip_bool = false;
+    if (isArray(series[0].data[0]) && (series[0].data[0][2] == CUSTOM_TOOLTIP_LABEL)) {
+      chart.custom_tooltip_bool = true;
+    }
+    
     // right format
+    var i, j, data, r, key;
     for (i = 0; i < series.length; i++) {
+      j = 0;
       data = toArr(series[i].data);
       r = [];
-      for (j = 0; j < data.length; j++) {
+      if (chart.custom_tooltip_bool) {
+        j = 1;
+        r.push([toStr(data[0][0]), toStr(data[0][1]), toStr(data[0][2])]);
+      }
+        
+      for (j; j < data.length; j++) {
         key = data[j][0];
         key = time ? toDate(key) : toStr(key);
-        r.push([key, toFloat(data[j][1])]);
+        if (chart.custom_tooltip_bool) {
+          r.push([key, toFloat(data[j][1]), toStr(data[j][2])]);
+        }
+        else {
+          r.push([key, toFloat(data[j][1])]);
+        }
       }
       if (time) {
         r.sort(sortByTime);
       }
       series[i].data = r;
     }
-
+    
     return series;
   }
 
-  function processSimple(data) {
-    var perfectData = toArr(data), i;
-    for (i = 0; i < perfectData.length; i++) {
-      perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+  function processSimple(chart) {
+    var perfectData = toArr(chart.data), i = 0;
+    chart.custom_tooltip_bool = false;
+    
+    // check if the data returned is packed with custom tooltip info, and if so
+    // pass it along as well!
+    if ((typeof perfectData[0][2] === "string") && (perfectData[0][2] == CUSTOM_TOOLTIP_LABEL)) {
+      chart.custom_tooltip_bool = true;
+      i = 1;
+      perfectData[0] = [toStr(perfectData[0][0]), toStr(perfectData[0][1]), toStr(perfectData[0][2])];
+    }
+    for (i; i < perfectData.length; i++) {
+      if (chart.custom_tooltip_bool) {
+        perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1]), toStr(perfectData[i][2])];
+      }
+      else {
+        perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+      }
     }
     return perfectData;
   }
 
-  function processTime(data)
+  function processGeo(chart)
   {
+    var series = chart.data;
+    // see if one series or multiple
+    if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
+      // single series, single data array -- use processSimple as before!
+      var chartData = processSimple(chart);
+      return chartData;
+    }
+    else {
+      // NOTE that googlecharts does not currently support multi-series geo
+      // charts so this is kind of a hack
+      // NOTE that more than 2 series is currently not supported!
+      // ...we actually utilize the googlecharts data input definitions which  
+      // allow assigning of two values for each geo marker, and "flatten" the 
+      // two series into a single one 
+      // we want to name the series', so we use the names in the data received
+      var flattened_series = [["", capitalize(series[0].name), capitalize(series[1].name)]];
+      var i, j;      
+      
+      // check if the data returned is packed with custom tooltip info, and if so
+      // pass it along as well!
+      chart.custom_tooltip_bool = false;
+      
+      if ((typeof series[0].data[0][2] === "string") && (series[0].data[0][2] == CUSTOM_TOOLTIP_LABEL)) {
+        chart.custom_tooltip_bool = true;
+      }
+      
+      for (j = 0; j < series[0].data.length; j++) {
+        var r = [];
+        var key = toStr(series[0].data[j][0]);
+        r.push(key);
+        for (i = 0; i < series.length; i++) {
+          r.push(toFloat(series[i].data[j][1]));
+        }
+        // single tooltip string (as both values will be represented in the 
+        // same data point) is taken from series[0]
+        if (chart.custom_tooltip_bool) {
+          r.push(toStr(series[0].data[j][2]));
+        }
+        flattened_series.push(r);
+      }
+
+      return flattened_series;
+    }
+  }
+
+  function processTime(chart)
+  {
+    var data = chart.data;
     var i;
+    
     for (i = 0; i < data.length; i++) {
       data[i][1] = toDate(data[i][1]);
       data[i][2] = toDate(data[i][2]);
     }
     return data;
   }
+  
+  function deriveBubbleVaxisTicks(min_vAxis_val, max_vAxis_val, vAxis_max_round) {
+    // the max y axis value will be the max value displayed rounded up 
+    // to the nearest vAxis_max_round, and the ticks are determined accordingly
+    var vAxis_tick_jump = vAxis_max_round / 2;
+    var vAxis_min = 0;
+    var vAxis_max = Math.ceil(max_vAxis_val / vAxis_max_round) * vAxis_max_round;
+    // if the min/max values are too close to the edge of the chart, 
+    // we want to leave some space so that the entire marker is always displayed
+    vAxis_min = (min_vAxis_val <= vAxis_tick_jump) ? -vAxis_tick_jump : 0;
+    vAxis_max = (vAxis_max - max_vAxis_val <= vAxis_tick_jump) ? (vAxis_max + vAxis_tick_jump) : vAxis_max;
+    var tick_val = 0;
+    var vAxis_ticks = [vAxis_min]; // pack the min chart scope here
+    while (tick_val < vAxis_max) {
+      vAxis_ticks.push(tick_val);
+      tick_val += vAxis_tick_jump;
+    }
+    vAxis_ticks.push(vAxis_max);
+    return vAxis_ticks;
+  }
+  
+  function processBubble(chart)
+  {
+    var series = chart.data;
+    var series_bool = true;
+    // see if one series or multiple
+    if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
+      // one series, single data array -- not supported yet
+      // series = [{name: "Value", data: series}];
+      series_bool = false;
+    }
+    else {
+      var hAxis_ticks = [ { v: 0, f: '' } ];
+      var y_min, y_max;
+      var i, data;
+      for (i = 0; i < series.length; i++) {
+        data = toArr(series[i].data);
+        if (i == 0) {  
+          y_min = data[0][2];
+          y_max = data[0][2];
+        }  // init min/max with first series first values
+        var category_counter = 0;
+        var j, r = [];
+        for (j = 0; j < data.length; j++) {
+          var bubble_id = data[j][0];
+          var x_coor = data[j][1];
+          // the x "coordinate" can't be a string when passed to Googlecharts; if
+          // it was passed as a string here that means we want to define it as a 
+          // category 
+          if (typeof x_coor === "string") {
+            category_counter++;
+            // only do this for the first series to avoid repetitions!
+            if (i == 0) {
+              hAxis_ticks.push({ v: category_counter, f: x_coor });
+            }
+            x_coor = category_counter;
+          }
+          var y_coor = data[j][2];
+          // keep track of min/max values for y axis min/max definitions
+          y_min = y_min < y_coor ? y_min : y_coor;
+          y_max = y_max > y_coor ? y_max : y_coor;
+          var series_id = capitalize(data[j][3]);
+          r.push([toStr(bubble_id), toFloat(x_coor), toFloat(y_coor), toStr(series_id)]);
+        }
+        series[i].data = r;
+      }
+      hAxis_ticks.push({ v: hAxis_ticks.length, f: '' }); // fix chart spacing
+      chart.hAxis_ticks = hAxis_ticks;
+      
+      // retrieve (and then delete) y axis rounding value from passed
+      // chart options library
+      var vAxis_max_round = chart.options.library.vAxis_max_round;
+      delete chart.options.library.vAxis_max_round;
+      var vAxis_ticks = deriveBubbleVaxisTicks(y_min, y_max, vAxis_max_round);
+      chart.vAxis_min = vAxis_ticks.shift();
+      chart.vAxis_ticks = vAxis_ticks;
+    }
+    
+    return series;
+  }
 
   function processLineData(chart) {
-    chart.data = processSeries(chart.data, chart.options, true);
+    chart.data = processSeries(chart, true);
     renderChart("LineChart", chart);
   }
 
   function processColumnData(chart) {
-    chart.data = processSeries(chart.data, chart.options, false);
+    chart.data = processSeries(chart, false);
     renderChart("ColumnChart", chart);
   }
 
   function processPieData(chart) {
-    chart.data = processSimple(chart.data);
+    chart.data = processSimple(chart);
     renderChart("PieChart", chart);
   }
 
   function processBarData(chart) {
-    chart.data = processSeries(chart.data, chart.options, false);
+    chart.data = processSeries(chart, false);
     renderChart("BarChart", chart);
   }
 
   function processAreaData(chart) {
-    chart.data = processSeries(chart.data, chart.options, true);
+    chart.data = processSeries(chart, true);
     renderChart("AreaChart", chart);
   }
 
   function processGeoData(chart) {
-    chart.data = processSimple(chart.data);
+    chart.data = processGeo(chart);
     renderChart("GeoChart", chart);
   }
 
   function processTimelineData(chart) {
-    chart.data = processTime(chart.data);
+    chart.data = processTime(chart);
     renderChart("Timeline", chart);
   }
 
+  function processBubbleData(chart) {
+    chart.data = processBubble(chart);
+    renderChart("BubbleChart", chart);
+  }
+  
   function setElement(chart, element, dataSource, opts, callback) {
     if (typeof element === "string") {
       element = document.getElementById(element);
@@ -821,6 +1061,9 @@
     },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
+    },
+    BubbleChart: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processBubbleData);
     },
     charts: {}
   };
