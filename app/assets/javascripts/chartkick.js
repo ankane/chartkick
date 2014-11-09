@@ -907,12 +907,10 @@
     return data;
   }
   
-  function deriveBubbleVaxisTicks(min_vAxis_val, max_vAxis_val) {
+  function deriveBubbleVaxisTicks(min_vAxis_val, max_vAxis_val, vAxis_max_round) {
     // the max y axis value will be the max value displayed rounded up 
-    // to the nearest 1000, and the ticks will be in jumps of 500
-    // (these numbers enable good visibility when the chart size is the default)
-    var vAxis_tick_jump = 500;
-    var vAxis_max_round = 1000;
+    // to the nearest vAxis_max_round, and the ticks are determined accordingly
+    var vAxis_tick_jump = vAxis_max_round / 2;
     var vAxis_min = 0;
     var vAxis_max = Math.ceil(max_vAxis_val / vAxis_max_round) * vAxis_max_round;
     // if the min/max values are too close to the edge of the chart, 
@@ -977,7 +975,11 @@
       hAxis_ticks.push({ v: hAxis_ticks.length, f: '' }); // fix chart spacing
       chart.hAxis_ticks = hAxis_ticks;
       
-      var vAxis_ticks = deriveBubbleVaxisTicks(y_min, y_max);
+      // retrieve (and then delete) y axis rounding value from passed
+      // chart options library
+      var vAxis_max_round = chart.options.library.vAxis_max_round;
+      delete chart.options.library.vAxis_max_round;
+      var vAxis_ticks = deriveBubbleVaxisTicks(y_min, y_max, vAxis_max_round);
       chart.vAxis_min = vAxis_ticks.shift();
       chart.vAxis_ticks = vAxis_ticks;
     }
