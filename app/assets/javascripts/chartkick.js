@@ -681,8 +681,8 @@
             data = google.visualization.arrayToDataTable(chart.data);
             // handle supplied custom tooltips
             if (chart.custom_tooltip_bool) {
-              data.setColumnProperty(chart.data.length - 1, 'role', 'tooltip');
-              data.setColumnProperty(chart.data.length - 1, 'type', 'string');
+              data.setColumnProperty(chart.data[0].length - 1, 'role', 'tooltip');
+              data.setColumnProperty(chart.data[0].length - 1, 'type', 'string');
             }
           }
           
