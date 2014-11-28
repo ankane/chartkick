@@ -215,7 +215,7 @@ For Google Charts, use:
 If you prefer Highcharts, use:
 
 ```erb
-<%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
+<%= javascript_include_tag "path/to/jquery.js", "path/to/highcharts.js", "chartkick" %>
 ```
 
 ### For Rails 3.1+
