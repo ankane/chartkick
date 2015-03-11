@@ -26,5 +26,4 @@ class TestChartkick < Minitest::Test
     line_chart @data, options
     assert_equal "boom", options[:id]
   end
-
 end
