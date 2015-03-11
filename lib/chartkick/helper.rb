@@ -33,7 +33,7 @@ module Chartkick
 
     private
 
-    def chartkick_chart(klass, data_source, options, &block)
+    def chartkick_chart(klass, data_source, options)
       @chartkick_chart_id ||= 0
       options = chartkick_deep_merge(Chartkick.options, options)
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
