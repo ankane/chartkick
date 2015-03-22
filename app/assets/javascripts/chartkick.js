@@ -22,8 +22,8 @@
 
 	isArray = Array.isArray || function(ary) { return toString.call(ary) === '[object Array]'; };
 
-  function isPlainObject(variable) {
-    return !isFunction(variable) && variable instanceof Object;
+	function isPlainObject(obj) {
+    return obj === Object(obj);
   }
 
   // https://github.com/madrobby/zepto/blob/master/src/zepto.js
