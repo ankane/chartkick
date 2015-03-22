@@ -16,8 +16,8 @@
 
   // helpers
 
-  function isArray(variable) {
-    return Object.prototype.toString.call(variable) === "[object Array]";
+	function isFunction(fn) {
+    return (typeof fn === 'function');
   }
 
   function isFunction(variable) {
