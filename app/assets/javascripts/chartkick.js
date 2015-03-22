@@ -20,9 +20,7 @@
     return (typeof fn === 'function');
   }
 
-  function isFunction(variable) {
-    return variable instanceof Function;
-  }
+	isArray = Array.isArray || function(ary) { return toString.call(ary) === '[object Array]'; };
 
   function isPlainObject(variable) {
     return !isFunction(variable) && variable instanceof Object;
