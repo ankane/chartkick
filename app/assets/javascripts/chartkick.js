@@ -20,7 +20,7 @@
     return (typeof fn === 'function');
   }
 
-	isArray = Array.isArray || function(ary) { return toString.call(ary) === '[object Array]'; };
+	isArray = Array.isArray || function(ary) { return Object.prototype.toString.call(ary) === '[object Array]'; };
 
 	function isPlainObject(obj) {
     return obj === Object(obj);
