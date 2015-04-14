@@ -28,6 +28,10 @@
     return !isFunction(variable) && variable instanceof Object;
   }
 
+  function isRemoteUrl(dataSource) {
+    return typeof dataSource === "string";
+  }
+
   // https://github.com/madrobby/zepto/blob/master/src/zepto.js
   function extend(target, source) {
     var key;
@@ -175,7 +179,7 @@
   }
 
   function fetchDataSource(chart, callback) {
-    if (typeof chart.dataSource === "string") {
+    if (isRemoteUrl(chart.dataSource)) {
       getJSON(chart.element, chart.dataSource, function (data, textStatus, jqXHR) {
         chart.data = data;
         errorCatcher(chart, callback);
@@ -822,7 +826,37 @@
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
     },
-    charts: {}
+    charts: {},
+    updateChart: function(chartId, dataSource) {
+      var chart = Chartkick.charts[chartId];
+      if (dataSource === undefined && !isRemoteUrl(chart.dataSource)) {
+        return null;
+      }
+      if (dataSource === undefined) {
+        dataSource = chart.dataSource;
+      }
+      new chart.__proto__.constructor(chart.element.id, dataSource);
+    },
+    updateAllCharts: function(dataSourceCallback) {
+      var chartNum   = 1,
+          chartId    = "chart-" + chartNum,
+          chart      = Chartkick.charts[chartId],
+          dataSource = null;
+      while (chart !== undefined) {
+        if (isFunction(dataSourceCallback)) {
+          dataSource = dataSourceCallback(chart);
+        } else if (isRemoteUrl(chart.dataSource)) {
+          dataSource = chart.dataSource;
+        } else {
+          throw new Error("You must pass a function, since the current dataSource is not an URL");
+        }
+
+        Chartkick.updateChart(chartId, dataSource);
+        chartNum++;
+        chartId = "chart-" + chartNum;
+        chart   = Chartkick.charts[chartId];
+      }
+    }
   };
 
   window.Chartkick = Chartkick;
