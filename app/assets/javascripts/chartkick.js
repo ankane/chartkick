@@ -128,26 +128,8 @@
         setStacked(options);
       }
       
-      //new: possible to overwrite legend options
-      //maybe better: take always opts options before default options.
-      if (opts.legend){
-        options.legend = opts.legend 
-      }
-      
       if (opts.colors) {
         options.colors = opts.colors;
-      }
-      
-      if (opts.chartArea){
-        options.chartArea = opts.chartArea
-      }
-      
-      if (opts.vAxis){
-        options.vAxis = merge(options.vAxis, opts.vAxis);
-        alert(JSON.stringify(options.vAxis))
-      }
-      if (opts.hAxis){
-        options.hAxis = merge(options.hAxis, opts.hAxis);
       }
 
       // merge library last
