@@ -740,7 +740,7 @@
           for (j = 0; j < thisSeries.data.length; j++) {
             if(i === 0){
               if("moment" in window){
-                data.labels.push(window.moment(thisSeries.data[j][0]).utc().format("MMM Do"));
+                data.labels.push(window.moment(thisSeries.data[j][0]).utc().format("MMM Do ha"));
               } else {
                 data.labels.push(thisSeries.data[j][0]);
               }
