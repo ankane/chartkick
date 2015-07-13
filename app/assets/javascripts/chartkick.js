@@ -455,7 +455,7 @@
           alignment: "center",
           position: "right"
         },
-        curveType: "function",
+        curveType: "none",
         hAxis: {
           textStyle: {
             color: "#666",
