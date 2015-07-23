@@ -1,5 +1,6 @@
 require "json"
 require "erb"
+require "securerandom"
 
 module Chartkick
   module Helper
@@ -34,9 +35,8 @@ module Chartkick
     private
 
     def chartkick_chart(klass, data_source, options)
-      @chartkick_chart_id ||= 0
       options = chartkick_deep_merge(Chartkick.options, options)
-      element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
+      element_id = options.delete(:id) || SecureRandom.hex(7)
       height = options.delete(:height) || "300px"
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
