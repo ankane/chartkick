@@ -124,8 +124,8 @@
         setMax(options, opts.max);
       }
 
-      if (opts.stacked) {
-        setStacked(options);
+      if ("stacked" in opts) {
+        setStacked(options, opts.stacked);
       }
 
       if (opts.colors) {
@@ -284,8 +284,14 @@
         options.yAxis.max = max;
       };
 
-      var setStacked = function (options) {
-        options.plotOptions.series.stacking = "normal";
+      var setStacked = function (options, stacking) {
+        // Google Options: (false) true, 'percent', 'relative', 'absolute' (absolute is the same as true)
+        // HighChart Options: (null), 'normal', 'percent'
+        if (stacking === true || stacking == 'absolute' || stacking == 'relative') {
+          options.plotOptions.series.stacking = "normal";
+        } else if (typeof stacking === 'string' || stacking instanceof String) {
+          options.plotOptions.series.stacking = stacking;
+        }
       };
 
       var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked);
@@ -503,8 +509,14 @@
         options.hAxis.viewWindow.max = max;
       };
 
-      var setStacked = function (options) {
-        options.isStacked = true;
+      var setStacked = function (options, stacking) {
+        // Google Options: (false) true, 'percent', 'relative', 'absolute' (absolute is the same as true)
+        // HighChart Options: (null), 'normal', 'percent'
+        if (stacking === true || stacking == 'normal') {
+          options.isStacked = true;
+        } else if (typeof stacking === 'string' || stacking instanceof String) {
+          options.isStacked = stacking;
+        }
       };
 
       var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked);

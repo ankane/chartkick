@@ -126,6 +126,28 @@ Stacked columns or bars
 <%= column_chart data, stacked: true %>
 ```
 
+```erb
+<%= column_chart data, stacked: 'normal' %>
+```
+
+```erb
+<%= column_chart data, stacked: 'absolute' %>
+```
+
+Stacked columns or bars with each value formatted as a percentage of 100%
+
+```erb
+<%= column_chart data, stacked: 'pecent' %>
+```
+
+Stacked columns or bars with each value formatted as a fraction of 1 (Google Charts only)
+
+```erb
+<%= column_chart data, stacked: 'relative' %>
+```
+
+`stacked: relative` used with Hightchart will display normal stacked columns or bars (like `stacked: true`)
+
 Discrete axis
 
 ```erb
