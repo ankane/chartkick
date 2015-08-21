@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["acekane1@gmail.com"]
   spec.description   = "Create beautiful Javascript charts with one line of Ruby"
   spec.summary       = "Create beautiful Javascript charts with one line of Ruby"
-  spec.homepage      = ""
+  spec.homepage      = "http://chartkick.com"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
