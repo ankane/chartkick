@@ -27,6 +27,10 @@ module Chartkick
       chartkick_chart "GeoChart", data_source, options
     end
 
+    def scatter_chart(data_source, options = {})
+      chartkick_chart "ScatterChart", data_source, options
+    end
+
     def timeline(data_source, options = {})
       chartkick_chart "Timeline", data_source, options
     end

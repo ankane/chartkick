@@ -48,6 +48,18 @@ Geo chart
 <%= geo_chart Medal.group(:country).count %>
 ```
 
+Scatter chart
+
+```erb
+<%= scatter_chart Comment.group_by_hour_of_day(:commented_on).count %>
+```
+
+Trendline chart
+
+```erb
+<%= scatter_chart Purchase.group_by_minute(:created_at).count, trendline: true %>
+```
+
 Timeline
 
 ```erb
@@ -139,6 +151,26 @@ You can pass options directly to the charting library with:
 ```
 
 See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery) and [Highcharts](http://api.highcharts.com/highcharts) for more info.
+
+### Trendlines
+
+Trendline options can be changed through the library.
+Make sure to use the syntax ```0 =>``` rather than ```0:``` to specify the data series for the trendline.
+
+Exponetial trendlines
+
+```erb
+<%= scatter_chart data, library: { trendlines: { 0 => { type: 'exponential' } } %>
+```
+
+Polynomial trendlines
+
+```erb
+<%= scatter_chart data, library: { trendlines: { 0 => { type: 'polynomial', degree: 3, color: 'blue' } } %>
+```
+
+All options can be found at [Google Trendlines](https://developers.google.com/chart/interactive/docs/gallery/trendlines)
+
 
 ### Global Options
 
