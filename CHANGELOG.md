@@ -1,3 +1,7 @@
+## 1.4.0 [unreleased]
+
+- Added scatter chart
+
 ## 1.3.2
 
 - Fixed `except` error when not using Rails

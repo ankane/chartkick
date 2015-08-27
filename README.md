@@ -42,6 +42,12 @@ Area chart
 <%= area_chart Visit.group_by_minute(:created_at).maximum(:load_time) %>
 ```
 
+Scatter chart [master]
+
+```erb
+<%= scatter_chart City.pluck(:size, :population) %>
+```
+
 Geo chart
 
 ```erb
