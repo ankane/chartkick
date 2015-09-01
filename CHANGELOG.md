@@ -1,4 +1,4 @@
-## 1.4.0 [unreleased]
+## 1.4.0
 
 - Added scatter chart
 - Added axis titles

@@ -42,7 +42,7 @@ Area chart
 <%= area_chart Visit.group_by_minute(:created_at).maximum(:load_time) %>
 ```
 
-Scatter chart [master]
+Scatter chart
 
 ```erb
 <%= scatter_chart City.pluck(:size, :population) %>
@@ -138,7 +138,7 @@ Discrete axis
 <%= line_chart data, discrete: true %>
 ```
 
-Axis titles [master]
+Axis titles
 
 ```erb
 <%= line_chart data, xtitle: "Time", ytitle: "Population" %>
