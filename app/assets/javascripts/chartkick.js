@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful Javascript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.3.0
+ * v1.4.0
  * MIT License
  */
 
@@ -101,7 +101,7 @@
     return false;
   }
 
-  function jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked) {
+  function jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked, setXtitle, setYtitle) {
     return function (series, opts, chartOptions) {
       var options = merge({}, defaultOptions);
       options = merge(options, chartOptions || {});
@@ -113,14 +113,14 @@
       }
 
       // min
-      if ("min" in opts) {
+      if (opts.min) {
         setMin(options, opts.min);
       } else if (!negativeValues(series)) {
         setMin(options, 0);
       }
 
       // max
-      if ("max" in opts) {
+      if (opts.max) {
         setMax(options, opts.max);
       }
 
@@ -130,6 +130,14 @@
 
       if (opts.colors) {
         options.colors = opts.colors;
+      }
+
+      if (opts.xtitle) {
+        setXtitle(options, opts.xtitle);
+      }
+
+      if (opts.ytitle) {
+        setYtitle(options, opts.ytitle);
       }
 
       // merge library last
@@ -236,6 +244,9 @@
       var defaultOptions = {
         chart: {},
         xAxis: {
+          title: {
+            text: null
+          },
           labels: {
             style: {
               fontSize: "12px"
@@ -290,7 +301,15 @@
         options.plotOptions.series.stacking = "normal";
       };
 
-      var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked);
+      var setXtitle = function (options, title) {
+        options.xAxis.title.text = title;
+      };
+
+      var setYtitle = function (options, title) {
+        options.yAxis.title.text = title;
+      };
+
+      var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked, setXtitle, setYtitle);
 
       this.renderLineChart = function (chart, chartType) {
         chartType = chartType || "spline";
@@ -474,6 +493,7 @@
             color: "#666",
             fontSize: 12
           },
+          titleTextStyle: {},
           gridlines: {
             color: "transparent"
           },
@@ -485,6 +505,7 @@
             color: "#666",
             fontSize: 12
           },
+          titleTextStyle: {},
           baselineColor: "#ccc",
           viewWindow: {}
         },
@@ -520,7 +541,17 @@
         options.isStacked = true;
       };
 
-      var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked);
+      var setXtitle = function (options, title) {
+        options.hAxis.title = title;
+        options.hAxis.titleTextStyle.italic = false;
+      }
+
+      var setYtitle = function (options, title) {
+        options.vAxis.title = title;
+        options.vAxis.titleTextStyle.italic = false;
+      };
+
+      var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked, setXtitle, setYtitle);
 
       // cant use object as key
       var createDataTable = function (series, columnType) {

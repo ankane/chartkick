@@ -1,6 +1,7 @@
 ## 1.4.0 [unreleased]
 
 - Added scatter chart
+- Added axis titles
 
 ## 1.3.2
 

@@ -138,6 +138,12 @@ Discrete axis
 <%= line_chart data, discrete: true %>
 ```
 
+Axis titles [master]
+
+```erb
+<%= line_chart data, xtitle: "Time", ytitle: "Population" %>
+```
+
 You can pass options directly to the charting library with:
 
 ```erb
