@@ -440,7 +440,8 @@
         var cb, call;
         for (var i = 0; i < callbacks.length; i++) {
           cb = callbacks[i];
-          call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline))
+          call = google.visualization &&
+              ((cb.pack === "gauge" && google.visualization.Gauge) || (cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline));
           if (call) {
             cb.callback();
             callbacks.splice(i, 1);
@@ -461,6 +462,7 @@
           runCallbacks();
         } else {
           loaded[pack] = true;
+
 
           // https://groups.google.com/forum/#!topic/google-visualization-api/fMKJcyA2yyI
           var loadOptions = {
@@ -686,17 +688,15 @@
       };
 
       this.renderGauge = function (chart) {
-        waitForLoaded(function () {
+        waitForLoaded("gauge", function () {
           var chartOptions = {
             legend: "none",
             colorAxis: {
               colors: chart.options.colors || ["#f6c7b6", "#ce502d"]
             }
           };
-          var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
-
-          var data = new google.visualization.arrayToDataTable(chart.data);
-
+          var options = merge(merge(defaultOptions, chartOptions), merge(chart.options.library || {},chart.options || {}));
+          var data = google.visualization.arrayToDataTable(chart.data);
           chart.chart = new google.visualization.Gauge(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -831,13 +831,19 @@
     return series;
   }
 
-  function processSimple(data) {
+  function processSimple(data, header) {
     var perfectData = toArr(data), i;
     for (i = 0; i < perfectData.length; i++) {
-      perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+      if (header && i == 0){
+        perfectData[i] = [toStr(perfectData[i][0]), toStr(perfectData[i][1])];
+      }else {
+        perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+      }
     }
     return perfectData;
   }
+
+
 
   function processTime(data)
   {
@@ -879,7 +885,7 @@
     renderChart("GeoChart", chart);
   }
   function processGaugeData(chart) {
-    chart.data = processSimple(chart.data);
+    chart.data = processSimple(chart.data,true);
     renderChart("Gauge", chart);
   }
 
