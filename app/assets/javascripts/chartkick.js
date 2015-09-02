@@ -685,6 +685,25 @@
         });
       };
 
+      this.renderGauge = function (chart) {
+        waitForLoaded(function () {
+          var chartOptions = {
+            legend: "none",
+            colorAxis: {
+              colors: chart.options.colors || ["#f6c7b6", "#ce502d"]
+            }
+          };
+          var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+
+          var data = new google.visualization.arrayToDataTable(chart.data);
+
+          chart.chart = new google.visualization.Gauge(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
       this.renderGeoChart = function (chart) {
         waitForLoaded(function () {
           var chartOptions = {
@@ -859,6 +878,10 @@
     chart.data = processSimple(chart.data);
     renderChart("GeoChart", chart);
   }
+  function processGaugeData(chart) {
+    chart.data = processSimple(chart.data);
+    renderChart("Gauge", chart);
+  }
 
   function processScatterData(chart) {
     chart.data = processSeries(chart.data, chart.options, "number");
@@ -904,6 +927,9 @@
     },
     ScatterChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processScatterData);
+    },
+    Gauge: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processGaugeData);
     },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
