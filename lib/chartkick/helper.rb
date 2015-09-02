@@ -35,6 +35,10 @@ module Chartkick
       chartkick_chart "Timeline", data_source, options
     end
 
+    def gauge(data_source, options= {})
+      chartkick_chart "Gauge", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options)
