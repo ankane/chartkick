@@ -634,6 +634,10 @@
           data.addColumn("string", "");
           data.addColumn("number", "Value");
           data.addRows(chart.data);
+          if (chart.options.money) {
+            var formatter = new google.visualization.NumberFormat({pattern: '$###,###'});
+            formatter.format(data, 1);
+          }
 
           chart.chart = new google.visualization.PieChart(chart.element);
           resize(function () {
@@ -660,19 +664,6 @@
           var data = google.visualization.arrayToDataTable(chart.data);
           console.debug(data);
           chart.chart = new google.visualization.ComboChart(chart.element);
-          resize(function () {
-            chart.chart.draw(data, options);
-          });
-        });
-      };
-
-      this.renderDonutChart = function(chart) {
-        waitForLoaded(function () {
-          var options = chart.options; //jsOptions(chart.data, chart.options);
-          //var data = createDataTable(chart.data, "string");
-          var data = google.visualization.arrayToDataTable(chart.data);
-          console.debug(data);
-          chart.chart = new google.visualization.DonutChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
           });
@@ -723,6 +714,14 @@
           };
           var options = merge(merge(defaultOptions, chartOptions), merge(chart.options.library || {},chart.options || {}));
           var data = google.visualization.arrayToDataTable(chart.data);
+          if (chart.options.money) {
+            var formatter = new google.visualization.NumberFormat({pattern: '$###,###'});
+            formatter.format(data, 1);
+          }else if (chart.options.percentage){
+            var formatter = new google.visualization.NumberFormat({pattern: '###%'});
+            formatter.format(data, 1);
+          }
+
           chart.chart = new google.visualization.Gauge(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -895,10 +894,6 @@
     renderChart("ComboChart", chart);
   }
 
-  function processDonutData(chart) {
-    renderChart("DonutChart", chart);
-  }
-
   function processPieData(chart) {
     chart.data = processSimple(chart.data);
     renderChart("PieChart", chart);
@@ -958,9 +953,6 @@
     },
     ComboChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processComboData);
-    },
-    DonutChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processDonutData);
     },
     BarChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processBarData);
