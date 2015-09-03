@@ -653,6 +653,17 @@
         });
       };
 
+      this.renderComboChart = function(chart) {
+        waitForLoaded(function () {
+          var options = jsOptions(chart.data, chart.options);
+          var data = createDataTable(chart.data, "string");
+          chart.chart = new google.visualization.ComboChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
       this.renderBarChart = function (chart) {
         waitForLoaded(function () {
           var chartOptions = {
@@ -865,6 +876,11 @@
     renderChart("ColumnChart", chart);
   }
 
+  function processComboData(chart) {
+    chart.data = processSeries(chart.data, chart.options, "string");
+    renderChart("ComboChart", chart);
+  }
+
   function processPieData(chart) {
     chart.data = processSimple(chart.data);
     renderChart("PieChart", chart);
@@ -921,6 +937,9 @@
     },
     ColumnChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processColumnData);
+    },
+    ComboChart: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processComboData);
     },
     BarChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processBarData);
