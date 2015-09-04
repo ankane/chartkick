@@ -662,7 +662,6 @@
           var options = chart.options; //jsOptions(chart.data, chart.options);
           //var data = createDataTable(chart.data, "string");
           var data = google.visualization.arrayToDataTable(chart.data);
-          console.debug(data);
           chart.chart = new google.visualization.ComboChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
