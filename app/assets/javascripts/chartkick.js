@@ -669,6 +669,18 @@
         });
       };
 
+
+      this.renderTable = function(chart) {
+        waitForLoaded("table", function () {
+          var options = chart.options;
+          var data = google.visualization.arrayToDataTable(chart.data);
+          chart.chart = new google.visualization.Table(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
       this.renderBarChart = function (chart) {
         waitForLoaded(function () {
           var chartOptions = {
@@ -917,6 +929,10 @@
     renderChart("Gauge", chart);
   }
 
+  function processTableData(chart){
+    renderChart("Table", chart);
+  }
+
   function processScatterData(chart) {
     chart.data = processSeries(chart.data, chart.options, "number");
     renderChart("ScatterChart", chart);
@@ -970,6 +986,9 @@
     },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
+    },
+    Table: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processTableData);
     },
     charts: {}
   };

@@ -43,6 +43,10 @@ module Chartkick
       chartkick_chart "ComboChart", data_source, options
     end
 
+    def table(data_source, options={})
+      chartkick_chart "Table", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options)
