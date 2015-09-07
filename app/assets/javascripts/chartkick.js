@@ -441,7 +441,8 @@
         for (var i = 0; i < callbacks.length; i++) {
           cb = callbacks[i];
           call = google.visualization &&
-              ((cb.pack === "gauge" && google.visualization.Gauge) || (cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline));
+              ((cb.pack === "table" && google.visualization.Table) ||
+              (cb.pack === "gauge" && google.visualization.Gauge) || (cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline));
           if (call) {
             cb.callback();
             callbacks.splice(i, 1);
@@ -674,6 +675,13 @@
         waitForLoaded("table", function () {
           var options = chart.options;
           var data = google.visualization.arrayToDataTable(chart.data);
+          if (chart.options.money) {
+            var formatter = new google.visualization.NumberFormat({pattern: '$###,###'});
+            formatter.format(data, 1);
+          }else if (chart.options.percentage){
+            var formatter = new google.visualization.NumberFormat({pattern: '###%'});
+            formatter.format(data, 1);
+          }
           chart.chart = new google.visualization.Table(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
