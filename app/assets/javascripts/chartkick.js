@@ -16,19 +16,31 @@
 
   // helpers
 
-  function isArray(variable) {
-    return Object.prototype.toString.call(variable) === "[object Array]";
-  }
-
-  function isFunction(variable) {
-    return variable instanceof Function;
-  }
-
-  function isPlainObject(variable) {
-    return !isFunction(variable) && variable instanceof Object;
-  }
+  var class2type = {};
+  var toString = class2type.toString
 
   // https://github.com/madrobby/zepto/blob/master/src/zepto.js
+  var t, types = ["Boolean","Number","String","Function","Array","Date","RegExp","Object","Error"];
+  for (t in types) {
+    name = types[t]
+    class2type[ "[object " + name + "]" ] = name.toLowerCase()
+  }
+
+  function type(obj) {
+    return obj == null ? String(obj) :
+      class2type[toString.call(obj)] || "object"
+  }
+
+  var isArray = Array.isArray ||
+      function(object){ return object instanceof Array }
+
+  function isFunction(value) { return type(value) == "function" }
+  function isWindow(obj) { return obj != null && obj == obj.window }
+  function isObject(obj) { return type(obj) == "object" }
+  function isPlainObject(obj) {
+    return isObject(obj) && !isWindow(obj) && Object.getPrototypeOf(obj) == Object.prototype
+  }
+
   function extend(target, source) {
     var key;
     for (key in source) {
@@ -604,9 +616,27 @@
         callback();
       };
 
+      var convertHAxisTicksToDates = function(options) {
+        var i, ticks = options && options.hAxis && options.hAxis.ticks;
+        if (ticks) {
+          for (i = 0; i < ticks.length; i++) {
+            if (ticks[i].v) {
+              ticks[i].v = toDate(ticks[i].v)
+            } else if (ticks[i]) {
+              ticks[i] = toDate(ticks[i])
+            }
+          }
+        }
+      };
+
       this.renderLineChart = function (chart) {
         waitForLoaded(function () {
           var options = jsOptions(chart.data, chart.options);
+
+          if (!chart.options.discrete) {
+            convertHAxisTicksToDates(options);
+          }
+
           var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
           chart.chart = new google.visualization.LineChart(chart.element);
           resize(function () {
