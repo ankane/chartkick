@@ -440,7 +440,9 @@
         var cb, call;
         for (var i = 0; i < callbacks.length; i++) {
           cb = callbacks[i];
-          call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline))
+          call = google.visualization &&
+              ((cb.pack === "table" && google.visualization.Table) ||
+              (cb.pack === "gauge" && google.visualization.Gauge) || (cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline));
           if (call) {
             cb.callback();
             callbacks.splice(i, 1);
@@ -461,6 +463,7 @@
           runCallbacks();
         } else {
           loaded[pack] = true;
+
 
           // https://groups.google.com/forum/#!topic/google-visualization-api/fMKJcyA2yyI
           var loadOptions = {
@@ -632,6 +635,10 @@
           data.addColumn("string", "");
           data.addColumn("number", "Value");
           data.addRows(chart.data);
+          if (chart.options.money) {
+            var formatter = new google.visualization.NumberFormat({pattern: '$###,###'});
+            formatter.format(data, 1);
+          }
 
           chart.chart = new google.visualization.PieChart(chart.element);
           resize(function () {
@@ -645,6 +652,37 @@
           var options = jsOptions(chart.data, chart.options);
           var data = createDataTable(chart.data, "string");
           chart.chart = new google.visualization.ColumnChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
+      this.renderComboChart = function(chart) {
+        waitForLoaded(function () {
+          var options = chart.options; //jsOptions(chart.data, chart.options);
+          //var data = createDataTable(chart.data, "string");
+          var data = google.visualization.arrayToDataTable(chart.data);
+          chart.chart = new google.visualization.ComboChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
+
+      this.renderTable = function(chart) {
+        waitForLoaded("table", function () {
+          var options = chart.options;
+          var data = google.visualization.arrayToDataTable(chart.data);
+          if (chart.options.money) {
+            var formatter = new google.visualization.NumberFormat({pattern: '$###,###'});
+            formatter.format(data, 1);
+          }else if (chart.options.percentage){
+            var formatter = new google.visualization.NumberFormat({pattern: '###%'});
+            formatter.format(data, 1);
+          }
+          chart.chart = new google.visualization.Table(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
           });
@@ -679,6 +717,31 @@
           var options = jsOptions(chart.data, chart.options, chartOptions);
           var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
           chart.chart = new google.visualization.AreaChart(chart.element);
+          resize(function () {
+            chart.chart.draw(data, options);
+          });
+        });
+      };
+
+      this.renderGauge = function (chart) {
+        waitForLoaded("gauge", function () {
+          var chartOptions = {
+            legend: "none",
+            colorAxis: {
+              colors: chart.options.colors || ["#f6c7b6", "#ce502d"]
+            }
+          };
+          var options = merge(merge(defaultOptions, chartOptions), merge(chart.options.library || {},chart.options || {}));
+          var data = google.visualization.arrayToDataTable(chart.data);
+          if (chart.options.money) {
+            var formatter = new google.visualization.NumberFormat({pattern: '$###,###'});
+            formatter.format(data, 1);
+          }else if (chart.options.percentage){
+            var formatter = new google.visualization.NumberFormat({pattern: '###%'});
+            formatter.format(data, 1);
+          }
+
+          chart.chart = new google.visualization.Gauge(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
           });
@@ -812,13 +875,19 @@
     return series;
   }
 
-  function processSimple(data) {
+  function processSimple(data, header) {
     var perfectData = toArr(data), i;
     for (i = 0; i < perfectData.length; i++) {
-      perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+      if (header && i == 0){
+        perfectData[i] = [toStr(perfectData[i][0]), toStr(perfectData[i][1])];
+      }else {
+        perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
+      }
     }
     return perfectData;
   }
+
+
 
   function processTime(data)
   {
@@ -840,6 +909,10 @@
     renderChart("ColumnChart", chart);
   }
 
+  function processComboData(chart) {
+    renderChart("ComboChart", chart);
+  }
+
   function processPieData(chart) {
     chart.data = processSimple(chart.data);
     renderChart("PieChart", chart);
@@ -858,6 +931,14 @@
   function processGeoData(chart) {
     chart.data = processSimple(chart.data);
     renderChart("GeoChart", chart);
+  }
+  function processGaugeData(chart) {
+    chart.data = processSimple(chart.data,true);
+    renderChart("Gauge", chart);
+  }
+
+  function processTableData(chart){
+    renderChart("Table", chart);
   }
 
   function processScatterData(chart) {
@@ -893,6 +974,9 @@
     ColumnChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processColumnData);
     },
+    ComboChart: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processComboData);
+    },
     BarChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processBarData);
     },
@@ -905,8 +989,14 @@
     ScatterChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processScatterData);
     },
+    Gauge: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processGaugeData);
+    },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
+    },
+    Table: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processTableData);
     },
     charts: {}
   };
