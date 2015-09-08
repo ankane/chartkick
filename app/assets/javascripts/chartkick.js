@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful Javascript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.4.0
+ * v1.4.1
  * MIT License
  */
 
@@ -113,7 +113,7 @@
       }
 
       // min
-      if (opts.min) {
+      if ("min" in opts) {
         setMin(options, opts.min);
       } else if (!negativeValues(series)) {
         setMin(options, 0);
