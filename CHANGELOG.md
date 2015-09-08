@@ -1,4 +1,4 @@
-## 1.4.1 [unreleased]
+## 1.4.1
 
 - Fixed regression with `min: nil`
 
