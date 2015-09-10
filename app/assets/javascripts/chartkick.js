@@ -10,10 +10,10 @@
 
 (function (window) {
   'use strict';
-
+  
   var config = window.Chartkick || {};
   var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
-
+  
   // helpers
 
   function isArray(variable) {
@@ -106,7 +106,7 @@
       var options = merge({}, defaultOptions);
       options = merge(options, chartOptions || {});
 
-      // hide legend
+       // hide legend
       // this is *not* an external option!
       if (opts.hideLegend) {
         hideLegend(options);
@@ -127,7 +127,7 @@
       if (opts.stacked) {
         setStacked(options);
       }
-
+      
       if (opts.colors) {
         options.colors = opts.colors;
       }
@@ -142,7 +142,6 @@
 
       // merge library last
       options = merge(options, opts.library || {});
-
       return options;
     };
   }
@@ -608,7 +607,9 @@
         waitForLoaded(function () {
           var options = jsOptions(chart.data, chart.options);
           var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
+          formatData(chart.options, data, chart.data.length)
           chart.chart = new google.visualization.LineChart(chart.element);
+          
           resize(function () {
             chart.chart.draw(data, options);
           });
@@ -627,12 +628,14 @@
             chartOptions.colors = chart.options.colors;
           }
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
-
+          
           var data = new google.visualization.DataTable();
           data.addColumn("string", "");
           data.addColumn("number", "Value");
           data.addRows(chart.data);
-
+          // new: formatter for formatting values in pie chart 
+          formatData(chart.options, data, 1)
+          
           chart.chart = new google.visualization.PieChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -644,6 +647,8 @@
         waitForLoaded(function () {
           var options = jsOptions(chart.data, chart.options);
           var data = createDataTable(chart.data, "string");
+          // new: formatter for formatting values in column chart 
+          formatData(chart.options, data, chart.data.length)
           chart.chart = new google.visualization.ColumnChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -662,6 +667,9 @@
           };
           var options = jsOptionsFunc(defaultOptions, hideLegend, setBarMin, setBarMax, setStacked)(chart.data, chart.options, chartOptions);
           var data = createDataTable(chart.data, "string");
+          // new: formatter for formatting values in column chart 
+          formatData(chart.options, data, chart.data.length)
+          
           chart.chart = new google.visualization.BarChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -678,6 +686,7 @@
           };
           var options = jsOptions(chart.data, chart.options, chartOptions);
           var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
+          formatData(chart.options, data, chart.data.length)
           chart.chart = new google.visualization.AreaChart(chart.element);
           resize(function () {
             chart.chart.draw(data, options);
@@ -811,6 +820,19 @@
 
     return series;
   }
+  
+  //new: format data with given formatter options 
+  function formatData(chartOptions, data, dataLength){
+    if (chartOptions.formatter){
+      var formatter = new google.visualization.NumberFormat(chartOptions.formatter);
+      var i = 1;
+      while (i <= dataLength ){
+        formatter.format(data,i);
+        i++;
+      }
+    }
+  }
+
 
   function processSimple(data) {
     var perfectData = toArr(data), i;
@@ -880,6 +902,8 @@
     Chartkick.charts[element.id] = chart;
     fetchDataSource(chart, callback);
   }
+  
+  
 
   // define classes
 
