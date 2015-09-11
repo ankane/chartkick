@@ -405,10 +405,8 @@
             d.push(rows[categories[j]][i] || 0);
           }
 
-          newSeries.push({
-            name: series[i].name,
-            data: d
-          });
+          series[i].data = d
+          newSeries.push(series[i]);
         }
         options.series = newSeries;
 
