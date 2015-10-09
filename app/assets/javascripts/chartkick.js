@@ -561,8 +561,9 @@
         var i, j, s, d, key, rows = [];
         for (i = 0; i < series.length; i++) {
           s = series[i];
-          data.addColumn("number", s.name);
 
+          data.addColumn("number", s.name);
+          var typeCount = 0
           for (j = 0; j < s.data.length; j++) {
             d = s.data[j];
             key = (columnType === "datetime") ? d[0].getTime() : d[0];
@@ -571,11 +572,31 @@
             }
             rows[key][i] = toFloat(d[1]);
           }
+
+          if(s.types != undefined) {
+              typeCount = s.types.length;
+              for (var k = 0; k < s.types.length; k++) {
+                  data.addColumn({type: "string", role: s.types[k]});
+
+                  for (j = 0; j < s.data.length; j++) {
+                      d = s.data[j];
+                      key = (columnType === "datetime") ? d[0].getTime() : d[0];
+                      if (!rows[key]) {
+                          rows[key] = new Array(series.length);
+                      }
+
+                      rows[key][i + k + 1] = d[k + 2];
+                  }
+              }
+          }
+
         }
 
         var rows2 = [];
         var value;
+
         for (i in rows) {
+
           if (rows.hasOwnProperty(i)) {
             if (columnType === "datetime") {
               value = new Date(toFloat(i));
@@ -584,14 +605,17 @@
             } else {
               value = i;
             }
-            rows2.push([value].concat(rows[i]));
+
+            var currentRow = [ value ];
+            currentRow = currentRow.concat(rows[i]);
+            rows2.push(currentRow);
           }
         }
         if (columnType === "datetime") {
           rows2.sort(sortByTime);
         }
-        data.addRows(rows2);
 
+        data.addRows(rows2);
         return data;
       };
 
@@ -782,7 +806,18 @@
     var r = [], key, j;
     for (j = 0; j < data.length; j++) {
       key = toFormattedKey(data[j][0], keyType);
+      if(data[j].length == 2) {
       r.push([key, toFloat(data[j][1])]);
+      }
+      else {
+        var arr = [key, toFloat(data[j][1])];
+        var options = data[j].slice(2);
+
+        if (options.length > 0) {
+          arr = arr.concat(options);
+        }
+        r.push(arr);
+      }
     }
     if (keyType === "datetime") {
       r.sort(sortByTime);
