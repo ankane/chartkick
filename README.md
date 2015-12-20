@@ -147,7 +147,7 @@ Axis titles
 You can pass options directly to the charting library with:
 
 ```erb
-<%= line_chart data, library: {backgroundColor: "#eee"} %>
+<%= line_chart data, library: {backgroundColor: "#eee", title: 'A Grey Chart'} %>
 ```
 
 See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery) and [Highcharts](http://api.highcharts.com/highcharts) for more info.
