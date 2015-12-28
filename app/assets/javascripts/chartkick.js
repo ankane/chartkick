@@ -735,6 +735,7 @@
           data.addColumn({type: "string", id: "Name"});
           data.addColumn({type: "date", id: "Start"});
           data.addColumn({type: "date", id: "End"});
+          console.log(chart.data[1]);
           data.addRows(chart.data);
 
           chart.chart = new google.visualization.Timeline(chart.element);
