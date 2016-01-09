@@ -140,6 +140,10 @@
         setYtitle(options, opts.ytitle);
       }
 
+      if (opts.plotOptions) {
+        options.plotOptions = (options.plotOptions, opts.plotOptions);
+      }
+
       // merge library last
       options = merge(options, opts.library || {});
 
