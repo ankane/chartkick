@@ -67,7 +67,7 @@ Timeline
 Multiple series
 
 ```erb
-<%= line_chart @goals.map{|goal|
+<%= line_chart @goals.map { |goal|
     {name: goal.name, data: goal.feats.group_by_week(:created_at).count}
 } %>
 ```
