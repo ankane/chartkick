@@ -124,8 +124,8 @@
         setMax(options, opts.max);
       }
 
-      if (opts.stacked) {
-        setStacked(options);
+      if ("stacked" in opts) {
+        setStacked(options, opts.stacked);
       }
 
       if (opts.colors) {
@@ -297,8 +297,8 @@
         options.yAxis.max = max;
       };
 
-      var setStacked = function (options) {
-        options.plotOptions.series.stacking = "normal";
+      var setStacked = function (options, stacked) {
+        options.plotOptions.series.stacking = stacked ? "normal" : null;
       };
 
       var setXtitle = function (options, title) {
@@ -537,8 +537,8 @@
         options.hAxis.viewWindow.max = max;
       };
 
-      var setStacked = function (options) {
-        options.isStacked = true;
+      var setStacked = function (options, stacked) {
+        options.isStacked = !!stacked;
       };
 
       var setXtitle = function (options, title) {

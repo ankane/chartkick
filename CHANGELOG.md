@@ -1,3 +1,8 @@
+## 1.4.2 [unreleased]
+
+- Added `width` option
+- Added support for `stacked: false` for area charts
+
 ## 1.4.1
 
 - Fixed regression with `min: nil`
