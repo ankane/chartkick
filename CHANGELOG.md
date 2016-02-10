@@ -2,6 +2,7 @@
 
 - Added `width` option
 - Added support for `stacked: false` for area charts
+- Lazy load adapters
 
 ## 1.4.1
 
