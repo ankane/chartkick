@@ -241,7 +241,7 @@ You must include `chartkick.js` manually.  [Download it here](https://raw.github
 For Rails 2.3, you must use a script tag for Google Charts due to [this bug](https://rails.lighthouseapp.com/projects/8994/tickets/1664-javascript_include_tag-shouldnt-append-a-js-onto-external-urls).
 
 ```html
-<script src="//www.google.com/jsapi"></script>
+<script src="https://www.google.com/jsapi"></script>
 ```
 
 ### For Sinatra
@@ -249,7 +249,7 @@ For Rails 2.3, you must use a script tag for Google Charts due to [this bug](htt
 You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
 
 ```html
-<script src="//www.google.com/jsapi"></script>
+<script src="https://www.google.com/jsapi"></script>
 <script src="chartkick.js"></script>
 ```
 
