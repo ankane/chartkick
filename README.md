@@ -1,6 +1,6 @@
 # Chartkick
 
-Create beautiful Javascript charts with one line of Ruby. No more fighting with charting libraries!
+Create beautiful JavaScript charts with one line of Ruby. No more fighting with charting libraries!
 
 [See it in action](http://ankane.github.io/chartkick/)
 
@@ -169,7 +169,7 @@ Customize the html
 Chartkick.options[:html] = '<div id="%{id}" style="height: %{height};">Loading...</div>'
 ```
 
-You capture the javascript in a content block with:
+You capture the JavaScript in a content block with:
 
 ```ruby
 Chartkick.options[:content_for] = :charts_js
@@ -182,7 +182,7 @@ Then, in your layout:
 <%= yield_content :charts_js %> <%# Padrino %>
 ```
 
-This is great for including all of your javascript at the bottom of the page.
+This is great for including all of your JavaScript at the bottom of the page.
 
 ### Data
 
@@ -216,7 +216,7 @@ Add this line to your application's Gemfile:
 gem "chartkick"
 ```
 
-And add the javascript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option.
+And add the JavaScript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option.
 
 For Google Charts, use:
 
@@ -273,7 +273,7 @@ To specify a language for Google Charts, add:
 </script>
 ```
 
-**before** the javascript files.
+**before** the JavaScript files.
 
 ## No Ruby? No Problem
 
