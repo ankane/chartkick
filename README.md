@@ -221,7 +221,7 @@ And add the JavaScript files to your views.  These files must be included **befo
 For Google Charts, use:
 
 ```erb
-<%= javascript_include_tag "//www.google.com/jsapi", "chartkick" %>
+<%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
 ```
 
 If you prefer Highcharts, use:
