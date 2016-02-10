@@ -13,6 +13,7 @@
 
   var config = window.Chartkick || {};
   var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
+  var adapters = [];
 
   // helpers
 
@@ -235,9 +236,8 @@
     return a[0].getTime() - b[0].getTime();
   }
 
-  function loadAdapters(){
-    adapters = [];
-    if ("Highcharts" in window) {
+  function loadAdapters() {
+    if (!HighchartsAdapter && "Highcharts" in window) {
       var HighchartsAdapter = new function () {
         var Highcharts = window.Highcharts;
 
@@ -429,7 +429,7 @@
       };
       adapters.push(HighchartsAdapter);
     }
-    if (window.google && window.google.setOnLoadCallback) {
+    if (!GoogleChartsAdapter && window.google && window.google.setOnLoadCallback) {
       var GoogleChartsAdapter = new function () {
         var google = window.google;
 
@@ -751,7 +751,6 @@
       adapters.push(GoogleChartsAdapter);
     }
   }
-  loadAdapters()
 
   // TODO remove chartType if cross-browser way
   // to get the name of the chart class
@@ -760,8 +759,8 @@
     fnName = "render" + chartType;
     adapterName = chart.options.adapter;
 
-    if(adapters.length == 0) {
-      loadAdapters()
+    if (adapters.length == 0) {
+      loadAdapters();
     }
 
     for (i = 0; i < adapters.length; i++) {
