@@ -1,8 +1,12 @@
 module Chartkick
   class Engine < ::Rails::Engine
     initializer "precompile", group: :all do |app|
-      # use a proc instead of a string
-      app.config.assets.precompile << 'chartkick.js'
+      # use a string in rails >= 5
+      if Gem::Requirement.new(">= 5.0.0.beta").satisfied_by?(Gem::Version.new(Rails.version))
+        app.config.assets.precompile << 'chartkick.js'
+      else
+        app.config.assets.precompile << proc { |path| path == "chartkick.js" }
+      end
     end
 
     initializer "helper" do
