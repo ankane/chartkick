@@ -106,10 +106,10 @@ render json: Task.group(:goal_id).group_by_day(:completed_at).count.chart_json
 
 ### Options
 
-Id and height
+Id, width, and height
 
 ```erb
-<%= line_chart data, id: "users-chart", height: "500px" %>
+<%= line_chart data, id: "users-chart", width: "800px", height: "500px" %>
 ```
 
 Min and max values
@@ -136,6 +136,12 @@ Discrete axis
 
 ```erb
 <%= line_chart data, discrete: true %>
+```
+
+Label (for single series)
+
+```erb
+<%= line_chart data, label: "Value" %>
 ```
 
 Axis titles
