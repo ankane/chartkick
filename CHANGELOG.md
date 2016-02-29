@@ -5,6 +5,7 @@
 - Added support for `stacked: false` for area charts
 - Lazy load adapters
 - Better tooltip for dates for Google Charts
+- Fixed asset precompilation issue with Rails 5
 
 ## 1.4.1
 
