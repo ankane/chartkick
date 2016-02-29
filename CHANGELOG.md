@@ -1,8 +1,10 @@
 ## 1.4.2 [unreleased]
 
 - Added `width` option
+- Added `label` option
 - Added support for `stacked: false` for area charts
 - Lazy load adapters
+- Better tooltip for dates for Google Charts
 
 ## 1.4.1
 
