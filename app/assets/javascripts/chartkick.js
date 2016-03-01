@@ -745,6 +745,7 @@
             data.addColumn({type: "date", id: "End"});
             data.addRows(chart.data);
 
+            chart.element.style.lineHeight = "normal";
             chart.chart = new google.visualization.Timeline(chart.element);
 
             resize(function () {
