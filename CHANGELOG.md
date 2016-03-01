@@ -1,3 +1,7 @@
+## 1.4.3 [unreleased]
+
+- Fixed line height on timeline charts
+
 ## 1.4.2
 
 - Added `width` option
