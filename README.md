@@ -1,6 +1,6 @@
 # Chartkick
 
-Create beautiful Javascript charts with one line of Ruby. No more fighting with charting libraries!
+Create beautiful JavaScript charts with one line of Ruby. No more fighting with charting libraries!
 
 [See it in action](http://ankane.github.io/chartkick/)
 
@@ -67,7 +67,7 @@ Timeline
 Multiple series
 
 ```erb
-<%= line_chart @goals.map{|goal|
+<%= line_chart @goals.map { |goal|
     {name: goal.name, data: goal.feats.group_by_week(:created_at).count}
 } %>
 ```
@@ -106,10 +106,10 @@ render json: Task.group(:goal_id).group_by_day(:completed_at).count.chart_json
 
 ### Options
 
-Id and height
+Id, width, and height
 
 ```erb
-<%= line_chart data, id: "users-chart", height: "500px" %>
+<%= line_chart data, id: "users-chart", width: "800px", height: "500px" %>
 ```
 
 Min and max values
@@ -136,6 +136,12 @@ Discrete axis
 
 ```erb
 <%= line_chart data, discrete: true %>
+```
+
+Label (for single series)
+
+```erb
+<%= line_chart data, label: "Value" %>
 ```
 
 Axis titles
@@ -169,7 +175,7 @@ Customize the html
 Chartkick.options[:html] = '<div id="%{id}" style="height: %{height};">Loading...</div>'
 ```
 
-You capture the javascript in a content block with:
+You capture the JavaScript in a content block with:
 
 ```ruby
 Chartkick.options[:content_for] = :charts_js
@@ -182,7 +188,7 @@ Then, in your layout:
 <%= yield_content :charts_js %> <%# Padrino %>
 ```
 
-This is great for including all of your javascript at the bottom of the page.
+This is great for including all of your JavaScript at the bottom of the page.
 
 ### Data
 
@@ -216,12 +222,12 @@ Add this line to your application's Gemfile:
 gem "chartkick"
 ```
 
-And add the javascript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option.
+And add the JavaScript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option.
 
 For Google Charts, use:
 
 ```erb
-<%= javascript_include_tag "//www.google.com/jsapi", "chartkick" %>
+<%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
 ```
 
 If you prefer Highcharts, use:
@@ -241,7 +247,7 @@ You must include `chartkick.js` manually.  [Download it here](https://raw.github
 For Rails 2.3, you must use a script tag for Google Charts due to [this bug](https://rails.lighthouseapp.com/projects/8994/tickets/1664-javascript_include_tag-shouldnt-append-a-js-onto-external-urls).
 
 ```html
-<script src="//www.google.com/jsapi"></script>
+<script src="https://www.google.com/jsapi"></script>
 ```
 
 ### For Sinatra
@@ -249,15 +255,13 @@ For Rails 2.3, you must use a script tag for Google Charts due to [this bug](htt
 You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
 
 ```html
-<script src="//www.google.com/jsapi"></script>
+<script src="https://www.google.com/jsapi"></script>
 <script src="chartkick.js"></script>
 ```
 
 ### For Padrino
 
 You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
-
-In addition, you must specify `http` or `https` if you use Google Charts, since Padrino tries to append `.js` to protocol relative urls.
 
 ```erb
 <%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
@@ -273,7 +277,7 @@ To specify a language for Google Charts, add:
 </script>
 ```
 
-**before** the javascript files.
+**before** the JavaScript files.
 
 ## No Ruby? No Problem
 
