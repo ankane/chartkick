@@ -413,7 +413,8 @@
 
             newSeries.push({
               name: series[i].name,
-              data: d
+              data: d,
+              colors: ( series[i].colors || nil )
             });
           }
           options.series = newSeries;
