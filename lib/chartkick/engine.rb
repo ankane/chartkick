@@ -1,7 +1,7 @@
 module Chartkick
   class Engine < ::Rails::Engine
     initializer "precompile", group: :all do |app|
-      if Rails::VERSION::MAJOR >= 5
+      if Gem::Version.new(Sprockets::VERSION) >= Gem::Version.new("4.0.0.beta1")
         app.config.assets.precompile << "chartkick.js"
       else
         # use a proc instead of a string
