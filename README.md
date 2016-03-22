@@ -156,6 +156,12 @@ You can pass options directly to the charting library with:
 <%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
+For remote data sources, you can pass options to the $.ajax call with:
+
+```erb
+<%= line_chart data, ajaxOptions: {<ajax options>} %>
+```
+
 See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery) and [Highcharts](http://api.highcharts.com/highcharts) for more info.
 
 ### Global Options
@@ -278,6 +284,16 @@ To specify a language for Google Charts, add:
 ```
 
 **before** the JavaScript files.
+
+### Limiting the Number of Simultaneous Ajax Requests
+
+To limit the number of ajax requests made simultaneously, you could include an extension to jquery ajax that provides this feature (see https://gist.github.com/dontfidget/1ad9ab33971b64fe6fef for an example) and then set the global chartkick options to enable this feature for your chartkick remote data requests:
+
+```ruby
+Chartkick.options = {
+  ajaxOptions: {queue: true, queueMaxConcurrency: 2} 
+}
+```
 
 ## No Ruby? No Problem
 

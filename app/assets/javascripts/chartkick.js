@@ -161,9 +161,9 @@
     element.style.color = "#ff0000";
   }
 
-  function getJSON(element, url, success) {
+  function getJSON(element, url, options, success) {
     var $ = window.jQuery || window.Zepto || window.$;
-    $.ajax({
+    $.ajax($.extend({}, options, {
       dataType: "json",
       url: url,
       success: success,
@@ -171,7 +171,7 @@
         var message = (typeof errorThrown === "string") ? errorThrown : errorThrown.message;
         chartError(element, message);
       }
-    });
+    }));
   }
 
   function errorCatcher(chart, callback) {
@@ -185,7 +185,7 @@
 
   function fetchDataSource(chart, callback) {
     if (typeof chart.dataSource === "string") {
-      getJSON(chart.element, chart.dataSource, function (data, textStatus, jqXHR) {
+      getJSON(chart.element, chart.dataSource, chart.options.ajaxOptions, function (data, textStatus, jqXHR) {
         chart.data = data;
         errorCatcher(chart, callback);
       });
