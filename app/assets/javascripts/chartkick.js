@@ -12,8 +12,7 @@
   'use strict';
 
   var config = window.Chartkick || {};
-  var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
-  var adapters = [];
+  var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters= [];
 
   // helpers
 
@@ -139,6 +138,10 @@
 
       if (opts.ytitle) {
         setYtitle(options, opts.ytitle);
+      }
+
+      if (opts.plotOptions) {
+        options.plotOptions = (options.plotOptions, opts.plotOptions);
       }
 
       // merge library last
@@ -374,7 +377,7 @@
         };
 
         this.renderColumnChart = function (chart, chartType) {
-          var chartType = chartType || "column";
+          chartType = chartType || "column";
           var series = chart.data;
           var options = jsOptions(series, chart.options), i, j, s, d, rows = [];
           options.chart.type = chartType;
@@ -409,7 +412,8 @@
 
             newSeries.push({
               name: series[i].name,
-              data: d
+              data: d,
+              colors: ( series[i].colors || undefined )
             });
           }
           options.series = newSeries;
