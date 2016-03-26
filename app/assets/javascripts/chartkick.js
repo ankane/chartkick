@@ -758,6 +758,79 @@
       adapters.push(GoogleChartsAdapter);
     }
   }
+  if ("Chart" in window) {
+    var ChartAdapter = new function () {
+      var self = this;
+
+      var Chart = window.Chart;
+
+      var defaultOptions = {
+      }
+
+      var setMin = function (options, min) {
+        options.scaleStartValue = min;
+      };
+
+      var hideLegend = function(options){
+      }
+
+      var renderCanvas = function(options, chart){
+        var canvas = document.createElement("canvas");
+        canvas.id = chart.element.id + "_canvas";
+        options.canvasDimensions = options.canvasDimensions || {};
+        canvas.width = options.canvasDimensions.width || 600;
+        canvas.height = options.canvasDimensions.height || 300;
+        delete options.canvasDimensions;
+        chart.element.innerHTML = '';
+        chart.element.appendChild(canvas);
+        return canvas;
+      }
+
+      var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setMin, null, null);
+
+      this.renderLineChart = function (chart) {
+        var chartOptions = {
+          pointHitDetectionRadius : 0,
+        };
+        var options = jsOptions(chart.data, chart.options, chartOptions), data, i, j;
+
+        data = {
+          labels: [],
+          datasets: []
+        }
+
+        var series = chart.data;
+        for (i = 0; i < series.length; i++) {
+          var dataset = {
+            data: [],
+            fillColor: "rgba(151,187,205,0.2)",
+            strokeColor: "rgba(151,187,205,1)",
+            pointColor: "rgba(151,187,205,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(151,187,205,1)"
+          };
+          var thisSeries = series[i];
+          dataset.label = thisSeries.name;
+          for (j = 0; j < thisSeries.data.length; j++) {
+            if(i === 0){
+              if("moment" in window){
+                data.labels.push(window.moment(thisSeries.data[j][0]).utc().format("MMM Do ha"));
+              } else {
+                data.labels.push(thisSeries.data[j][0]);
+              }
+            }
+            dataset.data.push(thisSeries.data[j][1]);
+          }
+          data.datasets.push(dataset);
+        }
+        var ctx = renderCanvas(options, chart).getContext("2d");
+        var myLineChart = new Chart(ctx).Line(data, chartOptions);
+      };
+    };
+    adapters.push(ChartAdapter);
+  }
+
 
   // TODO remove chartType if cross-browser way
   // to get the name of the chart class
