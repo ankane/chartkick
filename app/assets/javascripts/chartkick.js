@@ -753,6 +753,34 @@
             });
           });
         };
+
+        this.renderSankey = function (chart) {
+          waitForLoaded(function () {
+            var chartOptions = {
+              width: 900,
+              height: 600,
+              sankey: {
+                node: {
+                  interactivity: true
+                }
+              }
+            };
+            //var options = jsOptions(chart.data, chart.options, chartOptions);
+            var options = chartOptions;
+
+            var data = new google.visualization.DataTable();
+            data.addColumn({type: "string", id: "From"});
+            data.addColumn({type: "string", id: "To"});
+            data.addColumn({type: "number", id: "Weight"});
+            data.addRows(chart.data);
+
+            chart.chart = new google.visualization.Sankey(chart.element);
+
+            resize(function () {
+              chart.chart.draw(data, options);
+            });
+          });
+        };
       };
 
       adapters.push(GoogleChartsAdapter);
@@ -888,6 +916,11 @@
     renderChart("Timeline", chart);
   }
 
+  function processSankeyData(chart) {
+    //chart.data = processSimple(chart.data);
+    renderChart("Sankey", chart);
+  }
+
   function setElement(chart, element, dataSource, opts, callback) {
     if (typeof element === "string") {
       element = document.getElementById(element);
@@ -925,6 +958,9 @@
     },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
+    },
+    Sankey: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processSankeyData);
     },
     charts: {}
   };
