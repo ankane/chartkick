@@ -757,16 +757,13 @@
         this.renderSankey = function (chart) {
           waitForLoaded(function () {
             var chartOptions = {
-              width: 900,
-              height: 600,
               sankey: {
                 node: {
                   interactivity: true
                 }
               }
             };
-            //var options = jsOptions(chart.data, chart.options, chartOptions);
-            var options = chartOptions;
+            var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
             var data = new google.visualization.DataTable();
             data.addColumn({type: "string", id: "From"});
