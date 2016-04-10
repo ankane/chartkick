@@ -914,7 +914,6 @@
   }
 
   function processSankeyData(chart) {
-    //chart.data = processSimple(chart.data);
     renderChart("Sankey", chart);
   }
 
