@@ -13,6 +13,7 @@
 
   var config = window.Chartkick || {};
   var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
+  var DATE_PATTERN = /^(\d\d\d\d)(\-)?(\d\d)(\-)?(\d\d)$/i;
   var adapters = [];
 
   // helpers
@@ -206,9 +207,15 @@
   }
 
   function toDate(n) {
+    var matches, year, month, day;
     if (typeof n !== "object") {
       if (typeof n === "number") {
         n = new Date(n * 1000); // ms
+      } else if (config.smarterDates && (matches = n.match(DATE_PATTERN))) {
+        year = parseInt(matches[1], 10);
+        month = parseInt(matches[3], 10) - 1;
+        day = parseInt(matches[5], 10);
+        return new Date(year, month, day);
       } else { // str
         // try our best to get the str into iso8601
         // TODO be smarter about this
@@ -757,6 +764,256 @@
 
       adapters.push(GoogleChartsAdapter);
     }
+    if (!ChartjsAdapter && "Chart" in window) {
+      var ChartjsAdapter = new function () {
+        var Chart = window.Chart;
+
+        this.name = "chartjs";
+
+        var baseOptions = {
+          maintainAspectRatio: false,
+          animation: false
+        };
+
+        var defaultOptions = {
+          scales: {
+            yAxes: [
+              {
+                ticks: {
+                  maxTicksLimit: 4
+                },
+                scaleLabel: {
+                  fontSize: 16,
+                  // fontStyle: "bold",
+                  fontColor: "#333"
+                }
+              }
+            ],
+            xAxes: [
+              {
+                gridLines: {
+                  drawOnChartArea: false
+                },
+                scaleLabel: {
+                  fontSize: 16,
+                  // fontStyle: "bold",
+                  fontColor: "#333"
+                },
+                time: {}
+              }
+            ]
+          },
+          legend: {}
+        };
+
+        // http://there4.io/2012/05/02/google-chart-color-list/
+        var defaultColors = [
+          "#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", "#3B3EAC", "#0099C6",
+          "#DD4477", "#66AA00", "#B82E2E", "#316395", "#994499", "#22AA99", "#AAAA11",
+          "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#3B3EAC"
+        ];
+
+        var hideLegend = function (options) {
+          options.legend.display = false;
+        };
+
+        var setMin = function (options, min) {
+          if (min !== null) {
+            options.scales.yAxes[0].ticks.min = min;
+          }
+        };
+
+        var setMax = function (options, max) {
+          options.scales.yAxes[0].ticks.max = max;
+        };
+
+        var setStacked = function (options, stacked) {
+          options.scales.xAxes[0].stacked = !!stacked;
+          options.scales.yAxes[0].stacked = !!stacked;
+        };
+
+        var setXtitle = function (options, title) {
+          options.scales.xAxes[0].scaleLabel.display = true;
+          options.scales.xAxes[0].scaleLabel.labelString = title;
+        };
+
+        var setYtitle = function (options, title) {
+          options.scales.yAxes[0].scaleLabel.display = true;
+          options.scales.yAxes[0].scaleLabel.labelString = title;
+        };
+
+        var drawChart = function(chart, type, data, options) {
+          chart.element.innerHTML = "<canvas></canvas>";
+          var ctx = chart.element.getElementsByTagName("CANVAS")[0];
+
+          chart.chart = new Chart(ctx, {
+            type: type,
+            data: data,
+            options: options
+          });
+        };
+
+        // http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+        var addOpacity = function(hex, opacity) {
+          var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? "rgba(" + parseInt(result[1], 16) + ", " + parseInt(result[2], 16) + ", " + parseInt(result[3], 16) + ", " + opacity + ")" : hex;
+        };
+
+        var jsOptions = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setMin, setMax, setStacked, setXtitle, setYtitle);
+
+        var createDataTable = function (chart, options, chartType) {
+          var datasets = [];
+          var labels = [];
+
+          var colors = chart.options.colors || defaultColors;
+
+          var day = true;
+          var week = true;
+          var dayOfWeek;
+          var month = true;
+          var year = true;
+          var detectType = (chartType === "line" || chartType === "area") && !chart.options.discrete;
+
+          var series = chart.data;
+
+          var i, j, s, d, key, rows = [];
+          for (i = 0; i < series.length; i++) {
+            s = series[i];
+
+            for (j = 0; j < s.data.length; j++) {
+              d = s.data[j];
+              key = detectType ? d[0].getTime() : d[0];
+              if (!rows[key]) {
+                rows[key] = new Array(series.length);
+              }
+              rows[key][i] = toFloat(d[1]);
+            }
+          }
+
+          var rows2 = [];
+          for (var j = 0; j < series.length; j++) {
+            rows2.push([]);
+          }
+
+          var day = true;
+          var value;
+          for (i in rows) {
+            if (rows.hasOwnProperty(i)) {
+              if (detectType) {
+                value = new Date(toFloat(i));
+                // TODO make this efficient
+                day = day && isDay(value);
+                if (!dayOfWeek) {
+                  dayOfWeek = value.getDay();
+                }
+                week = week && isWeek(value, dayOfWeek);
+                month = month && isMonth(value);
+                year = year && isYear(value);
+              } else {
+                value = i;
+              }
+              labels.push(value);
+              for (var j = 0; j < series.length; j++) {
+                rows2[j].push(rows[i][j])
+              }
+            }
+          }
+
+          for (var i = 0; i < series.length; i++) {
+            var s = series[i];
+
+            var backgroundColor = chartType === "area" ? addOpacity(colors[i], 0.5) : colors[i];
+
+            var dataset = {
+              label: s.name,
+              data: rows2[i],
+              fill: chartType === "area",
+              borderColor: colors[i],
+              backgroundColor: backgroundColor,
+              pointBackgroundColor: colors[i]
+            };
+
+            datasets.push(dataset);
+          }
+
+          if (detectType) {
+            if (year) {
+              options.scales.xAxes[0].time.unit = "year";
+              options.scales.xAxes[0].time.tooltipFormat = "ll";
+            } else if (month) {
+              options.scales.xAxes[0].time.unit = "month";
+              options.scales.xAxes[0].time.tooltipFormat = "ll";
+            } else if (week) {
+              options.scales.xAxes[0].time.unit = "week";
+              options.scales.xAxes[0].time.tooltipFormat = "ll";
+            } else if (day) {
+              options.scales.xAxes[0].time.unit = "day";
+              options.scales.xAxes[0].time.tooltipFormat = "ll";
+            }
+          }
+
+          var data = {
+            labels: labels,
+            datasets: datasets
+          };
+
+          return data;
+        };
+
+        this.renderLineChart = function (chart, chartType) {
+          var areaOptions = {};
+          if (chartType === "area") {
+            // TODO fix area stacked
+            // areaOptions.stacked = true;
+          }
+          var options = jsOptions(chart.data, merge(areaOptions, chart.options));
+
+          var data = createDataTable(chart, options, chartType || "line");
+
+          options.scales.xAxes[0].type = chart.options.discrete ? "category" : "time";
+
+          drawChart(chart, "line", data, options);
+        }
+
+        this.renderPieChart = function (chart) {
+          var options = merge(baseOptions, chart.options.library || {});
+
+          var labels = [];
+          var values = [];
+          for (var i = 0; i < chart.data.length; i++) {
+            var point = chart.data[i];
+            labels.push(point[0]);
+            values.push(point[1]);
+          }
+
+          var data = {
+            labels: labels,
+            datasets: [
+              {
+                data: values,
+                backgroundColor: chart.options.colors || defaultColors
+              }
+            ]
+          };
+
+          drawChart(chart, "pie", data, options);
+        }
+
+        this.renderColumnChart = function (chart) {
+          var options = jsOptions(chart.data, chart.options);
+          var data = createDataTable(chart);
+          drawChart(chart, "bar", data, options);
+        }
+
+        var self = this;
+
+        this.renderAreaChart = function (chart) {
+          self.renderLineChart(chart, "area");
+        };
+      }
+
+      adapters.push(ChartjsAdapter);
+    }
   }
 
   // TODO remove chartType if cross-browser way
@@ -806,6 +1063,18 @@
 
   function isDay(d) {
     return d.getMilliseconds() + d.getSeconds() + d.getMinutes() + d.getHours() === 0;
+  }
+
+  function isWeek(d, dayOfWeek) {
+    return isDay(d) && d.getDay() === dayOfWeek;
+  }
+
+  function isMonth(d) {
+    return isDay(d) && d.getDate() === 1;
+  }
+
+  function isYear(d) {
+    return isMonth(d) && d.getMonth() === 0;
   }
 
   function processSeries(series, opts, keyType) {
