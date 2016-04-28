@@ -236,7 +236,7 @@ If you prefer Highcharts, use:
 <%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
 ```
 
-If you prefer Chart.js (works with 2.0+, in beta), use:
+If you prefer Chart.js (works with 2.0+, in beta), use: **[only on master branch]**
 
 ```erb
 <%= javascript_include_tag "path/to/Chart.bundle.js", "chartkick" %>
