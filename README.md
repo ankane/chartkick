@@ -78,6 +78,16 @@ or
 <%= line_chart Feat.group(:goal_id).group_by_week(:created_at).count %>
 ```
 
+Tables (Only with Google Charts)
+
+```erb
+<%= table [
+  [['string', 'Domain'], ['number', 'Landing Page'], ['number', 'Sign Up']],
+  ['www.example.com', 243, 20],
+  ['t.co', 12, 1]
+] %>
+```
+
 ### Say Goodbye To Timeouts
 
 Make your pages load super fast and stop worrying about timeouts.  Give each chart its own endpoint.

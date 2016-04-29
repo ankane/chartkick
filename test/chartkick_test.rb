@@ -21,6 +21,10 @@ class TestChartkick < Minitest::Test
     assert column_chart(@data)
   end
 
+  def test_table
+    assert table(@data)
+  end
+
   def test_options_not_mutated
     options = {id: "boom"}
     line_chart @data, options
