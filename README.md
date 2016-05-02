@@ -230,13 +230,13 @@ For Google Charts, use:
 <%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
 ```
 
-If you prefer Highcharts, use:
+If you prefer Highcharts (works with 2.1+), [download it](http://www.highcharts.com/download) and use:
 
 ```erb
 <%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
 ```
 
-If you prefer Chart.js (works with 2.0+, in beta), use: **[only on master branch]**
+If you prefer Chart.js (works with 2.0+, in beta), [download the bundle](http://www.chartjs.org/docs/#getting-started-download-chart-js) and use:
 
 ```erb
 <%= javascript_include_tag "path/to/Chart.bundle.js", "chartkick" %>
