@@ -1,4 +1,4 @@
-## 1.5.0 [unreleased]
+## 1.5.0
 
 - Added Chart.js adapter **beta**
 - Fixed line height on timeline charts
