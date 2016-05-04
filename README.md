@@ -224,7 +224,7 @@ gem "chartkick"
 
 Next, choose your charting library.
 
-**Note:** `application.js` must be included **before** the helper methods in your views, unless using the `:content_for` option.
+**Note:** In the instructions below, `application.js` must be included **before** the helper methods in your views, unless using the `:content_for` option.
 
 #### Google Charts
 
