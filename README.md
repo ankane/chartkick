@@ -222,29 +222,45 @@ Add this line to your application's Gemfile:
 gem "chartkick"
 ```
 
-And add the JavaScript files to your views.  These files must be included **before** the helper methods, unless using the `:content_for` option.
+Next, choose your charting library.
 
-For Google Charts, use:
+**Note:** `application.js` must be included **before** the helper methods in your views, unless using the `:content_for` option.
 
-```erb
-<%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
+#### Google Charts
+
+In `application.js`, add:
+
+```js
+//= require chartkick
 ```
 
-If you prefer Highcharts (works with 2.1+), [download it](http://www.highcharts.com/download) and use:
+In your views, before `application.js`, add:
 
 ```erb
-<%= javascript_include_tag "path/to/highcharts.js", "chartkick" %>
+<%= javascript_include_tag "https://www.google.com/jsapi" %>
 ```
 
-If you prefer Chart.js (works with 2.0+, in beta), [download the bundle](http://www.chartjs.org/docs/#getting-started-download-chart-js) and use:
+#### Highcharts
 
-```erb
-<%= javascript_include_tag "path/to/Chart.bundle.js", "chartkick" %>
+Download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts`.
+
+In `application.js`, add:
+
+```js
+//= require highcharts
+//= require chartkick
 ```
 
-### For Rails 3.1+
+Works with Highcharts 2.1+
 
-`chartkick.js` runs as a Rails engine - no need to install it.
+#### Chart.js (in beta)
+
+In `application.js`, add:
+
+```js
+//= require Chart.bundle
+//= require chartkick
+```
 
 ### For Rails 2.3 and 3.0
 

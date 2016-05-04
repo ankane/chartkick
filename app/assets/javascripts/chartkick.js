@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful JavaScript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.5.0
+ * v1.5.1
  * MIT License
  */
 
@@ -241,6 +241,10 @@
 
   function sortByTime(a, b) {
     return a[0].getTime() - b[0].getTime();
+  }
+
+  function sortByNumber(a, b) {
+    return a - b;
   }
 
   function loadAdapters() {
@@ -799,7 +803,8 @@
                   // fontStyle: "bold",
                   fontColor: "#333"
                 },
-                time: {}
+                time: {},
+                ticks: {}
               }
             ]
           },
@@ -859,6 +864,18 @@
           return result ? "rgba(" + parseInt(result[1], 16) + ", " + parseInt(result[2], 16) + ", " + parseInt(result[3], 16) + ", " + opacity + ")" : hex;
         };
 
+        var setLabelSize = function (chart, data, options) {
+          var maxLabelSize = Math.ceil(chart.element.offsetWidth / 4.0 / data.labels.length);
+          options.scales.xAxes[0].ticks.callback = function (value) {
+            value = toStr(value);
+            if (value.length > maxLabelSize) {
+              return value.substring(0, maxLabelSize - 2) + "...";
+            } else {
+              return value;
+            }
+          };
+        };
+
         var jsOptions = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setMin, setMax, setStacked, setXtitle, setYtitle);
 
         var createDataTable = function (chart, options, chartType) {
@@ -876,6 +893,8 @@
 
           var series = chart.data;
 
+          var sortedLabels = [];
+
           var i, j, s, d, key, rows = [];
           for (i = 0; i < series.length; i++) {
             s = series[i];
@@ -887,7 +906,14 @@
                 rows[key] = new Array(series.length);
               }
               rows[key][i] = toFloat(d[1]);
+              if (sortedLabels.indexOf(key) === -1) {
+                sortedLabels.push(key);
+              }
             }
+          }
+
+          if (detectType) {
+            sortedLabels.sort(sortByNumber);
           }
 
           var rows2 = [];
@@ -897,25 +923,25 @@
 
           var day = true;
           var value;
-          for (i in rows) {
-            if (rows.hasOwnProperty(i)) {
-              if (detectType) {
-                value = new Date(toFloat(i));
-                // TODO make this efficient
-                day = day && isDay(value);
-                if (!dayOfWeek) {
-                  dayOfWeek = value.getDay();
-                }
-                week = week && isWeek(value, dayOfWeek);
-                month = month && isMonth(value);
-                year = year && isYear(value);
-              } else {
-                value = i;
+          var k;
+          for (k = 0; k < sortedLabels.length; k++) {
+            i = sortedLabels[k];
+            if (detectType) {
+              value = new Date(toFloat(i));
+              // TODO make this efficient
+              day = day && isDay(value);
+              if (!dayOfWeek) {
+                dayOfWeek = value.getDay();
               }
-              labels.push(value);
-              for (var j = 0; j < series.length; j++) {
-                rows2[j].push(rows[i][j])
-              }
+              week = week && isWeek(value, dayOfWeek);
+              month = month && isMonth(value);
+              year = year && isYear(value);
+            } else {
+              value = i;
+            }
+            labels.push(value);
+            for (var j = 0; j < series.length; j++) {
+              rows2[j].push(rows[i][j])
             }
           }
 
@@ -934,21 +960,47 @@
               borderWidth: 2
             };
 
-            datasets.push(dataset);
+            datasets.push(merge(dataset, s.library || {}));
           }
 
-          if (detectType) {
-            if (year) {
-              options.scales.xAxes[0].time.unit = "year";
-              options.scales.xAxes[0].time.tooltipFormat = "ll";
-            } else if (month) {
-              options.scales.xAxes[0].time.unit = "month";
-              options.scales.xAxes[0].time.tooltipFormat = "ll";
-            } else if (week) {
-              options.scales.xAxes[0].time.unit = "week";
-              options.scales.xAxes[0].time.tooltipFormat = "ll";
-            } else if (day) {
-              options.scales.xAxes[0].time.unit = "day";
+          if (detectType && labels.length > 0) {
+            var minTime = labels[0].getTime();
+            var maxTime = labels[0].getTime();
+            for (i = 1; i < labels.length; i++) {
+              value = labels[i].getTime();
+              if (value < minTime) {
+                minTime = value;
+              }
+              if (value > maxTime) {
+                maxTime = value;
+              }
+            }
+
+            var timeDiff = (maxTime - minTime) / (86400 * 1000.0);
+
+            if (!options.scales.xAxes[0].time.unit) {
+              var step;
+              if (year || timeDiff > 365 * 10) {
+                options.scales.xAxes[0].time.unit = "year";
+                step = 365;
+              } else if (month || timeDiff > 30 * 10) {
+                options.scales.xAxes[0].time.unit = "month";
+                step = 30;
+              } else if (day || timeDiff > 10) {
+                options.scales.xAxes[0].time.unit = "day";
+                step = 1;
+              }
+
+              if (step && timeDiff > 0) {
+                var unitStepSize = Math.ceil(timeDiff / step / (chart.element.offsetWidth / 100.0));
+                if (week) {
+                  unitStepSize = Math.ceil(unitStepSize / 7.0) * 7;
+                }
+                options.scales.xAxes[0].time.unitStepSize = unitStepSize;
+              }
+            }
+
+            if (!options.scales.xAxes[0].time.tooltipFormat && day) {
               options.scales.xAxes[0].time.tooltipFormat = "ll";
             }
           }
@@ -1000,10 +1052,11 @@
           drawChart(chart, "pie", data, options);
         }
 
-        this.renderColumnChart = function (chart) {
+        this.renderColumnChart = function (chart, chartType) {
           var options = jsOptions(chart.data, chart.options);
-          var data = createDataTable(chart, {}, "column");
-          drawChart(chart, "bar", data, options);
+          var data = createDataTable(chart, options, "column");
+          setLabelSize(chart, data, options);
+          drawChart(chart, (chartType === "bar" ? "horizontalBar" : "bar"), data, options);
         }
 
         var self = this;
@@ -1011,6 +1064,10 @@
         this.renderAreaChart = function (chart) {
           self.renderLineChart(chart, "area");
         };
+
+        this.renderBarChart = function (chart) {
+          self.renderColumnChart(chart, "bar")
+        }
       }
 
       adapters.push(ChartjsAdapter);

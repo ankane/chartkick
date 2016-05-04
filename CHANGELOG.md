@@ -1,3 +1,8 @@
+## 1.5.1 [unreleased]
+
+- Updated chartkick.js to latest version
+- Included `Chart.bundle.js`
+
 ## 1.5.0
 
 - Added Chart.js adapter **beta**
