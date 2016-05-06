@@ -1,3 +1,7 @@
+## 1.5.2
+
+- Fixed Sprockets error
+
 ## 1.5.1
 
 - Updated chartkick.js to latest version
