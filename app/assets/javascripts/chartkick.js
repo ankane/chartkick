@@ -453,7 +453,7 @@
           var cb, call;
           for (var i = 0; i < callbacks.length; i++) {
             cb = callbacks[i];
-            call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline))
+            call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline) || (cb.pack === 'table' && google.visualization.Table))
             if (call) {
               cb.callback();
               callbacks.splice(i, 1);
@@ -764,6 +764,25 @@
             });
           });
         };
+
+        this.renderTable = function (chart) {
+          waitForLoaded('table', function () {
+            //TODO: Finish implementing table
+            var options = merge(defaultOptions, chart.options.library || {});
+
+            var data = new google.visualization.DataTable();
+            for (var i = 0; i < chart.data[0].length; i++) {
+              data.addColumn.apply(data, chart.data[0][i]);
+            }
+            data.addRows(chart.data.slice(1));
+
+            chart.chart = new google.visualization.Table(chart.element);
+
+            resize(function () {
+              chart.chart.draw(data, options);
+            });
+          });
+        }
       };
 
       adapters.push(GoogleChartsAdapter);
@@ -1185,13 +1204,16 @@
     return perfectData;
   }
 
-  function processTime(data)
-  {
+  function processTime(data) {
     var i;
     for (i = 0; i < data.length; i++) {
       data[i][1] = toDate(data[i][1]);
       data[i][2] = toDate(data[i][2]);
     }
+    return data;
+  }
+
+  function processTable(data) {
     return data;
   }
 
@@ -1235,6 +1257,11 @@
     renderChart("Timeline", chart);
   }
 
+  function processTableData(chart) {
+    chart.data = processTable(chart.data);
+    renderChart("Table", chart);
+  }
+
   function setElement(chart, element, dataSource, opts, callback) {
     if (typeof element === "string") {
       element = document.getElementById(element);
@@ -1272,6 +1299,9 @@
     },
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
+    },
+    Table: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processTableData);
     },
     charts: {}
   };

@@ -35,6 +35,10 @@ module Chartkick
       chartkick_chart "Timeline", data_source, options
     end
 
+    def table(data_source, options = {})
+      chartkick_chart "Table", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options)
@@ -46,7 +50,7 @@ module Chartkick
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
-      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width)}
+      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width)}
 
       js = <<JS
 <script type="text/javascript">
