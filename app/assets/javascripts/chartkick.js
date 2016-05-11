@@ -14,7 +14,7 @@
   var config = window.Chartkick || {};
   var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
   var DATE_PATTERN = /^(\d\d\d\d)(\-)?(\d\d)(\-)?(\d\d)$/i;
-  var adapters = [];
+  var GoogleChartsAdapter, HighchartsAdapter, ChartjsAdapter;
 
   // helpers
 
@@ -68,7 +68,8 @@
     if (type !== '[object String]') {
       return;
     }
-    if (matches = input.match(ISO8601_PATTERN)) {
+    matches = input.match(ISO8601_PATTERN);
+    if (matches) {
       year = parseInt(matches[1], 10);
       month = parseInt(matches[3], 10) - 1;
       day = parseInt(matches[5], 10);
@@ -249,7 +250,7 @@
 
   function loadAdapters() {
     if (!HighchartsAdapter && "Highcharts" in window) {
-      var HighchartsAdapter = new function () {
+      HighchartsAdapter = new function () {
         var Highcharts = window.Highcharts;
 
         this.name = "highcharts";
@@ -385,7 +386,7 @@
         };
 
         this.renderColumnChart = function (chart, chartType) {
-          var chartType = chartType || "column";
+          chartType = chartType || "column";
           var series = chart.data;
           var options = jsOptions(series, chart.options), i, j, s, d, rows = [];
           options.chart.type = chartType;
@@ -441,7 +442,7 @@
       adapters.push(HighchartsAdapter);
     }
     if (!GoogleChartsAdapter && window.google && window.google.setOnLoadCallback) {
-      var GoogleChartsAdapter = new function () {
+      GoogleChartsAdapter = new function () {
         var google = window.google;
 
         this.name = "google";
@@ -453,7 +454,7 @@
           var cb, call;
           for (var i = 0; i < callbacks.length; i++) {
             cb = callbacks[i];
-            call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline))
+            call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline));
             if (call) {
               cb.callback();
               callbacks.splice(i, 1);
@@ -557,7 +558,7 @@
         var setXtitle = function (options, title) {
           options.hAxis.title = title;
           options.hAxis.titleTextStyle.italic = false;
-        }
+        };
 
         var setYtitle = function (options, title) {
           options.vAxis.title = title;
@@ -769,7 +770,7 @@
       adapters.push(GoogleChartsAdapter);
     }
     if (!ChartjsAdapter && "Chart" in window) {
-      var ChartjsAdapter = new function () {
+      ChartjsAdapter = new function () {
         var Chart = window.Chart;
 
         this.name = "chartjs";
@@ -917,11 +918,10 @@
           }
 
           var rows2 = [];
-          for (var j = 0; j < series.length; j++) {
+          for (j = 0; j < series.length; j++) {
             rows2.push([]);
           }
 
-          var day = true;
           var value;
           var k;
           for (k = 0; k < sortedLabels.length; k++) {
@@ -940,13 +940,13 @@
               value = i;
             }
             labels.push(value);
-            for (var j = 0; j < series.length; j++) {
-              rows2[j].push(rows[i][j])
+            for (j = 0; j < series.length; j++) {
+              rows2[j].push(rows[i][j]);
             }
           }
 
-          for (var i = 0; i < series.length; i++) {
-            var s = series[i];
+          for (i = 0; i < series.length; i++) {
+            s = series[i];
 
             var backgroundColor = chartType !== "line" ? addOpacity(colors[i], 0.5) : colors[i];
 
@@ -1026,7 +1026,7 @@
           options.scales.xAxes[0].type = chart.options.discrete ? "category" : "time";
 
           drawChart(chart, "line", data, options);
-        }
+        };
 
         this.renderPieChart = function (chart) {
           var options = merge(baseOptions, chart.options.library || {});
@@ -1050,14 +1050,14 @@
           };
 
           drawChart(chart, "pie", data, options);
-        }
+        };
 
         this.renderColumnChart = function (chart, chartType) {
           var options = jsOptions(chart.data, chart.options);
           var data = createDataTable(chart, options, "column");
           setLabelSize(chart, data, options);
           drawChart(chart, (chartType === "bar" ? "horizontalBar" : "bar"), data, options);
-        }
+        };
 
         var self = this;
 
@@ -1066,9 +1066,9 @@
         };
 
         this.renderBarChart = function (chart) {
-          self.renderColumnChart(chart, "bar")
-        }
-      }
+          self.renderColumnChart(chart, "bar");
+        };
+      };
 
       adapters.push(ChartjsAdapter);
     }
@@ -1242,6 +1242,18 @@
     chart.element = element;
     chart.options = opts || {};
     chart.dataSource = dataSource;
+    chart.getElement = function () {
+      return element;
+    };
+    chart.getData = function () {
+      return chart.data;
+    };
+    chart.getOptions = function () {
+      return opts || {};
+    };
+    chart.getChartObject = function () {
+      return chart.chart;
+    };
     Chartkick.charts[element.id] = chart;
     fetchDataSource(chart, callback);
   }
