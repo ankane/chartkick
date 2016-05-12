@@ -1081,9 +1081,7 @@
     fnName = "render" + chartType;
     adapterName = chart.options.adapter;
 
-    if (adapters.length == 0) {
-      loadAdapters();
-    }
+    loadAdapters();
 
     for (i = 0; i < adapters.length; i++) {
       adapter = adapters[i];
