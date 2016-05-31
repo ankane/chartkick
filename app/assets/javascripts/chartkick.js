@@ -1046,6 +1046,11 @@
             // TODO fix area stacked
             // areaOptions.stacked = true;
           }
+          // fix for https://github.com/chartjs/Chart.js/issues/2441
+          if (!chart.options.max && allZeros(chart.data)) {
+            chart.options.max = 1;
+          }
+
           var options = jsOptions(chart.data, merge(areaOptions, chart.options));
 
           var data = createDataTable(chart, options, chartType || "line");
@@ -1175,6 +1180,19 @@
 
   function isDate(obj) {
     return !isNaN(toDate(obj)) && toStr(obj).length >= 6;
+  }
+
+  function allZeros(data) {
+    var i, j, d;
+    for (i = 0; i < data.length; i++) {
+      d = data[i].data;
+      for (j = 0; j < d.length; j++) {
+        if (d[j][1] != 0) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   function detectDiscrete(series) {
