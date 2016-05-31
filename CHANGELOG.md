@@ -1,4 +1,4 @@
-## 2.0.0 [unreleased]
+## 2.0.0
 
 - Chart.js is now the default adapter - yay open source!
 - Axis types are automatically detected - no need for `discrete: true`
