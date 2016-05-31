@@ -1,3 +1,10 @@
+## 2.0.0 [unreleased]
+
+- Chart.js is now the default adapter - yay open source!
+- Axis types are automatically detected - no need for `discrete: true`
+- Better date support
+- New JavaScript API
+
 ## 1.5.2
 
 - Fixed Sprockets error

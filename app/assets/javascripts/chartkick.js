@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful JavaScript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v1.5.1
+ * v2.0.0
  * MIT License
  */
 
@@ -212,7 +212,7 @@
     if (typeof n !== "object") {
       if (typeof n === "number") {
         n = new Date(n * 1000); // ms
-      } else if (config.smarterDates && (matches = n.match(DATE_PATTERN))) {
+      } else if ((matches = n.match(DATE_PATTERN))) {
         year = parseInt(matches[1], 10);
         month = parseInt(matches[3], 10) - 1;
         day = parseInt(matches[5], 10);
@@ -833,6 +833,16 @@
           options.scales.yAxes[0].ticks.max = max;
         };
 
+        var setBarMin = function (options, min) {
+          if (min !== null) {
+            options.scales.xAxes[0].ticks.min = min;
+          }
+        };
+
+        var setBarMax = function (options, max) {
+          options.scales.xAxes[0].ticks.max = max;
+        };
+
         var setStacked = function (options, stacked) {
           options.scales.xAxes[0].stacked = !!stacked;
           options.scales.yAxes[0].stacked = !!stacked;
@@ -890,6 +900,8 @@
           var dayOfWeek;
           var month = true;
           var year = true;
+          var hour = true;
+          var minute = true;
           var detectType = (chartType === "line" || chartType === "area") && !chart.options.discrete;
 
           var series = chart.data;
@@ -936,6 +948,8 @@
               week = week && isWeek(value, dayOfWeek);
               month = month && isMonth(value);
               year = year && isYear(value);
+              hour = hour && isHour(value);
+              minute = minute && isMinute(value);
             } else {
               value = i;
             }
@@ -989,6 +1003,13 @@
               } else if (day || timeDiff > 10) {
                 options.scales.xAxes[0].time.unit = "day";
                 step = 1;
+              } else if (hour) {
+                options.scales.xAxes[0].time.unit = "hour";
+                step = 1 / 24.0;
+              } else if (minute) {
+                options.scales.xAxes[0].time.displayFormats = {minute: "h:mm a"};
+                options.scales.xAxes[0].time.unit = "minute";
+                step = 1 / 24.0 / 60.0;
               }
 
               if (step && timeDiff > 0) {
@@ -1000,8 +1021,14 @@
               }
             }
 
-            if (!options.scales.xAxes[0].time.tooltipFormat && day) {
-              options.scales.xAxes[0].time.tooltipFormat = "ll";
+            if (!options.scales.xAxes[0].time.tooltipFormat) {
+              if (day) {
+                options.scales.xAxes[0].time.tooltipFormat = "ll";
+              } else if (hour) {
+                options.scales.xAxes[0].time.tooltipFormat = "MMM D, h a";
+              } else if (minute) {
+                options.scales.xAxes[0].time.tooltipFormat = "h:mm a";
+              }
             }
           }
 
@@ -1053,7 +1080,12 @@
         };
 
         this.renderColumnChart = function (chart, chartType) {
-          var options = jsOptions(chart.data, chart.options);
+          var options;
+          if (chartType === "bar") {
+            options = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setBarMin, setBarMax, setStacked)(chart.data, chart.options);
+          } else {
+            options = jsOptions(chart.data, chart.options);
+          }
           var data = createDataTable(chart, options, "column");
           setLabelSize(chart, data, options);
           drawChart(chart, (chartType === "bar" ? "horizontalBar" : "bar"), data, options);
@@ -1070,7 +1102,7 @@
         };
       };
 
-      adapters.push(ChartjsAdapter);
+      adapters.unshift(ChartjsAdapter);
     }
   }
 
@@ -1117,8 +1149,16 @@
     return r;
   };
 
+  function isMinute(d) {
+    return d.getMilliseconds() === 0 && d.getSeconds() === 0;
+  }
+
+  function isHour(d) {
+    return isMinute(d) && d.getMinutes() === 0;
+  }
+
   function isDay(d) {
-    return d.getMilliseconds() + d.getSeconds() + d.getMinutes() + d.getHours() === 0;
+    return isHour(d) && d.getHours() === 0;
   }
 
   function isWeek(d, dayOfWeek) {
@@ -1160,7 +1200,7 @@
     } else {
       opts.hideLegend = false;
     }
-    if (config.smarterDiscrete && (opts.discrete === null || opts.discrete === undefined)) {
+    if ((opts.discrete === null || opts.discrete === undefined)) {
       opts.discrete = detectDiscrete(series);
     }
     if (opts.discrete) {
@@ -1286,5 +1326,9 @@
     charts: {}
   };
 
-  window.Chartkick = Chartkick;
+  if (typeof module === "object" && typeof module.exports === "object") {
+    module.exports = Chartkick;
+  } else {
+    window.Chartkick = Chartkick;
+  }
 }(window));

@@ -4,7 +4,7 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 [See it in action](http://ankane.github.io/chartkick/)
 
-Works with Rails, Sinatra and most browsers (including IE 6)
+**Chartkick 2.0 was just released!** See [instructions for upgrading](#20)
 
 :two_hearts: A perfect companion to [groupdate](https://github.com/ankane/groupdate), [hightop](https://github.com/ankane/hightop), and [active_median](https://github.com/ankane/active_median)
 
@@ -42,19 +42,19 @@ Area chart
 <%= area_chart Visit.group_by_minute(:created_at).maximum(:load_time) %>
 ```
 
-Scatter chart
+Scatter chart - *Google Charts and Highcharts*
 
 ```erb
 <%= scatter_chart City.pluck(:size, :population) %>
 ```
 
-Geo chart
+Geo chart - *Google Charts*
 
 ```erb
 <%= geo_chart Medal.group(:country).count %>
 ```
 
-Timeline
+Timeline - *Google Charts*
 
 ```erb
 <%= timeline [
@@ -226,6 +226,15 @@ Next, choose your charting library.
 
 **Note:** In the instructions below, `application.js` must be included **before** the helper methods in your views, unless using the `:content_for` option.
 
+#### Chart.js
+
+In `application.js`, add:
+
+```js
+//= require Chart.bundle
+//= require chartkick
+```
+
 #### Google Charts
 
 In `application.js`, add:
@@ -252,15 +261,6 @@ In `application.js`, add:
 ```
 
 Works with Highcharts 2.1+
-
-#### Chart.js (in beta)
-
-In `application.js`, add:
-
-```js
-//= require Chart.bundle
-//= require chartkick
-```
 
 ### For Rails 2.3 and 3.0
 
@@ -301,9 +301,41 @@ To specify a language for Google Charts, add:
 
 **before** the JavaScript files.
 
+## JavaScript API
+
+Access a chart with:
+
+```javascript
+var chart = Chartkick.charts["chart-id"];
+```
+
+Get the underlying chart object with:
+
+```javascript
+chart.getChartObject();
+```
+
+You can also use:
+
+```javascript
+chart.getElement();
+chart.getData();
+chart.getOptions();
+```
+
 ## No Ruby? No Problem
 
 Check out [chartkick.js](https://github.com/ankane/chartkick.js)
+
+## Upgrading
+
+### 2.0
+
+Breaking changes
+
+- Chart.js is now the default adapter if multiple are loaded - yay open source!
+- Axis types are automatically detected - no need for `discrete: true`
+- Better date support - dates are no longer treated as UTC
 
 ## Credits
 
