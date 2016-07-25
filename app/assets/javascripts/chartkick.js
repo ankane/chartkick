@@ -643,10 +643,9 @@
                 height: "80%"
               }
             };
-            if (chart.options.colors) {
-              chartOptions.colors = chart.options.colors;
-            }
+
             var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+            options = merge(options, chart.options);
 
             var data = new google.visualization.DataTable();
             data.addColumn("string", "");
