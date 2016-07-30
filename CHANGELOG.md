@@ -1,3 +1,8 @@
+## 2.0.1
+
+- Small Chartkick.js fixes
+- Updated Chart.js to 2.2.0
+
 ## 2.0.0
 
 - Chart.js is now the default adapter - yay open source!
