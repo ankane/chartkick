@@ -680,7 +680,7 @@
                 }
               }
             };
-            var options = jsOptionsFunc(defaultOptions, hideLegend, setBarMin, setBarMax, setStacked)(chart.data, chart.options, chartOptions);
+            var options = jsOptionsFunc(defaultOptions, hideLegend, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart.data, chart.options, chartOptions);
             var data = createDataTable(chart.data, "string");
             chart.chart = new google.visualization.BarChart(chart.element);
             resize(function () {
@@ -877,6 +877,9 @@
 
         var setLabelSize = function (chart, data, options) {
           var maxLabelSize = Math.ceil(chart.element.offsetWidth / 4.0 / data.labels.length);
+          if (maxLabelSize > 25) {
+            maxLabelSize = 25;
+          }
           options.scales.xAxes[0].ticks.callback = function (value) {
             value = toStr(value);
             if (value.length > maxLabelSize) {
@@ -1012,9 +1015,10 @@
                 step = 1 / 24.0 / 60.0;
               }
 
+
               if (step && timeDiff > 0) {
                 var unitStepSize = Math.ceil(timeDiff / step / (chart.element.offsetWidth / 100.0));
-                if (week) {
+                if (week && step === 1) {
                   unitStepSize = Math.ceil(unitStepSize / 7.0) * 7;
                 }
                 options.scales.xAxes[0].time.unitStepSize = unitStepSize;
@@ -1087,7 +1091,7 @@
         this.renderColumnChart = function (chart, chartType) {
           var options;
           if (chartType === "bar") {
-            options = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setBarMin, setBarMax, setStacked)(chart.data, chart.options);
+            options = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart.data, chart.options);
           } else {
             options = jsOptions(chart.data, chart.options);
           }
@@ -1292,8 +1296,13 @@
   }
 
   function setElement(chart, element, dataSource, opts, callback) {
+    var elementId;
     if (typeof element === "string") {
+      elementId = element;
       element = document.getElementById(element);
+      if (!element) {
+        throw new Error("No element with id " + elementId);
+      }
     }
     chart.element = element;
     chart.options = opts || {};
