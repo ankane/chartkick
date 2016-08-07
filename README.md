@@ -328,6 +328,7 @@ Check out [chartkick.js](https://github.com/ankane/chartkick.js)
 ## Tutorials
 
 - [Make Easy Graphs and Charts on Rails with Chartkick](https://www.sitepoint.com/make-easy-graphs-and-charts-on-rails-with-chartkick/)
+- [Practical Graphs on Rails: Chartkick in Practice](https://www.sitepoint.com/graphs-on-rails-chartkick-in-practice/)
 
 ## Upgrading
 
