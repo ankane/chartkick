@@ -40,7 +40,7 @@ Area chart
 <%= area_chart Visit.group_by_minute(:created_at).maximum(:load_time) %>
 ```
 
-Scatter chart - *Google Charts and Highcharts*
+Scatter chart
 
 ```erb
 <%= scatter_chart City.pluck(:size, :population) %>
