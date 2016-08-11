@@ -1,7 +1,7 @@
 /*!
  * Chart.js
  * http://chartjs.org/
- * Version: 2.2.0
+ * Version: 2.2.1
  *
  * Copyright 2016 Nick Downie
  * Released under the MIT license
@@ -6775,7 +6775,7 @@ module.exports = function(Chart) {
 							var meta = chart.getDatasetMeta(0);
 							var ds = data.datasets[0];
 							var arc = meta.data[i];
-							var custom = arc.custom || {};
+							var custom = arc && arc.custom || {};
 							var getValueAtIndexOrDefault = helpers.getValueAtIndexOrDefault;
 							var arcOpts = chart.options.elements.arc;
 							var fill = custom.backgroundColor ? custom.backgroundColor : getValueAtIndexOrDefault(ds.backgroundColor, i, arcOpts.backgroundColor);
@@ -6981,6 +6981,10 @@ module.exports = function(Chart) {
 					total += Math.abs(value);
 				}
 			});
+
+			/*if (total === 0) {
+				total = NaN;
+			}*/
 
 			return total;
 		},
@@ -12864,7 +12868,7 @@ module.exports = function(Chart) {
 				}
 
 				if (!loop) {
-					ctx.lineTo(points[points.length - 1]._view.x, scaleZero);
+					ctx.lineTo(points[lastDrawnIndex]._view.x, scaleZero);
 				}
 
 				ctx.fillStyle = vm.backgroundColor || globalDefaults.defaultColor;
@@ -12907,7 +12911,7 @@ module.exports = function(Chart) {
 					previous = lastDrawnIndex === -1 ? previous : points[lastDrawnIndex];
 
 					if (!currentVM.skip) {
-						if (lastDrawnIndex !== (index - 1) && !spanGaps) {
+						if ((lastDrawnIndex !== (index - 1) && !spanGaps) || lastDrawnIndex === -1) {
 							// There was a gap and this is the first point after the gap
 							ctx.moveTo(currentVM.x, currentVM.y);
 						} else {
@@ -14428,10 +14432,15 @@ module.exports = function(Chart) {
 			// Only round the last tick if we have no hard maximum
 			if (!me.options.time.max) {
 				var roundedEnd = me.getMomentStartOf(me.lastTick);
-				if (roundedEnd.diff(me.lastTick, me.tickUnit, true) !== 0) {
+				var delta = roundedEnd.diff(me.lastTick, me.tickUnit, true);
+				if (delta < 0) {
 					// Do not use end of because we need me to be in the next time unit
 					me.lastTick = me.getMomentStartOf(me.lastTick.add(1, me.tickUnit));
+				} else if (delta >= 0) {
+					me.lastTick = roundedEnd;
 				}
+
+				me.scaleSizeInUnits = me.lastTick.diff(me.firstTick, me.tickUnit, true);
 			}
 
 			me.smallestLabelSeparation = me.width;

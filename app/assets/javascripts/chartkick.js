@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful JavaScript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v2.0.0
+ * v2.0.1
  * MIT License
  */
 
@@ -1108,6 +1108,41 @@
 
         this.renderBarChart = function (chart) {
           self.renderColumnChart(chart, "bar");
+        };
+
+        this.renderScatterChart = function (chart) {
+          var options = jsOptions(chart.data, chart.options);
+
+          var colors = chart.options.colors || defaultColors;
+
+          var datasets = [];
+          var series = chart.data;
+          for (var i = 0; i < series.length; i++) {
+            var s = series[i];
+            var d = [];
+            for (var j = 0; j < s.data.length; j++) {
+              d.push({
+                x: toFloat(s.data[j][0]),
+                y: toFloat(s.data[j][1])
+              });
+            }
+
+            datasets.push({
+              label: s.name,
+              showLine: false,
+              data: d,
+              borderColor: colors[i],
+              backgroundColor: colors[i],
+              pointBackgroundColor: colors[i]
+            })
+          }
+
+          var data = {datasets: datasets};
+
+          options.scales.xAxes[0].type = "linear";
+          options.scales.xAxes[0].position = "bottom";
+
+          drawChart(chart, "line", data, options);
         };
       };
 
