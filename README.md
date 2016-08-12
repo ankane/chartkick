@@ -8,6 +8,12 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
 
+---
+
+Help make Chartkick better by [giving feedback](https://docs.google.com/forms/d/e/1FAIpQLSeo90MN5xCunD4q19h6GcbVdnG0CzN021xqHQX7oQQtW_GhMg/viewform) :heart:
+
+---
+
 ## Charts
 
 Line chart
