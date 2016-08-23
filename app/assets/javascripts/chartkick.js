@@ -163,17 +163,47 @@
     element.style.color = "#ff0000";
   }
 
+  // http://code.tutsplus.com/articles/how-to-make-ajax-requests-with-raw-javascript--net-4855
   function getJSON(element, url, success) {
-    var $ = window.jQuery || window.Zepto || window.$;
-    $.ajax({
-      dataType: "json",
-      url: url,
-      success: success,
-      error: function (jqXHR, textStatus, errorThrown) {
-        var message = (typeof errorThrown === "string") ? errorThrown : errorThrown.message;
-        chartError(element, message);
+    var xhr;
+
+    if(typeof XMLHttpRequest !== 'undefined') xhr = new XMLHttpRequest();
+    else {
+      var versions = ["MSXML2.XMLHttp.6.0",
+                      "MSXML2.XmlHttp.5.0",
+                      "MSXML2.XmlHttp.4.0",
+                      "MSXML2.XmlHttp.3.0",
+                      "MSXML2.XmlHttp.2.0",
+                      "Microsoft.XmlHttp"]
+
+      for(var i = 0, len = versions.length; i < len; i++) {
+        try {
+          xhr = new ActiveXObject(versions[i]);
+          break;
+        }
+        catch(e){}
       }
-    });
+    }
+
+    xhr.onreadystatechange = xhrStateChanged;
+
+    function xhrStateChanged() {
+      if(xhr.readyState < 4) {
+        return;
+      }
+
+      if(xhr.status !== 200) {
+        chartError(element, xhr.statusText)
+        return;
+      }
+
+      if(xhr.readyState === 4) {
+        success(JSON.parse(xhr.responseText), xhr.statusText, xhr);
+      }
+    }
+
+    xhr.open('GET', url, true);
+    xhr.send('');
   }
 
   function errorCatcher(chart, callback) {

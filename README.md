@@ -100,8 +100,6 @@ class ChartsController < ApplicationController
 end
 ```
 
-**Note:** This feature requires [jQuery](http://jquery.com/) or [Zepto](http://zeptojs.com/) at the moment.
-
 For multiple series, add `chart_json` at the end.
 
 ```ruby
