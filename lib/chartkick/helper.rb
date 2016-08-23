@@ -43,16 +43,32 @@ module Chartkick
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
       width = options.delete(:width) || "100%"
+      defer = !!options.delete(:defer)
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
       html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width)}
 
-      js = <<JS
+      createjs = "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json}, #{options.to_json});"
+      if defer
+        js = <<JS
 <script type="text/javascript">
-  new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json}, #{options.to_json});
+  (function() {
+    var createChart = function createChart() { #{createjs} };
+    if (window.attachEvent) {
+      window.attachEvent("onload", createChart);
+    } else if (window.addEventListener) {
+      window.addEventListener("load", createChart, true);
+    } else {
+      createChart();
+    }
+  })();
 </script>
 JS
+      else
+        js = '<script type="text/javascript">' + createjs + '</script>'
+      end
+
       if content_for
         content_for(content_for) { js.respond_to?(:html_safe) ? js.html_safe : js }
       else
