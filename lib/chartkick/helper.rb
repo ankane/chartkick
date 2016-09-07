@@ -66,7 +66,11 @@ module Chartkick
 </script>
 JS
       else
-        js = '<script type="text/javascript">' + createjs + '</script>'
+        js = <<JS
+<script type="text/javascript">
+  #{createjs}
+</script>
+JS
       end
 
       if content_for
