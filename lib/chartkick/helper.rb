@@ -54,7 +54,7 @@ module Chartkick
         js = <<JS
 <script type="text/javascript">
   (function() {
-    var createChart = function createChart() { #{createjs} };
+    var createChart = function() { #{createjs} };
     if (window.attachEvent) {
       window.attachEvent("onload", createChart);
     } else if (window.addEventListener) {
