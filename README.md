@@ -260,16 +260,6 @@ In `application.js`, add:
 
 Works with Highcharts 2.1+
 
-### For Rails 2.3 and 3.0
-
-You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
-
-For Rails 2.3, you must use a script tag for Google Charts due to [this bug](https://rails.lighthouseapp.com/projects/8994/tickets/1664-javascript_include_tag-shouldnt-append-a-js-onto-external-urls).
-
-```html
-<script src="https://www.google.com/jsapi"></script>
-```
-
 ### For Sinatra
 
 You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
