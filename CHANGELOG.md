@@ -1,3 +1,10 @@
+## 2.1.0 [unreleased]
+
+- Added basic support for new Google Charts loader
+- Added `configure` function
+- Dropped jQuery and Zepto dependencies for AJAX
+- Updated Chart.js to 2.2.2
+
 ## 2.0.2
 
 - Updated Chartkick.js to 2.0.1

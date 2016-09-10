@@ -78,7 +78,7 @@ or
 
 ### Say Goodbye To Timeouts
 
-Make your pages load super fast and stop worrying about timeouts.  Give each chart its own endpoint.
+Make your pages load super fast and stop worrying about timeouts. Give each chart its own endpoint.
 
 ```erb
 <%= line_chart completed_tasks_charts_path %>
@@ -93,8 +93,6 @@ class ChartsController < ApplicationController
   end
 end
 ```
-
-**Note:** This feature requires [jQuery](http://jquery.com/) or [Zepto](http://zeptojs.com/) at the moment.
 
 For multiple series, add `chart_json` at the end.
 
@@ -281,13 +279,11 @@ You must include `chartkick.js` manually.  [Download it here](https://raw.github
 
 To specify a language for Google Charts, add:
 
-```html
-<script>
-  var Chartkick = {"language": "de"};
-</script>
+```javascript
+Chartkick.configure({"language": "de"});
 ```
 
-**before** the JavaScript files.
+after the JavaScript files and before your charts.
 
 ## JavaScript API
 
