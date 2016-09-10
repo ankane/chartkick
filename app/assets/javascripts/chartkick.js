@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful JavaScript charts with minimal code
  * https://github.com/ankane/chartkick.js
- * v2.0.1
+ * v2.1.0
  * MIT License
  */
 
@@ -62,10 +62,10 @@
   function parseISO8601(input) {
     var day, hour, matches, milliseconds, minutes, month, offset, result, seconds, type, year;
     type = Object.prototype.toString.call(input);
-    if (type === '[object Date]') {
+    if (type === "[object Date]") {
       return input;
     }
-    if (type !== '[object String]') {
+    if (type !== "[object String]") {
       return;
     }
     matches = input.match(ISO8601_PATTERN);
@@ -83,7 +83,7 @@
         if (matches[17]) {
           offset += parseInt(matches[17], 10);
         }
-        offset *= matches[14] === '-' ? -1 : 1;
+        offset *= matches[14] === "-" ? -1 : 1;
         result -= offset * 60 * 1000;
       }
       return new Date(result);
@@ -164,16 +164,35 @@
   }
 
   function getJSON(element, url, success) {
-    var $ = window.jQuery || window.Zepto || window.$;
-    $.ajax({
-      dataType: "json",
-      url: url,
-      success: success,
-      error: function (jqXHR, textStatus, errorThrown) {
-        var message = (typeof errorThrown === "string") ? errorThrown : errorThrown.message;
-        chartError(element, message);
-      }
+    ajaxCall(url, success, function (jqXHR, textStatus, errorThrown) {
+      var message = (typeof errorThrown === "string") ? errorThrown : errorThrown.message;
+      chartError(element, message);
     });
+  }
+
+  function ajaxCall(url, success, error) {
+    var $ = window.jQuery || window.Zepto || window.$;
+
+    if ($) {
+      $.ajax({
+        dataType: "json",
+        url: url,
+        success: success,
+        error: error
+      });
+    } else {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          success(JSON.parse(xhr.responseText), xhr.statusText, xhr);
+        } else {
+          error(xhr, "error", xhr.statusText);
+        }
+      };
+      xhr.send();
+    }
   }
 
   function errorCatcher(chart, callback) {
@@ -366,7 +385,7 @@
         this.renderScatterChart = function (chart) {
           var chartOptions = {};
           var options = jsOptions(chart.data, chart.options, chartOptions);
-          options.chart.type = 'scatter';
+          options.chart.type = "scatter";
           options.chart.renderTo = chart.element.id;
           options.series = chart.data;
           new Highcharts.Chart(options);
@@ -443,7 +462,7 @@
       };
       adapters.push(HighchartsAdapter);
     }
-    if (!GoogleChartsAdapter && window.google && window.google.setOnLoadCallback) {
+    if (!GoogleChartsAdapter && window.google && (window.google.setOnLoadCallback || window.google.charts)) {
       GoogleChartsAdapter = new function () {
         var google = window.google;
 
@@ -486,7 +505,12 @@
             if (config.language) {
               loadOptions.language = config.language;
             }
-            google.load("visualization", "1", loadOptions);
+
+            if (window.google.setOnLoadCallback) {
+              google.load("visualization", "1", loadOptions);
+            } else {
+              google.charts.load("current", loadOptions);
+            }
           }
         };
 
@@ -1387,7 +1411,14 @@
     Timeline: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processTimelineData);
     },
-    charts: {}
+    charts: {},
+    configure: function (options) {
+      for (var key in options) {
+        if (options.hasOwnProperty(key)) {
+          config[key] = options[key];
+        }
+      }
+    }
   };
 
   if (typeof module === "object" && typeof module.exports === "object") {
