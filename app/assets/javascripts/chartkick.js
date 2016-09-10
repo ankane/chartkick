@@ -486,7 +486,7 @@
             if (config.language) {
               loadOptions.language = config.language;
             }
-            google.load("visualization", "1", loadOptions);
+            google.load("visualization", "1.0", loadOptions);
           }
         };
 
