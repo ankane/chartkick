@@ -1,4 +1,8 @@
-## 2.1.0 [unreleased]
+## 2.1.1 [unreleased]
+
+- Use custom version of Chart.js to fix label overlap
+
+## 2.1.0
 
 - Added basic support for new Google Charts loader
 - Added `configure` function
