@@ -14609,7 +14609,7 @@ module.exports = function(Chart) {
 				if (me.options.time.max) {
 					me.ticks.push(me.lastTick.clone());
 					me.scaleSizeInUnits = me.lastTick.diff(me.ticks[0], me.tickUnit, true);
-				} else {
+				} else if (me.scaleSizeInUnits === 0) {
 					me.ticks.push(me.lastTick.clone());
 					me.scaleSizeInUnits = me.lastTick.diff(me.firstTick, me.tickUnit, true);
 				}
