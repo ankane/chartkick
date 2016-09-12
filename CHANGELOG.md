@@ -1,4 +1,4 @@
-## 2.1.1 [unreleased]
+## 2.1.1
 
 - Use custom version of Chart.js to fix label overlap
 
