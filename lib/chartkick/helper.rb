@@ -55,10 +55,10 @@ module Chartkick
 <script type="text/javascript">
   (function() {
     var createChart = function() { #{createjs} };
-    if (window.attachEvent) {
-      window.attachEvent("onload", createChart);
-    } else if (window.addEventListener) {
+    if (window.addEventListener) {
       window.addEventListener("load", createChart, true);
+    } else if (window.attachEvent) {
+      window.attachEvent("onload", createChart);
     } else {
       createChart();
     }
