@@ -1,3 +1,7 @@
+## 2.1.2 [unreleased]
+
+- Added `defer` option
+
 ## 2.1.1
 
 - Use custom version of Chart.js to fix label overlap
