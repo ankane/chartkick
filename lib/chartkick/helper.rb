@@ -46,7 +46,7 @@ module Chartkick
       defer = !!options.delete(:defer)
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
-      nonce = options.key?(:nonce) ? ((%( nonce="%{nonce_value}")) % {nonce_value: ERB::Util.html_escape(options.delete(:nonce))}) : nil
+      nonce = options.key?(:nonce) ? " nonce=\"#{ERB::Util.html_escape(options.delete(:nonce))}\"" : nil
       html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width)}
 
       createjs = "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json}, #{options.to_json});"
