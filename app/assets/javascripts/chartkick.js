@@ -984,7 +984,8 @@
             }
             labels.push(value);
             for (j = 0; j < series.length; j++) {
-              rows2[j].push(rows[i][j]);
+              // Chart.js doesn't like undefined
+              rows2[j].push(rows[i][j] || null);
             }
           }
 
@@ -1032,7 +1033,8 @@
               } else if (day || timeDiff > 10) {
                 options.scales.xAxes[0].time.unit = "day";
                 step = 1;
-              } else if (hour) {
+              } else if (hour || timeDiff > 0.5) {
+                options.scales.xAxes[0].time.displayFormats = {hour: "MMM D, h a"};
                 options.scales.xAxes[0].time.unit = "hour";
                 step = 1 / 24.0;
               } else if (minute) {
@@ -1040,7 +1042,6 @@
                 options.scales.xAxes[0].time.unit = "minute";
                 step = 1 / 24.0 / 60.0;
               }
-
 
               if (step && timeDiff > 0) {
                 var unitStepSize = Math.ceil(timeDiff / step / (chart.element.offsetWidth / 100.0));
