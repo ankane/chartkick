@@ -180,8 +180,8 @@ Chartkick.options[:content_for] = :charts_js
 Then, in your layout:
 
 ```erb
-<%= yield :charts_js %> <%# Rails %>
-<%= yield_content :charts_js %> <%# Padrino %>
+<%= yield :charts_js %> <!-- Rails -->
+<%= yield_content :charts_js %> <!-- Padrino -->
 ```
 
 This is great for including all of your JavaScript at the bottom of the page.
@@ -284,6 +284,14 @@ Chartkick.configure({"language": "de"});
 ```
 
 after the JavaScript files and before your charts.
+
+### Multiple Libraries
+
+If more than one charting library is loaded, choose between them with:
+
+```erb
+<%= line_chart data, adapter: "google" %> <!-- or highcharts -->
+```
 
 ## JavaScript API
 
