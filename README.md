@@ -242,7 +242,7 @@ In `application.js`, add:
 In your views, before `application.js`, add:
 
 ```erb
-<%= javascript_include_tag "https://www.google.com/jsapi" %>
+<%= javascript_include_tag "https://www.gstatic.com/charts/loader.js" %>
 ```
 
 #### Highcharts
@@ -258,21 +258,12 @@ In `application.js`, add:
 
 Works with Highcharts 2.1+
 
-### For Sinatra
+### Sinatra and Padrino
 
-You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
+You must include `chartkick.js` manually. [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
 
 ```html
-<script src="https://www.google.com/jsapi"></script>
 <script src="chartkick.js"></script>
-```
-
-### For Padrino
-
-You must include `chartkick.js` manually.  [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
-
-```erb
-<%= javascript_include_tag "https://www.google.com/jsapi", "chartkick" %>
 ```
 
 ### Localization
