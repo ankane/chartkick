@@ -1,4 +1,4 @@
-## 2.1.2 [unreleased]
+## 2.1.2
 
 - Added `defer` option
 - Added `nonce` option
