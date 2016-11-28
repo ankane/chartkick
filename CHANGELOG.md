@@ -2,6 +2,7 @@
 
 - Added `defer` option
 - Added `nonce` option
+- Updated Chartkick.js to 2.1.1
 
 ## 2.1.1
 

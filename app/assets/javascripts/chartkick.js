@@ -1,8 +1,8 @@
 /*
  * Chartkick.js
- * Create beautiful JavaScript charts with minimal code
+ * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v2.1.0
+ * v2.1.1
  * MIT License
  */
 
@@ -835,7 +835,10 @@
               }
             ]
           },
-          legend: {}
+          legend: {},
+          tooltips: {
+            displayColors: false
+          }
         };
 
         // http://there4.io/2012/05/02/google-chart-color-list/
