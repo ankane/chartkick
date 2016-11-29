@@ -1,4 +1,4 @@
-## 2.1.3 [unreleased]
+## 2.1.3
 
 - Updated Chartkick.js to 2.1.2 - fixes missing zero values for Chart.js
 
