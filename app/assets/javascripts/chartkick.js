@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v2.1.1
+ * v2.1.2
  * MIT License
  */
 
@@ -988,7 +988,7 @@
             labels.push(value);
             for (j = 0; j < series.length; j++) {
               // Chart.js doesn't like undefined
-              rows2[j].push(rows[i][j] || null);
+              rows2[j].push((typeof rows[i][j] === "undefined") ? null : rows[i][j]);
             }
           }
 

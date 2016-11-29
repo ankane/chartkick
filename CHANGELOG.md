@@ -1,3 +1,7 @@
+## 2.1.3 [unreleased]
+
+- Updated Chartkick.js to 2.1.2 - fixes missing zero values for Chart.js
+
 ## 2.1.2
 
 - Added `defer` option
