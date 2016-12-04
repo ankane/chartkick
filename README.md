@@ -301,7 +301,7 @@ You must include `chartkick.js` manually. [Download it here](https://raw.github.
 To specify a language for Google Charts, add:
 
 ```javascript
-Chartkick.configure({"language": "de"});
+Chartkick.configure({language: "de"});
 ```
 
 after the JavaScript files and before your charts.
