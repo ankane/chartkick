@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v2.1.2
+ * v2.2.0
  * MIT License
  */
 
@@ -105,13 +105,12 @@
   }
 
   function jsOptionsFunc(defaultOptions, hideLegend, setMin, setMax, setStacked, setXtitle, setYtitle) {
-    return function (series, opts, chartOptions) {
+    return function (chart, opts, chartOptions) {
+      var series = chart.data;
       var options = merge({}, defaultOptions);
       options = merge(options, chartOptions || {});
 
-      // hide legend
-      // this is *not* an external option!
-      if (opts.hideLegend) {
+      if (chart.hideLegend) {
         hideLegend(options);
       }
 
@@ -204,16 +203,77 @@
     }
   }
 
-  function fetchDataSource(chart, callback) {
-    if (typeof chart.dataSource === "string") {
-      getJSON(chart.element, chart.dataSource, function (data, textStatus, jqXHR) {
+  function fetchDataSource(chart, callback, dataSource) {
+    if (typeof dataSource === "string") {
+      getJSON(chart.element, dataSource, function (data, textStatus, jqXHR) {
         chart.data = data;
         errorCatcher(chart, callback);
       });
     } else {
-      chart.data = chart.dataSource;
+      chart.data = dataSource;
       errorCatcher(chart, callback);
     }
+  }
+
+  function addDownloadButton(chart) {
+    var element = chart.element;
+    var link = document.createElement("a");
+    link.download = chart.options.download === true ? "chart.png" : chart.options.download; // http://caniuse.com/download
+    link.style.position = "absolute";
+    link.style.top = "20px";
+    link.style.right = "20px";
+    link.style.zIndex = 1000;
+    link.style.lineHeight = "20px";
+    link.target = "_blank"; // for safari
+    var image = document.createElement("img");
+    image.alt = "Download";
+    image.style.border = "none";
+    // icon from font-awesome
+    // http://fa2png.io/
+    image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAABCFBMVEUAAADMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMywEsqxAAAAV3RSTlMAAQIDBggJCgsMDQ4PERQaHB0eISIjJCouLzE0OTo/QUJHSUpLTU5PUllhYmltcHh5foWLjI+SlaCio6atr7S1t7m6vsHHyM7R2tze5Obo7fHz9ff5+/1hlxK2AAAA30lEQVQYGUXBhVYCQQBA0TdYWAt2d3d3YWAHyur7/z9xgD16Lw0DW+XKx+1GgX+FRzM3HWQWrHl5N/oapW5RPe0PkBu+UYeICvozTWZVK23Ao04B79oJrOsJDOoxkZoQPWgX29pHpCZEk7rEvQYiNSFq1UMqvlCjJkRBS1R8hb00Vb/TajtBL7nTHE1X1vyMQF732dQhyF2o6SAwrzP06iUQzvwsArlnzcOdrgBhJyHa1QOgO9U1GsKuvjUTjavliZYQ8nNPapG6sap/3nrIdJ6bOWzmX/fy0XVpfzZP3S8OJT3g9EEiJwAAAABJRU5ErkJggg==";
+    link.appendChild(image);
+    element.style.position = "relative";
+
+    chart.downloadAttached = true;
+
+    // mouseenter
+    addEvent(element, "mouseover", function(e) {
+      var related = e.relatedTarget;
+      // check download option again to ensure it wasn't changed
+      if (!related || (related !== this && !childOf(this, related)) && chart.options.download) {
+        link.href = chart.toImage();
+        element.appendChild(link);
+      }
+    });
+
+    // mouseleave
+    addEvent(element, "mouseout", function(e) {
+      var related = e.relatedTarget;
+      if (!related || (related !== this && !childOf(this, related))) {
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+      }
+    });
+  }
+
+  // http://stackoverflow.com/questions/10149963/adding-event-listener-cross-browser
+  function addEvent(elem, event, fn) {
+    if (elem.addEventListener) {
+      elem.addEventListener(event, fn, false);
+    } else {
+      elem.attachEvent("on" + event, function() {
+        // set the this pointer same as addEventListener when fn is called
+        return(fn.call(elem, window.event));
+      });
+    }
+  }
+
+  // https://gist.github.com/shawnbot/4166283
+  function childOf(p, c) {
+    if (p === c) return false;
+    while (c && c !== p) c = c.parentNode;
+    return c === p;
   }
 
   // type conversions
@@ -361,8 +421,8 @@
               }
             };
           }
-          var options = jsOptions(chart.data, chart.options, chartOptions), data, i, j;
-          options.xAxis.type = chart.options.discrete ? "category" : "datetime";
+          var options = jsOptions(chart, chart.options, chartOptions), data, i, j;
+          options.xAxis.type = chart.discrete ? "category" : "datetime";
           if (!options.chart.type) {
             options.chart.type = chartType;
           }
@@ -371,7 +431,7 @@
           var series = chart.data;
           for (i = 0; i < series.length; i++) {
             data = series[i].data;
-            if (!chart.options.discrete) {
+            if (!chart.discrete) {
               for (j = 0; j < data.length; j++) {
                 data[j][0] = data[j][0].getTime();
               }
@@ -379,22 +439,25 @@
             series[i].marker = {symbol: "circle"};
           }
           options.series = series;
-          new Highcharts.Chart(options);
+          chart.chart = new Highcharts.Chart(options);
         };
 
         this.renderScatterChart = function (chart) {
           var chartOptions = {};
-          var options = jsOptions(chart.data, chart.options, chartOptions);
+          var options = jsOptions(chart, chart.options, chartOptions);
           options.chart.type = "scatter";
           options.chart.renderTo = chart.element.id;
           options.series = chart.data;
-          new Highcharts.Chart(options);
+          chart.chart = new Highcharts.Chart(options);
         };
 
         this.renderPieChart = function (chart) {
           var chartOptions = {};
           if (chart.options.colors) {
             chartOptions.colors = chart.options.colors;
+          }
+          if (chart.options.donut) {
+            chartOptions.plotOptions = {pie: {innerSize: "50%"}};
           }
           var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
           options.chart.renderTo = chart.element.id;
@@ -403,13 +466,13 @@
             name: chart.options.label || "Value",
             data: chart.data
           }];
-          new Highcharts.Chart(options);
+          chart.chart = new Highcharts.Chart(options);
         };
 
         this.renderColumnChart = function (chart, chartType) {
           chartType = chartType || "column";
           var series = chart.data;
-          var options = jsOptions(series, chart.options), i, j, s, d, rows = [];
+          var options = jsOptions(chart, chart.options), i, j, s, d, rows = [];
           options.chart.type = chartType;
           options.chart.renderTo = chart.element.id;
 
@@ -447,7 +510,7 @@
           }
           options.series = newSeries;
 
-          new Highcharts.Chart(options);
+          chart.chart = new Highcharts.Chart(options);
         };
 
         var self = this;
@@ -652,8 +715,8 @@
 
         this.renderLineChart = function (chart) {
           waitForLoaded(function () {
-            var options = jsOptions(chart.data, chart.options);
-            var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
+            var options = jsOptions(chart, chart.options);
+            var data = createDataTable(chart.data, chart.discrete ? "string" : "datetime");
             chart.chart = new google.visualization.LineChart(chart.element);
             resize(function () {
               chart.chart.draw(data, options);
@@ -672,6 +735,9 @@
             if (chart.options.colors) {
               chartOptions.colors = chart.options.colors;
             }
+            if (chart.options.donut) {
+              chartOptions.pieHole = 0.5;
+            }
             var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
             var data = new google.visualization.DataTable();
@@ -688,7 +754,7 @@
 
         this.renderColumnChart = function (chart) {
           waitForLoaded(function () {
-            var options = jsOptions(chart.data, chart.options);
+            var options = jsOptions(chart, chart.options);
             var data = createDataTable(chart.data, "string");
             chart.chart = new google.visualization.ColumnChart(chart.element);
             resize(function () {
@@ -706,7 +772,7 @@
                 }
               }
             };
-            var options = jsOptionsFunc(defaultOptions, hideLegend, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart.data, chart.options, chartOptions);
+            var options = jsOptionsFunc(defaultOptions, hideLegend, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart, chart.options, chartOptions);
             var data = createDataTable(chart.data, "string");
             chart.chart = new google.visualization.BarChart(chart.element);
             resize(function () {
@@ -722,8 +788,8 @@
               pointSize: 0,
               areaOpacity: 0.5
             };
-            var options = jsOptions(chart.data, chart.options, chartOptions);
-            var data = createDataTable(chart.data, chart.options.discrete ? "string" : "datetime");
+            var options = jsOptions(chart, chart.options, chartOptions);
+            var data = createDataTable(chart.data, chart.discrete ? "string" : "datetime");
             chart.chart = new google.visualization.AreaChart(chart.element);
             resize(function () {
               chart.chart.draw(data, options);
@@ -756,7 +822,7 @@
         this.renderScatterChart = function (chart) {
           waitForLoaded(function () {
             var chartOptions = {};
-            var options = jsOptions(chart.data, chart.options, chartOptions);
+            var options = jsOptions(chart, chart.options, chartOptions);
             var data = createDataTable(chart.data, "number");
 
             chart.chart = new google.visualization.ScatterChart(chart.element);
@@ -803,7 +869,10 @@
 
         var baseOptions = {
           maintainAspectRatio: false,
-          animation: false
+          animation: false,
+          tooltips: {
+            displayColors: false
+          }
         };
 
         var defaultOptions = {
@@ -835,10 +904,7 @@
               }
             ]
           },
-          legend: {},
-          tooltips: {
-            displayColors: false
-          }
+          legend: {}
         };
 
         // http://there4.io/2012/05/02/google-chart-color-list/
@@ -888,9 +954,13 @@
         };
 
         var drawChart = function(chart, type, data, options) {
-          chart.element.innerHTML = "<canvas></canvas>";
-          var ctx = chart.element.getElementsByTagName("CANVAS")[0];
+          if (chart.chart) {
+            chart.chart.destroy();
+          } else {
+            chart.element.innerHTML = "<canvas></canvas>";
+          }
 
+          var ctx = chart.element.getElementsByTagName("CANVAS")[0];
           chart.chart = new Chart(ctx, {
             type: type,
             data: data,
@@ -934,7 +1004,7 @@
           var year = true;
           var hour = true;
           var minute = true;
-          var detectType = (chartType === "line" || chartType === "area") && !chart.options.discrete;
+          var detectType = (chartType === "line" || chartType === "area") && !chart.discrete;
 
           var series = chart.data;
 
@@ -988,7 +1058,7 @@
             labels.push(value);
             for (j = 0; j < series.length; j++) {
               // Chart.js doesn't like undefined
-              rows2[j].push((typeof rows[i][j] === "undefined") ? null : rows[i][j]);
+              rows2[j].push(rows[i][j] === undefined ? null : rows[i][j]);
             }
           }
 
@@ -1085,17 +1155,21 @@
             chart.options.max = 1;
           }
 
-          var options = jsOptions(chart.data, merge(areaOptions, chart.options));
+          var options = jsOptions(chart, merge(areaOptions, chart.options));
 
           var data = createDataTable(chart, options, chartType || "line");
 
-          options.scales.xAxes[0].type = chart.options.discrete ? "category" : "time";
+          options.scales.xAxes[0].type = chart.discrete ? "category" : "time";
 
           drawChart(chart, "line", data, options);
         };
 
         this.renderPieChart = function (chart) {
-          var options = merge(baseOptions, chart.options.library || {});
+          var options = merge({}, baseOptions);
+          if (chart.options.donut) {
+            options.cutoutPercentage = 50;
+          }
+          options = merge(options, chart.options.library || {});
 
           var labels = [];
           var values = [];
@@ -1121,9 +1195,9 @@
         this.renderColumnChart = function (chart, chartType) {
           var options;
           if (chartType === "bar") {
-            options = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart.data, chart.options);
+            options = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart, chart.options);
           } else {
-            options = jsOptions(chart.data, chart.options);
+            options = jsOptions(chart, chart.options);
           }
           var data = createDataTable(chart, options, "column");
           setLabelSize(chart, data, options);
@@ -1141,7 +1215,7 @@
         };
 
         this.renderScatterChart = function (chart) {
-          var options = jsOptions(chart.data, chart.options);
+          var options = jsOptions(chart, chart.options);
 
           var colors = chart.options.colors || defaultColors;
 
@@ -1180,9 +1254,16 @@
     }
   }
 
+  function renderChart(chartType, chart) {
+    callAdapter(chartType, chart);
+    if (chart.options.download && !chart.downloadAttached && chart.adapter === "chartjs") {
+      addDownloadButton(chart);
+    }
+  }
+
   // TODO remove chartType if cross-browser way
   // to get the name of the chart class
-  function renderChart(chartType, chart) {
+  function callAdapter(chartType, chart) {
     var i, adapter, fnName, adapterName;
     fnName = "render" + chartType;
     adapterName = chart.options.adapter;
@@ -1192,6 +1273,7 @@
     for (i = 0; i < adapters.length; i++) {
       adapter = adapters[i];
       if ((!adapterName || adapterName === adapter.name) && isFunction(adapter[fnName])) {
+        chart.adapter = adapter.name;
         return adapter[fnName](chart);
       }
     }
@@ -1277,20 +1359,25 @@
     return false;
   }
 
-  function processSeries(series, opts, keyType) {
+  function processSeries(chart, keyType) {
     var i;
+
+    var opts = chart.options;
+    var series = chart.data;
 
     // see if one series or multiple
     if (!isArray(series) || typeof series[0] !== "object" || isArray(series[0])) {
       series = [{name: opts.label || "Value", data: series}];
-      opts.hideLegend = true;
+      chart.hideLegend = true;
     } else {
-      opts.hideLegend = false;
+      chart.hideLegend = false;
     }
     if ((opts.discrete === null || opts.discrete === undefined)) {
-      opts.discrete = detectDiscrete(series);
+      chart.discrete = detectDiscrete(series);
+    } else {
+      chart.discrete = opts.discrete;
     }
-    if (opts.discrete) {
+    if (chart.discrete) {
       keyType = "string";
     }
 
@@ -1321,12 +1408,12 @@
   }
 
   function processLineData(chart) {
-    chart.data = processSeries(chart.data, chart.options, "datetime");
+    chart.data = processSeries(chart, "datetime");
     renderChart("LineChart", chart);
   }
 
   function processColumnData(chart) {
-    chart.data = processSeries(chart.data, chart.options, "string");
+    chart.data = processSeries(chart, "string");
     renderChart("ColumnChart", chart);
   }
 
@@ -1336,12 +1423,12 @@
   }
 
   function processBarData(chart) {
-    chart.data = processSeries(chart.data, chart.options, "string");
+    chart.data = processSeries(chart, "string");
     renderChart("BarChart", chart);
   }
 
   function processAreaData(chart) {
-    chart.data = processSeries(chart.data, chart.options, "datetime");
+    chart.data = processSeries(chart, "datetime");
     renderChart("AreaChart", chart);
   }
 
@@ -1351,7 +1438,7 @@
   }
 
   function processScatterData(chart) {
-    chart.data = processSeries(chart.data, chart.options, "number");
+    chart.data = processSeries(chart, "number");
     renderChart("ScatterChart", chart);
   }
 
@@ -1369,23 +1456,67 @@
         throw new Error("No element with id " + elementId);
       }
     }
+
     chart.element = element;
-    chart.options = opts || {};
+    opts = merge(Chartkick.options, opts || {});
+    chart.options = opts;
     chart.dataSource = dataSource;
+
+    // getters
     chart.getElement = function () {
       return element;
+    };
+    chart.getDataSource = function () {
+      return chart.dataSource;
     };
     chart.getData = function () {
       return chart.data;
     };
     chart.getOptions = function () {
-      return opts || {};
+      return chart.options;
     };
     chart.getChartObject = function () {
       return chart.chart;
     };
+
+    // functions
+    chart.updateData = function (dataSource, options) {
+      chart.dataSource = dataSource;
+      if (options) {
+        chart.options = merge(Chartkick.options, options);
+      }
+      fetchDataSource(chart, callback, dataSource);
+    };
+    chart.refreshData = function () {
+      if (typeof dataSource === "string") {
+        // prevent browser from caching
+        var sep = dataSource.indexOf("?") === -1 ? "?" : "&";
+        var url = dataSource + sep + "_=" + (new Date()).getTime();
+        fetchDataSource(chart, callback, url);
+      }
+    };
+    chart.stopRefresh = function () {
+      if (chart.intervalId) {
+        clearInterval(chart.intervalId);
+      }
+    };
+    chart.toImage = function () {
+      if (chart.adapter === "chartjs") {
+        return chart.chart.toBase64Image();
+      } else {
+        return null;
+      }
+    }
+
     Chartkick.charts[element.id] = chart;
-    fetchDataSource(chart, callback);
+
+    fetchDataSource(chart, callback, dataSource);
+
+    if (opts.refresh) {
+      chart.intervalId = setInterval( function () {
+        chart.refreshData();
+      }, opts.refresh * 1000);
+    }
   }
 
   // define classes
@@ -1422,7 +1553,15 @@
           config[key] = options[key];
         }
       }
-    }
+    },
+    eachChart: function (callback) {
+      for (var chartId in Chartkick.charts) {
+        if (Chartkick.charts.hasOwnProperty(chartId)) {
+          callback(Chartkick.charts[chartId]);
+        }
+      }
+    },
+    options: {}
   };
 
   if (typeof module === "object" && typeof module.exports === "object") {

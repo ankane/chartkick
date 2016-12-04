@@ -146,6 +146,18 @@ Axis titles
 <%= line_chart data, xtitle: "Time", ytitle: "Population" %>
 ```
 
+Donut chart
+
+```erb
+<%= pie_chart data, donut: true %>
+```
+
+Refresh data from a remote source every `n` seconds
+
+```erb
+<%= line_chart url, refresh: 60 %>
+```
+
 You can pass options directly to the charting library with:
 
 ```erb
@@ -185,6 +197,24 @@ Then, in your layout:
 ```
 
 This is great for including all of your JavaScript at the bottom of the page.
+
+### Download Charts
+
+*Chart.js only*
+
+Give users the ability to download charts. It all happens in the browser - no server-side code needed.
+
+```erb
+<%= line_chart data, download: true %>
+```
+
+Set the filename
+
+```erb
+<%= line_chart data, download: "boom" %>
+```
+
+**Note:** Safari will open the image in a new window instead of downloading.
 
 ### Data
 
@@ -289,21 +319,47 @@ If more than one charting library is loaded, choose between them with:
 Access a chart with:
 
 ```javascript
-var chart = Chartkick.charts["chart-id"];
+var chart = Chartkick.charts["chart-id"]
 ```
 
 Get the underlying chart object with:
 
 ```javascript
-chart.getChartObject();
+chart.getChartObject()
 ```
 
 You can also use:
 
 ```javascript
-chart.getElement();
-chart.getData();
-chart.getOptions();
+chart.getElement()
+chart.getData()
+chart.getOptions()
+```
+
+Update the data with:
+
+```javascript
+chart.updateData(newData)
+```
+
+You can also specify new options:
+
+```javascript
+chart.updateData(newData, newOptions)
+```
+
+Refresh the data from a remote source:
+
+```javascript
+chart.refreshData()
+```
+
+Loop over charts with:
+
+```javascript
+Chartkick.eachChart( function(chart) {
+  // do something
+})
 ```
 
 ## No Ruby? No Problem

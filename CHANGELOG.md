@@ -1,3 +1,11 @@
+## 2.2.0 [unreleased]
+
+- Updated Chartkick.js to 2.2.0
+- Improved JavaScript API
+- Added `download` option - *Chart.js only*
+- Added `refresh` option
+- Added `donut` option to pie chart
+
 ## 2.1.3
 
 - Updated Chartkick.js to 2.1.2 - fixes missing zero values for Chart.js
