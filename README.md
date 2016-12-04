@@ -152,7 +152,7 @@ You can pass options directly to the charting library with:
 <%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
-See the documentation for [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), [Highcharts](http://api.highcharts.com/highcharts), and [Chart.js](http://www.chartjs.org/docs/) for more info.
+See the documentation for [Chart.js](http://www.chartjs.org/docs/), [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), and [Highcharts](http://api.highcharts.com/highcharts) for more info.
 
 ### Global Options
 
