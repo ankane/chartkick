@@ -216,24 +216,6 @@ Then, in your layout:
 
 This is great for including all of your JavaScript at the bottom of the page.
 
-### Download Charts
-
-*Chart.js only*
-
-Give users the ability to download charts. It all happens in the browser - no server-side code needed.
-
-```erb
-<%= line_chart data, download: true %>
-```
-
-Set the filename
-
-```erb
-<%= line_chart data, download: "boom" %>
-```
-
-**Note:** Safari will open the image in a new window instead of downloading.
-
 ### Data
 
 Pass data as a Hash or Array
@@ -257,6 +239,24 @@ Times can be a time, a timestamp, or a string (strings are parsed)
 ```erb
 <%= line_chart({20.day.ago => 5, 1368174456 => 4, "2013-05-07 00:00:00 UTC" => 7}) %>
 ```
+
+### Download Charts
+
+*Chart.js only*
+
+Give users the ability to download charts. It all happens in the browser - no server-side code needed.
+
+```erb
+<%= line_chart data, download: true %>
+```
+
+Set the filename
+
+```erb
+<%= line_chart data, download: "boom" %>
+```
+
+**Note:** Safari will open the image in a new window instead of downloading.
 
 ## Installation
 
