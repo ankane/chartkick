@@ -146,6 +146,24 @@ Axis titles
 <%= line_chart data, xtitle: "Time", ytitle: "Population" %>
 ```
 
+Straight lines between points instead of a curve [master]
+
+```erb
+<%= line_chart data, curve: false %>
+```
+
+Show or hide legend [master]
+
+```erb
+<%= line_chart data, legend: false %>
+```
+
+Specify legend position [master]
+
+```erb
+<%= line_chart data, legend: "bottom" %>
+```
+
 Donut chart
 
 ```erb
