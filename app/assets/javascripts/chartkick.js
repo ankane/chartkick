@@ -503,7 +503,7 @@
         this.renderColumnChart = function (chart, chartType) {
           chartType = chartType || "column";
           var series = chart.data;
-          var options = jsOptions(chart, chart.options), i, j, s, d, rows = [];
+          var options = jsOptions(chart, chart.options), i, j, s, d, rows = [], categories = [];
           options.chart.type = chartType;
           options.chart.renderTo = chart.element.id;
 
@@ -514,17 +514,12 @@
               d = s.data[j];
               if (!rows[d[0]]) {
                 rows[d[0]] = new Array(series.length);
+                categories.push(d[0]);
               }
               rows[d[0]][i] = d[1];
             }
           }
 
-          var categories = [];
-          for (i in rows) {
-            if (rows.hasOwnProperty(i)) {
-              categories.push(i);
-            }
-          }
           options.xAxis.categories = categories;
 
           var newSeries = [];
@@ -701,7 +696,7 @@
 
         // cant use object as key
         var createDataTable = function (series, columnType) {
-          var i, j, s, d, key, rows = [];
+          var i, j, s, d, key, rows = [], sortedLabels = [];
           for (i = 0; i < series.length; i++) {
             s = series[i];
 
@@ -710,6 +705,7 @@
               key = (columnType === "datetime") ? d[0].getTime() : d[0];
               if (!rows[key]) {
                 rows[key] = new Array(series.length);
+                sortedLabels.push(key);
               }
               rows[key][i] = toFloat(d[1]);
             }
@@ -718,18 +714,17 @@
           var rows2 = [];
           var day = true;
           var value;
-          for (i in rows) {
-            if (rows.hasOwnProperty(i)) {
-              if (columnType === "datetime") {
-                value = new Date(toFloat(i));
-                day = day && isDay(value);
-              } else if (columnType === "number") {
-                value = toFloat(i);
-              } else {
-                value = i;
-              }
-              rows2.push([value].concat(rows[i]));
+          for (var j = 0; j < sortedLabels.length; j++) {
+            var i = sortedLabels[j];
+            if (columnType === "datetime") {
+              value = new Date(toFloat(i));
+              day = day && isDay(value);
+            } else if (columnType === "number") {
+              value = toFloat(i);
+            } else {
+              value = i;
             }
+            rows2.push([value].concat(rows[i]));
           }
           if (columnType === "datetime") {
             rows2.sort(sortByTime);
