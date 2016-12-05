@@ -980,22 +980,22 @@
 
         var setMin = function (options, min) {
           if (min !== null) {
-            options.scales.yAxes[0].ticks.min = min;
+            options.scales.yAxes[0].ticks.min = toFloat(min);
           }
         };
 
         var setMax = function (options, max) {
-          options.scales.yAxes[0].ticks.max = max;
+          options.scales.yAxes[0].ticks.max = toFloat(max);
         };
 
         var setBarMin = function (options, min) {
           if (min !== null) {
-            options.scales.xAxes[0].ticks.min = min;
+            options.scales.xAxes[0].ticks.min = toFloat(min);
           }
         };
 
         var setBarMax = function (options, max) {
-          options.scales.xAxes[0].ticks.max = max;
+          options.scales.xAxes[0].ticks.max = toFloat(max);
         };
 
         var setStacked = function (options, stacked) {
