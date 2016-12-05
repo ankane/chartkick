@@ -110,8 +110,8 @@
       var options = merge({}, defaultOptions);
       options = merge(options, chartOptions || {});
 
-      if (chart.hideLegend) {
-        hideLegend(options);
+      if (chart.hideLegend || "legend" in opts) {
+        hideLegend(options, opts.legend, chart.hideLegend);
       }
 
       // min
@@ -378,8 +378,21 @@
           }
         };
 
-        var hideLegend = function (options) {
-          options.legend.enabled = false;
+        var hideLegend = function (options, legend, hideLegend) {
+          if (legend !== undefined) {
+            options.legend.enabled = !!legend;
+            if (legend && legend !== true) {
+              if (legend === "top" || legend === "bottom") {
+                options.legend.verticalAlign = legend;
+              } else {
+                options.legend.layout = "vertical";
+                options.legend.verticalAlign = "middle";
+                options.legend.align = legend;
+              }
+            }
+          } else if (hideLegend) {
+            options.legend.enabled = false;
+          }
         };
 
         var setMin = function (options, min) {
@@ -413,6 +426,9 @@
                 areaspline: {
                   stacking: "normal"
                 },
+                area: {
+                  stacking: "normal"
+                },
                 series: {
                   marker: {
                     enabled: false
@@ -421,6 +437,15 @@
               }
             };
           }
+
+          if (chart.options.curve === false) {
+            if (chartType === "areaspline") {
+              chartType = "area";
+            } else if (chartType === "spline") {
+              chartType = "line";
+            }
+          }
+
           var options = jsOptions(chart, chart.options, chartOptions), data, i, j;
           options.xAxis.type = chart.discrete ? "category" : "datetime";
           if (!options.chart.type) {
@@ -452,14 +477,20 @@
         };
 
         this.renderPieChart = function (chart) {
-          var chartOptions = {};
+          var chartOptions = merge(defaultOptions, {});
+
           if (chart.options.colors) {
             chartOptions.colors = chart.options.colors;
           }
           if (chart.options.donut) {
             chartOptions.plotOptions = {pie: {innerSize: "50%"}};
           }
-          var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+
+          if ("legend" in chart.options) {
+            hideLegend(chartOptions, chart.options.legend);
+          }
+
+          var options = merge(chartOptions, chart.options.library || {});
           options.chart.renderTo = chart.element.id;
           options.series = [{
             type: "pie",
@@ -620,8 +651,20 @@
           }
         };
 
-        var hideLegend = function (options) {
-          options.legend.position = "none";
+        var hideLegend = function (options, legend, hideLegend) {
+          if (legend !== undefined) {
+            var position;
+            if (!legend) {
+              position = "none";
+            } else if (legend === true) {
+              position = "right";
+            } else {
+              position = legend;
+            }
+            options.legend.position = position;
+          } else if (hideLegend) {
+            options.legend.position = "none";
+          }
         };
 
         var setMin = function (options, min) {
@@ -715,7 +758,13 @@
 
         this.renderLineChart = function (chart) {
           waitForLoaded(function () {
-            var options = jsOptions(chart, chart.options);
+            var chartOptions = {};
+
+            if (chart.options.curve === false) {
+              chartOptions.curveType = "none";
+            }
+
+            var options = jsOptions(chart, chart.options, chartOptions);
             var data = createDataTable(chart.data, chart.discrete ? "string" : "datetime");
             chart.chart = new google.visualization.LineChart(chart.element);
             resize(function () {
@@ -730,13 +779,17 @@
               chartArea: {
                 top: "10%",
                 height: "80%"
-              }
+              },
+              legend: {}
             };
             if (chart.options.colors) {
               chartOptions.colors = chart.options.colors;
             }
             if (chart.options.donut) {
               chartOptions.pieHole = 0.5;
+            }
+            if ("legend" in chart.options) {
+              hideLegend(chartOptions, chart.options.legend);
             }
             var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
@@ -872,7 +925,8 @@
           animation: false,
           tooltips: {
             displayColors: false
-          }
+          },
+          legend: {}
         };
 
         var defaultOptions = {
@@ -903,8 +957,7 @@
                 ticks: {}
               }
             ]
-          },
-          legend: {}
+          }
         };
 
         // http://there4.io/2012/05/02/google-chart-color-list/
@@ -914,8 +967,15 @@
           "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#3B3EAC"
         ];
 
-        var hideLegend = function (options) {
-          options.legend.display = false;
+        var hideLegend = function (options, legend, hideLegend) {
+          if (legend !== undefined) {
+            options.legend.display = !!legend;
+            if (legend && legend !== true) {
+              options.legend.position = legend;
+            }
+          } else if (hideLegend) {
+            options.legend.display = false;
+          }
         };
 
         var setMin = function (options, min) {
@@ -1077,6 +1137,10 @@
               borderWidth: 2
             };
 
+            if (chart.options.curve === false) {
+              dataset.lineTension = 0;
+            }
+
             datasets.push(merge(dataset, s.library || {}));
           }
 
@@ -1145,17 +1209,17 @@
         };
 
         this.renderLineChart = function (chart, chartType) {
-          var areaOptions = {};
+          var chartOptions = {};
           if (chartType === "area") {
             // TODO fix area stacked
-            // areaOptions.stacked = true;
+            // chartOptions.stacked = true;
           }
           // fix for https://github.com/chartjs/Chart.js/issues/2441
           if (!chart.options.max && allZeros(chart.data)) {
-            chart.options.max = 1;
+            chartOptions.max = 1;
           }
 
-          var options = jsOptions(chart, merge(areaOptions, chart.options));
+          var options = jsOptions(chart, merge(chartOptions, chart.options));
 
           var data = createDataTable(chart, options, chartType || "line");
 
@@ -1169,6 +1233,11 @@
           if (chart.options.donut) {
             options.cutoutPercentage = 50;
           }
+
+          if ("legend" in chart.options) {
+            hideLegend(options, chart.options.legend);
+          }
+
           options = merge(options, chart.options.library || {});
 
           var labels = [];
@@ -1478,6 +1547,9 @@
     chart.getChartObject = function () {
       return chart.chart;
     };
+    chart.getAdapter = function () {
+      return chart.adapter;
+    };
 
     // functions
     chart.updateData = function (dataSource, options) {
@@ -1487,6 +1559,10 @@
       }
       fetchDataSource(chart, callback, dataSource);
     };
+    chart.setOptions = function (options) {
+      chart.options = merge(Chartkick.options, options);
+      errorCatcher(chart, callback);
+    }
     chart.refreshData = function () {
       if (typeof dataSource === "string") {
         // prevent browser from caching
