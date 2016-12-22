@@ -889,8 +889,8 @@
 
         this.renderCandlestickChart = function (chart) {
           waitForLoaded(function () {
-            // TODO: Review these
             var chartOptions = {
+              legend:'none'
             };
             var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
