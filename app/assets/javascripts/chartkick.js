@@ -894,7 +894,13 @@
             };
             var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
-            var data = createDataTable(chart.data, chart.discrete ? "string" : "datetime");
+            var data = new google.visualization.DataTable();
+            data.addColumn({type: "date", id: "Date"});
+            data.addColumn({type: "number", id: "Low"});
+            data.addColumn({type: "number", id: "Open"});
+            data.addColumn({type: "number", id: "Close"});
+            data.addColumn({type: "number", id: "High"});
+            data.addRows(chart.data);
 
             chart.chart = new google.visualization.CandlestickChart(chart.element);
             resize(function () {
