@@ -887,6 +887,22 @@
           });
         };
 
+        this.renderCandlestickChart = function (chart) {
+          waitForLoaded(function () {
+            // TODO: Review these
+            var chartOptions = {
+            };
+            var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+
+            var data = createDataTable(chart.data, chart.discrete ? "string" : "datetime");
+
+            chart.chart = new google.visualization.CandlestickChart(chart.element);
+            resize(function () {
+              chart.chart.draw(data, options);
+            });
+          });
+        };
+
         this.renderScatterChart = function (chart) {
           waitForLoaded(function () {
             var chartOptions = {};
@@ -1531,6 +1547,11 @@
     renderChart("GeoChart", chart);
   }
 
+  function processCandlestickData(chart) {
+    chart.data = processSeries(chart, "datetime");
+    renderChart("CandlestickChart", chart);
+  }
+
   function processScatterData(chart) {
     chart.data = processSeries(chart, "number");
     renderChart("ScatterChart", chart);
@@ -1643,6 +1664,9 @@
     },
     GeoChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processGeoData);
+    },
+    CandlestickChart: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processCandlestickData);
     },
     ScatterChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processScatterData);

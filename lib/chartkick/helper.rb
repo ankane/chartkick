@@ -35,6 +35,10 @@ module Chartkick
       chartkick_chart "Timeline", data_source, options
     end
 
+    def candlestick_chart(data_source, options = {})
+      chartkick_chart "CandlestickChart", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options)
