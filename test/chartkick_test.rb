@@ -11,6 +11,7 @@ class TestChartkick < Minitest::Test
         [Date.today -  1, 10, 20, 30, 40],
         [Date.today, 10, 30, 20, 60]
     ]
+    @combo_data = [[["Work", 32],["Play", 1492]], types: ["line", "column"]]
   end
 
   def test_line_chart
@@ -27,6 +28,10 @@ class TestChartkick < Minitest::Test
 
   def test_candlestick_chart
     assert candlestick_chart(@candlestick_data)
+  end
+
+  def test_combo_chart
+    assert combo_chart(@combo_data)
   end
 
   def test_options_not_mutated
