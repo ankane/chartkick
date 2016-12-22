@@ -1554,7 +1554,7 @@
   }
 
   function processCandlestickData(chart) {
-    chart.data = processSeries(chart, "datetime");
+    chart.data = processSimple(chart);
     renderChart("CandlestickChart", chart);
   }
 
