@@ -1523,6 +1523,19 @@
     return data;
   }
 
+  function processCandlesticks(chart)
+  {
+    var i, data = chart.rawData;
+    for (i = 0; i < data.length; i++) {
+      data[i][0] = toDate(data[i][0]);
+      data[i][1] = toFloat(data[i][1]);
+      data[i][2] = toFloat(data[i][2]);
+      data[i][3] = toFloat(data[i][3]);
+      data[i][4] = toFloat(data[i][4]);
+    }
+    return data;
+  }
+
   function processLineData(chart) {
     chart.data = processSeries(chart, "datetime");
     renderChart("LineChart", chart);
@@ -1554,7 +1567,7 @@
   }
 
   function processCandlestickData(chart) {
-    chart.data = processSimple(chart);
+    chart.data = processCandlesticks(chart);
     renderChart("CandlestickChart", chart);
   }
 
