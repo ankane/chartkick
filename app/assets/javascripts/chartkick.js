@@ -1652,7 +1652,7 @@
   }
 
   function processComboData(chart) {
-    chart.data = processSeries(chart.data, "string");
+    chart.data = processSeries(chart, "string");
     renderChart("ComboChart", chart);
   }
 
