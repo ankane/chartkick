@@ -119,7 +119,7 @@ Min and max values
 Colors
 
 ```erb
-<%= line_chart data, colors: ["pink", "#999"] %>
+<%= line_chart data, colors: ["#b00", "#666"] %>
 ```
 
 Stacked columns or bars
@@ -191,7 +191,7 @@ To set options for all of your charts, create an initializer `config/initializer
 ```ruby
 Chartkick.options = {
   height: "400px",
-  colors: ["pink", "#999"]
+  colors: ["#b00", "#666"]
 }
 ```
 
