@@ -1,6 +1,7 @@
 ## 2.2.1 [unreleased]
 
 - Updated Chartkick.js to 2.2.1
+- Added candlestick chart
 
 ## 2.2.0
 

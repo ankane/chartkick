@@ -887,6 +887,28 @@
           });
         };
 
+        this.renderCandlestickChart = function (chart) {
+          waitForLoaded(function () {
+            var chartOptions = {
+              legend:'none'
+            };
+            var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+
+            var data = new google.visualization.DataTable();
+            data.addColumn({type: "date", id: "Date"});
+            data.addColumn({type: "number", id: "Low"});
+            data.addColumn({type: "number", id: "Open"});
+            data.addColumn({type: "number", id: "Close"});
+            data.addColumn({type: "number", id: "High"});
+            data.addRows(chart.data);
+
+            chart.chart = new google.visualization.CandlestickChart(chart.element);
+            resize(function () {
+              chart.chart.draw(data, options);
+            });
+          });
+        };
+
         this.renderScatterChart = function (chart) {
           waitForLoaded(function () {
             var chartOptions = {};
@@ -1501,6 +1523,19 @@
     return data;
   }
 
+  function processCandlesticks(chart)
+  {
+    var i, data = chart.rawData;
+    for (i = 0; i < data.length; i++) {
+      data[i][0] = toDate(data[i][0]);
+      data[i][1] = toFloat(data[i][1]);
+      data[i][2] = toFloat(data[i][2]);
+      data[i][3] = toFloat(data[i][3]);
+      data[i][4] = toFloat(data[i][4]);
+    }
+    return data;
+  }
+
   function processLineData(chart) {
     chart.data = processSeries(chart, "datetime");
     renderChart("LineChart", chart);
@@ -1529,6 +1564,11 @@
   function processGeoData(chart) {
     chart.data = processSimple(chart);
     renderChart("GeoChart", chart);
+  }
+
+  function processCandlestickData(chart) {
+    chart.data = processCandlesticks(chart);
+    renderChart("CandlestickChart", chart);
   }
 
   function processScatterData(chart) {
@@ -1643,6 +1683,9 @@
     },
     GeoChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processGeoData);
+    },
+    CandlestickChart: function (element, dataSource, opts) {
+      setElement(this, element, dataSource, opts, processCandlestickData);
     },
     ScatterChart: function (element, dataSource, opts) {
       setElement(this, element, dataSource, opts, processScatterData);

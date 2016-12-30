@@ -62,6 +62,17 @@ Timeline - *Google Charts*
 ] %>
 ```
 
+Candlestick chart - *Google Charts*
+
+```erb
+<%=# date, low, open, close, high %>
+<%= candlestick_chart [
+  [Date.today - 2, 10, 20, 30, 40],
+  [Date.today - 1, 20, 50, 40, 60],
+  [Date.today, 5, 20, 50, 100]
+] %>
+```
+
 Multiple series
 
 ```erb
