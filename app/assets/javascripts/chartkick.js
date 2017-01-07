@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v2.2.1
+ * v2.2.2
  * MIT License
  */
 
@@ -1187,15 +1187,16 @@
           for (i = 0; i < series.length; i++) {
             s = series[i];
 
-            var backgroundColor = chartType !== "line" ? addOpacity(colors[i], 0.5) : colors[i];
+            var color = s.color || colors[i];
+            var backgroundColor = chartType !== "line" ? addOpacity(color, 0.5) : color;
 
             var dataset = {
               label: s.name,
               data: rows2[i],
               fill: chartType === "area",
-              borderColor: colors[i],
+              borderColor: color,
               backgroundColor: backgroundColor,
-              pointBackgroundColor: colors[i],
+              pointBackgroundColor: color,
               borderWidth: 2
             };
 
@@ -1372,13 +1373,15 @@
               d.push(point);
             }
 
+            var color = s.color || colors[i];
+
             datasets.push({
               label: s.name,
               showLine: false,
               data: d,
-              borderColor: colors[i],
-              backgroundColor: colors[i],
-              pointBackgroundColor: colors[i]
+              borderColor: color,
+              backgroundColor: color,
+              pointBackgroundColor: color
             })
           }
 
