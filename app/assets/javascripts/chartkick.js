@@ -15,6 +15,7 @@
   var Chartkick, ISO8601_PATTERN, DECIMAL_SEPARATOR, adapters = [];
   var DATE_PATTERN = /^(\d\d\d\d)(\-)?(\d\d)(\-)?(\d\d)$/i;
   var GoogleChartsAdapter, HighchartsAdapter, ChartjsAdapter;
+  var pendingRequests = [], runningRequests = 0, maxRequests = 4;
 
   // helpers
 
@@ -166,6 +167,27 @@
     element.style.color = "#ff0000";
   }
 
+  function pushRequest(element, url, success) {
+    pendingRequests.push([element, url, success]);
+    runNext();
+  }
+
+  function runNext() {
+    if (runningRequests < maxRequests) {
+      var request = pendingRequests.shift()
+      if (request) {
+        runningRequests++;
+        getJSON(request[0], request[1], request[2]);
+        runNext();
+      }
+    }
+  }
+
+  function requestComplete() {
+    runningRequests--;
+    runNext();
+  }
+
   function getJSON(element, url, success) {
     ajaxCall(url, success, function (jqXHR, textStatus, errorThrown) {
       var message = (typeof errorThrown === "string") ? errorThrown : errorThrown.message;
@@ -181,13 +203,15 @@
         dataType: "json",
         url: url,
         success: success,
-        error: error
+        error: error,
+        complete: requestComplete
       });
     } else {
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
       xhr.setRequestHeader("Content-Type", "application/json");
       xhr.onload = function () {
+        requestComplete();
         if (xhr.status === 200) {
           success(JSON.parse(xhr.responseText), xhr.statusText, xhr);
         } else {
@@ -209,7 +233,7 @@
 
   function fetchDataSource(chart, callback, dataSource) {
     if (typeof dataSource === "string") {
-      getJSON(chart.element, dataSource, function (data, textStatus, jqXHR) {
+      pushRequest(chart.element, dataSource, function (data, textStatus, jqXHR) {
         chart.rawData = data;
         errorCatcher(chart, callback);
       });
@@ -891,7 +915,24 @@
           waitForLoaded(function () {
             var chartOptions = {};
             var options = jsOptions(chart, chart.options, chartOptions);
-            var data = createDataTable(chart.data, "number");
+
+            var series = chart.data, rows2 = [], i, j, data, d;
+            for (i = 0; i < series.length; i++) {
+              d = series[i].data;
+              for (j = 0; j < d.length; j++) {
+                var row = new Array(series.length + 1);
+                row[0] = d[j][0];
+                row[i + 1] = d[j][1];
+                rows2.push(row);
+              }
+            }
+
+            var data = new google.visualization.DataTable();
+            data.addColumn("number", "");
+            for (i = 0; i < series.length; i++) {
+              data.addColumn("number", series[i].name);
+            }
+            data.addRows(rows2);
 
             chart.chart = new google.visualization.ScatterChart(chart.element);
             resize(function () {
@@ -1308,7 +1349,9 @@
           self.renderColumnChart(chart, "bar");
         };
 
-        this.renderScatterChart = function (chart) {
+        this.renderScatterChart = function (chart, chartType) {
+          chartType = chartType || "line";
+
           var options = jsOptions(chart, chart.options);
 
           var colors = chart.options.colors || defaultColors;
@@ -1319,10 +1362,14 @@
             var s = series[i];
             var d = [];
             for (var j = 0; j < s.data.length; j++) {
-              d.push({
+              var point = {
                 x: toFloat(s.data[j][0]),
                 y: toFloat(s.data[j][1])
-              });
+              };
+              if (chartType === "bubble") {
+                point.r = toFloat(s.data[j][2]);
+              }
+              d.push(point);
             }
 
             datasets.push({
@@ -1340,7 +1387,11 @@
           options.scales.xAxes[0].type = "linear";
           options.scales.xAxes[0].position = "bottom";
 
-          drawChart(chart, "line", data, options);
+          drawChart(chart, chartType, data, options);
+        };
+
+        this.renderBubbleChart = function (chart) {
+          this.renderScatterChart(chart, "bubble");
         };
       };
 
@@ -1390,8 +1441,12 @@
   var formatSeriesData = function (data, keyType) {
     var r = [], key, j;
     for (j = 0; j < data.length; j++) {
-      key = toFormattedKey(data[j][0], keyType);
-      r.push([key, toFloat(data[j][1])]);
+      if (keyType === "bubble") {
+        r.push([toFloat(data[j][0]), toFloat(data[j][1]), toFloat(data[j][2])]);
+      } else {
+        key = toFormattedKey(data[j][0], keyType);
+        r.push([key, toFloat(data[j][1])]);
+      }
     }
     if (keyType === "datetime") {
       r.sort(sortByTime);
@@ -1466,7 +1521,7 @@
     } else {
       chart.hideLegend = false;
     }
-    if ((opts.discrete === null || opts.discrete === undefined)) {
+    if ((opts.discrete === null || opts.discrete === undefined) && keyType !== "bubble" && keyType !== "number") {
       chart.discrete = detectDiscrete(series);
     } else {
       chart.discrete = opts.discrete;
@@ -1502,46 +1557,30 @@
   }
 
   function processLineData(chart) {
-    chart.data = processSeries(chart, "datetime");
-    renderChart("LineChart", chart);
+    return processSeries(chart, "datetime");
   }
 
   function processColumnData(chart) {
-    chart.data = processSeries(chart, "string");
-    renderChart("ColumnChart", chart);
-  }
-
-  function processPieData(chart) {
-    chart.data = processSimple(chart);
-    renderChart("PieChart", chart);
+    return processSeries(chart, "string");
   }
 
   function processBarData(chart) {
-    chart.data = processSeries(chart, "string");
-    renderChart("BarChart", chart);
+    return processSeries(chart, "string");
   }
 
   function processAreaData(chart) {
-    chart.data = processSeries(chart, "datetime");
-    renderChart("AreaChart", chart);
-  }
-
-  function processGeoData(chart) {
-    chart.data = processSimple(chart);
-    renderChart("GeoChart", chart);
+    return processSeries(chart, "datetime");
   }
 
   function processScatterData(chart) {
-    chart.data = processSeries(chart, "number");
-    renderChart("ScatterChart", chart);
+    return processSeries(chart, "number");
   }
 
-  function processTimelineData(chart) {
-    chart.data = processTime(chart);
-    renderChart("Timeline", chart);
+  function processBubbleData(chart) {
+    return processSeries(chart, "bubble");
   }
 
-  function setElement(chart, element, dataSource, opts, callback) {
+  function createChart(chartType, chart, element, dataSource, opts, processData) {
     var elementId;
     if (typeof element === "string") {
       elementId = element;
@@ -1555,6 +1594,12 @@
     opts = merge(Chartkick.options, opts || {});
     chart.options = opts;
     chart.dataSource = dataSource;
+
+    if (!processData) {
+      processData = function (chart) {
+        return chart.rawData;
+      }
+    }
 
     // getters
     chart.getElement = function () {
@@ -1574,6 +1619,11 @@
     };
     chart.getAdapter = function () {
       return chart.adapter;
+    };
+
+    var callback = function () {
+      chart.data = processData(chart);
+      renderChart(chartType, chart);
     };
 
     // functions
@@ -1626,29 +1676,32 @@
   // define classes
 
   Chartkick = {
-    LineChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processLineData);
+    LineChart: function (element, dataSource, options) {
+      createChart("LineChart", this, element, dataSource, options, processLineData);
     },
-    PieChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processPieData);
+    PieChart: function (element, dataSource, options) {
+      createChart("PieChart", this, element, dataSource, options, processSimple);
     },
-    ColumnChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processColumnData);
+    ColumnChart: function (element, dataSource, options) {
+      createChart("ColumnChart", this, element, dataSource, options, processColumnData);
     },
-    BarChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processBarData);
+    BarChart: function (element, dataSource, options) {
+      createChart("BarChart", this, element, dataSource, options, processBarData);
     },
-    AreaChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processAreaData);
+    AreaChart: function (element, dataSource, options) {
+      createChart("AreaChart", this, element, dataSource, options, processAreaData);
     },
-    GeoChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processGeoData);
+    GeoChart: function (element, dataSource, options) {
+      createChart("GeoChart", this, element, dataSource, options, processSimple);
     },
-    ScatterChart: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processScatterData);
+    ScatterChart: function (element, dataSource, options) {
+      createChart("ScatterChart", this, element, dataSource, options, processScatterData);
     },
-    Timeline: function (element, dataSource, opts) {
-      setElement(this, element, dataSource, opts, processTimelineData);
+    BubbleChart: function (element, dataSource, options) {
+      createChart("BubbleChart", this, element, dataSource, options, processBubbleData);
+    },
+    Timeline: function (element, dataSource, options) {
+      createChart("Timeline", this, element, dataSource, options, processTime);
     },
     charts: {},
     configure: function (options) {
@@ -1665,7 +1718,9 @@
         }
       }
     },
-    options: {}
+    options: {},
+    adapters: adapters,
+    createChart: createChart
   };
 
   if (typeof module === "object" && typeof module.exports === "object") {
