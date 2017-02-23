@@ -152,6 +152,12 @@ Straight lines between points instead of a curve
 <%= line_chart data, curve: false %>
 ```
 
+Hide points
+
+```erb
+<%= line_chart data, points: false %>
+```
+
 Show or hide legend
 
 ```erb
