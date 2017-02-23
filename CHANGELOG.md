@@ -1,5 +1,6 @@
 ## 2.2.3 [unreleased]
 
+- Updated Chartkick.js to 2.2.3
 - Updated Chart.js to 2.5.0
 
 ## 2.2.2
