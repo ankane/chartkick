@@ -1,3 +1,7 @@
+## 2.2.4 [unreleased]
+
+- Added compatibility with Rails API
+
 ## 2.2.3
 
 - Updated Chartkick.js to 2.2.3
