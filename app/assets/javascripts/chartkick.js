@@ -1702,10 +1702,10 @@
       fetchDataSource(chart, callback, chart.rawData);
     };
     chart.refreshData = function () {
-      if (typeof dataSource === "string") {
+      if (typeof chart.dataSource === "string") {
         // prevent browser from caching
-        var sep = dataSource.indexOf("?") === -1 ? "?" : "&";
-        var url = dataSource + sep + "_=" + (new Date()).getTime();
+        var sep = chart.dataSource.indexOf("?") === -1 ? "?" : "&";
+        var url = chart.dataSource + sep + "_=" + (new Date()).getTime();
         fetchDataSource(chart, callback, url);
       }
     };
