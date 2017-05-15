@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v2.2.3
+ * v2.2.4
  * MIT License
  */
 
@@ -569,17 +569,22 @@
 
           options.xAxis.categories = categories;
 
-          var newSeries = [];
+          var newSeries = [], d2;
           for (i = 0; i < series.length; i++) {
             d = [];
             for (j = 0; j < categories.length; j++) {
               d.push(rows[categories[j]][i] || 0);
             }
 
-            newSeries.push({
+            d2 = {
               name: series[i].name,
               data: d
-            });
+            }
+            if (series[i].stack) {
+              d2.stack = series[i].stack;
+            }
+
+            newSeries.push(d2);
           }
           options.series = newSeries;
 
@@ -1058,7 +1063,7 @@
         var defaultColors = [
           "#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", "#3B3EAC", "#0099C6",
           "#DD4477", "#66AA00", "#B82E2E", "#316395", "#994499", "#22AA99", "#AAAA11",
-          "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#3B3EAC"
+          "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#651067"
         ];
 
         var hideLegend = function (options, legend, hideLegend) {
@@ -1236,6 +1241,10 @@
               pointBackgroundColor: color,
               borderWidth: 2
             };
+
+            if (s.stack) {
+              dataset.stack = s.stack;
+            }
 
             if (chart.options.curve === false) {
               dataset.lineTension = 0;
@@ -1565,6 +1574,22 @@
     return false;
   }
 
+  // creates a shallow copy of each element of the array
+  // elements are expected to be objects
+  function copySeries(series) {
+    var newSeries = [], i, j;
+    for (i = 0; i < series.length; i++) {
+      var copy = {}
+      for (j in series[i]) {
+        if (series[i].hasOwnProperty(j)) {
+          copy[j] = series[i][j];
+        }
+      }
+      newSeries.push(copy)
+    }
+    return newSeries;
+  }
+
   function processSeries(chart, keyType) {
     var i;
 
@@ -1591,6 +1616,7 @@
     }
 
     // right format
+    series = copySeries(series);
     for (i = 0; i < series.length; i++) {
       series[i].data = formatSeriesData(toArr(series[i].data), keyType);
     }
