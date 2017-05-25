@@ -454,7 +454,7 @@
         var jsOptions = jsOptionsFunc(defaultOptions, hideLegend, setTitle, setMin, setMax, setStacked, setXtitle, setYtitle);
 
         this.renderLineChart = function (chart, chartType) {
-          chartType = chartType || "spline";
+          chartType = chartType || "line";
           var chartOptions = {};
           if (chartType === "areaspline") {
             chartOptions = {
