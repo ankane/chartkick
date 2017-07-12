@@ -35,6 +35,10 @@ module Chartkick
       chartkick_chart "Timeline", data_source, options
     end
 
+    def table_chart(data_source, options = {})
+      chartkick_chart "Table", data_source, options
+    end
+
     private
 
     def chartkick_chart(klass, data_source, options)
@@ -42,12 +46,13 @@ module Chartkick
       options = chartkick_deep_merge(Chartkick.options, options)
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
+      line_height = options.delete(:line_height) || klass == 'Table' ? 'inherit' : '300px'
       width = options.delete(:width) || "100%"
       defer = !!options.delete(:defer)
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
       nonce = options.key?(:nonce) ? " nonce=\"#{ERB::Util.html_escape(options.delete(:nonce))}\"" : nil
-      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width)}
+      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{line_height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width), line_height: ERB::Util.html_escape(line_height),}
 
       createjs = "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json}, #{options.to_json});"
       if defer

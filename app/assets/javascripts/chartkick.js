@@ -616,7 +616,7 @@
           var cb, call;
           for (var i = 0; i < callbacks.length; i++) {
             cb = callbacks[i];
-            call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline));
+            call = google.visualization && ((cb.pack === "corechart" && google.visualization.LineChart) || (cb.pack === "timeline" && google.visualization.Timeline) || (cb.pack === 'table' && google.visualization.Table));
             if (call) {
               cb.callback();
               callbacks.splice(i, 1);
@@ -1002,6 +1002,30 @@
 
             chart.element.style.lineHeight = "normal";
             chart.chart = new google.visualization.Timeline(chart.element);
+
+            resize(function () {
+              chart.chart.draw(data, options);
+            });
+          });
+        };
+
+        this.renderTable = function (chart) {
+          waitForLoaded('table', function () {
+            var chartOptions = {
+              showRowNumber: true,
+              width: '100%',
+              height: '100%'
+            };
+
+            var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
+
+            var columnType = chart.discrete ? "string" : "datetime";
+            if (chart.options.xtype === "number") {
+              columnType = "number";
+            }
+            var data = createDataTable(chart.data, columnType);
+
+            chart.chart = new google.visualization.Table(chart.element);
 
             resize(function () {
               chart.chart.draw(data, options);
@@ -1642,6 +1666,10 @@
     return data;
   }
 
+  function processTable(chart) {
+    return processSeries(chart, "datetime");;
+  }
+
   function processLineData(chart) {
     return processSeries(chart, "datetime");
   }
@@ -1788,6 +1816,9 @@
     },
     Timeline: function (element, dataSource, options) {
       createChart("Timeline", this, element, dataSource, options, processTime);
+    },
+    Table: function (element, dataSource, options) {
+      createChart("Table", this, element, dataSource, options, processTable);
     },
     charts: {},
     configure: function (options) {
