@@ -600,6 +600,58 @@
         this.renderAreaChart = function (chart) {
           self.renderLineChart(chart, "areaspline");
         };
+
+        this.renderStockChart = function (chart,chartType) {
+          chartType = chartType || "spline";
+          var chartOptions = {};
+          if (chartType === "areaspline") {
+            chartOptions = {
+              plotOptions: {
+                areaspline: {
+                  stacking: "normal"
+                },
+                area: {
+                  stacking: "normal"
+                }
+              },
+              legend: {
+                enabled: true
+              }
+            };
+          }
+
+          if (chart.options.curve === false) {
+            if (chartType === "areaspline") {
+              chartType = "area";
+            } else if (chartType === "spline") {
+              chartType = "line";
+            }
+          }
+
+          var options = jsOptions(chart, chart.options, chartOptions), data, i, j;
+          options.xAxis.type = chart.discrete ? "category" : "datetime";
+          if (!options.chart.type) {
+            options.chart.type = chartType;
+          }
+          options.chart.renderTo = chart.element.id;
+
+          var series = chart.data;
+          for (i = 0; i < series.length; i++) {
+            data = series[i].data;
+            if (!chart.discrete) {
+              for (j = 0; j < data.length; j++) {
+                data[j][0] = data[j][0].getTime();
+              }
+            }
+            series[i].marker = {enabled: true};
+            if (chart.options.points === false) {
+              series[i].marker.enabled = false;
+            }
+          }
+          options.series = series;
+          chart.chart = new Highcharts.StockChart(options);
+        };
+      
       };
       adapters.push(HighchartsAdapter);
     }
@@ -1666,6 +1718,10 @@
     return processSeries(chart, "bubble");
   }
 
+  function processStockData(chart) {
+    return processSeries(chart, "datetime");
+  }
+
   function createChart(chartType, chart, element, dataSource, opts, processData) {
     var elementId;
     if (typeof element === "string") {
@@ -1788,6 +1844,9 @@
     },
     Timeline: function (element, dataSource, options) {
       createChart("Timeline", this, element, dataSource, options, processTime);
+    },
+    StockChart: function (element, dataSource, options) {
+      createChart("StockChart", this, element, dataSource, options, processStockData);
     },
     charts: {},
     configure: function (options) {
