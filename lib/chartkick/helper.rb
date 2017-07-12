@@ -30,6 +30,10 @@ module Chartkick
     def geo_chart(data_source, options = {})
       chartkick_chart "GeoChart", data_source, options
     end
+    
+    def combo_chart(data_source, options = {})
+      chartkick_chart "ComboChart", data_source, options
+    end
 
     def timeline(data_source, options = {})
       chartkick_chart "Timeline", data_source, options
