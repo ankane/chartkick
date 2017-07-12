@@ -941,10 +941,19 @@
             };
             var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
-            var data = new google.visualization.DataTable();
-            data.addColumn("string", "");
-            data.addColumn("number", chart.options.label || "Value");
-            data.addRows(chart.data);
+            if(chart.options.hasOwnProperty('rawArray') && chart.options.rawArray)
+            {
+              var data = google.visualization.arrayToDataTable(chart.rawData)
+            }
+            else
+            {
+              var data = new google.visualization.DataTable();
+              data.addColumn("string", "");
+              data.addColumn("number", chart.options.label || "Value");
+              data.addRows(chart.data);
+            }
+
+
 
             chart.chart = new google.visualization.GeoChart(chart.element);
             resize(function () {
@@ -1625,7 +1634,7 @@
   }
 
   function processSimple(chart) {
-    var perfectData = toArr(chart.rawData), i;
+    var perfectData = toArr(chart.rawData).slice(), i;
     for (i = 0; i < perfectData.length; i++) {
       perfectData[i] = [toStr(perfectData[i][0]), toFloat(perfectData[i][1])];
     }
