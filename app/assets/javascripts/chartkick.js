@@ -994,11 +994,7 @@
             }
             var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
-            var data = new google.visualization.DataTable();
-            data.addColumn({type: "string", id: "Name"});
-            data.addColumn({type: "date", id: "Start"});
-            data.addColumn({type: "date", id: "End"});
-            data.addRows(chart.data);
+            var data = new google.visualization.arrayToDataTable(chart.data);
 
             chart.element.style.lineHeight = "normal";
             chart.chart = new google.visualization.Timeline(chart.element);
@@ -1632,14 +1628,25 @@
     return perfectData;
   }
 
-  function processTime(chart)
+  function processTime(chart) {
+      var i,
+          data = chart.rawData;
+
+      $.each(data, function (index, value) {
+          for (i = 0; i < data[index].length; i++) {
+              if (isValidDate(data[index][i])) {
+                  data[index][i] = toDate(data[index][i]);
+                  data[index][i] = toDate(data[index][i]);
+              }
+          }
+      });
+
+      return data;
+  }
+
+  function isValidDate(date) 
   {
-    var i, data = chart.rawData;
-    for (i = 0; i < data.length; i++) {
-      data[i][1] = toDate(data[i][1]);
-      data[i][2] = toDate(data[i][2]);
-    }
-    return data;
+    return (new Date(date) != "Invalid Date") && !isNaN(new Date(date));
   }
 
   function processLineData(chart) {
