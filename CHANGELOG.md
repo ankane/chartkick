@@ -1,4 +1,4 @@
-## 2.2.5 [unreleased]
+## 2.2.5
 
 - Updated Chart.js to 2.7.1
 
