@@ -1,3 +1,7 @@
+## 2.2.5 [unreleased]
+
+- Updated Chart.js to 2.7.1
+
 ## 2.2.4
 
 - Added compatibility with Rails API
