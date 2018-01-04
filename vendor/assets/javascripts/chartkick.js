@@ -1235,7 +1235,7 @@
             var dataset = {
               label: s.name,
               data: rows2[i],
-              fill: chartType === "area",
+              fill: s.fill === undefined ? chartType === "area" : s.fill,
               borderColor: color,
               backgroundColor: backgroundColor,
               pointBackgroundColor: color,
