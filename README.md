@@ -320,7 +320,7 @@ Works with Highcharts 2.1+
 
 ### Sinatra and Padrino
 
-You must include `chartkick.js` manually. [Download it here](https://raw.github.com/ankane/chartkick/master/app/assets/javascripts/chartkick.js)
+You must include `chartkick.js` manually. [Download it here](https://raw.githubusercontent.com/ankane/chartkick/master/vendor/assets/javascripts/chartkick.js)
 
 ```html
 <script src="chartkick.js"></script>
