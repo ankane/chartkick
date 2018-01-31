@@ -84,13 +84,23 @@ module Chartkick
       end
       createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % js_vars
 
-      if defer
+      turbolinks = defined?(Turbolinks)
+
+      load_event_type = turbolinks ? "turbolinks:load" : "load"
+
+
+      if defer || turbolinks
         js = <<JS
 <script type="text/javascript"#{nonce_html}>
   (function() {
     var createChart = function() { #{createjs} };
     if (window.addEventListener) {
-      window.addEventListener("load", createChart, true);
+      
+      var createChartOnce = function() {
+        window.removeEventListener("#{load_event_type}", createChartOnce, true);
+        createChart();
+      };
+      window.addEventListener("#{load_event_type}", createChartOnce, true);
     } else if (window.attachEvent) {
       window.attachEvent("onload", createChart);
     } else {
