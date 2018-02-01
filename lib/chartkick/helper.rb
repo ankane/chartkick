@@ -59,7 +59,11 @@ module Chartkick
   (function() {
     var createChart = function() { #{createjs} };
     if (window.addEventListener) {
-      window.addEventListener("#{load_event_type}", createChart, true);
+        var createChartOnce = function() {
+          window.removeEventListener("#{load_event_type}", createChartOnce, true);
+          createChart();
+        };
+      window.addEventListener("#{load_event_type}", createChartOnce, true);
     } else if (window.attachEvent) {
       window.attachEvent("onload", createChart);
     } else {
