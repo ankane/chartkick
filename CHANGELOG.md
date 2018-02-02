@@ -1,3 +1,7 @@
+## 2.2.6 [unreleased]
+
+- Fixed deep merge error for non-Rails apps
+
 ## 2.2.5
 
 - Updated Chart.js to 2.7.1
