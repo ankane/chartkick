@@ -87,7 +87,7 @@ JS
       hash_a = hash_a.dup
       hash_b.each_pair do |k, v|
         tv = hash_a[k]
-        hash_a[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? tv.deep_merge(v) : v
+        hash_a[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? chartkick_deep_merge(tv, v) : v
       end
       hash_a
     end
