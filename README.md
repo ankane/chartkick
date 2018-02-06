@@ -34,6 +34,12 @@ Bar chart
 <%= bar_chart Shirt.group(:size).sum(:price) %>
 ```
 
+Bubble chart
+
+```erb
+<%= bubble_chart [[20, 30, 15], [40, 10, 10]] %>
+```
+
 Area chart
 
 ```erb
