@@ -176,7 +176,7 @@ Specify legend position
 <%= line_chart data, legend: "bottom" %>
 ```
 
-Defer chart creation until after the page loads 
+Defer chart creation until after the page loads
 
 ```erb
 <%= line_chart data, defer: true %>
@@ -347,7 +347,7 @@ after the JavaScript files and before your charts.
 If more than one charting library is loaded, choose between them with:
 
 ```erb
-<%= line_chart data, adapter: "google" %> <!-- or highcharts -->
+<%= line_chart data, adapter: "google" %> <!-- or highcharts or chartjs -->
 ```
 
 ## JavaScript API
