@@ -7,6 +7,7 @@ class TestChartkick < Minitest::Test
 
   def setup
     @data = [[34, 42], [56, 49]]
+    @three_d_data = [[34, 42, 56], [56, 49, 7]]
   end
 
   def test_line_chart
@@ -19,6 +20,10 @@ class TestChartkick < Minitest::Test
 
   def test_column_chart
     assert column_chart(@data)
+  end
+
+  def test_bubble_chart
+    assert bubble_chart(@three_d_data)
   end
 
   def test_options_not_mutated

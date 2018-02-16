@@ -19,6 +19,10 @@ module Chartkick
       chartkick_chart "BarChart", data_source, options
     end
 
+    def bubble_chart(data_source, options = {})
+      chartkick_chart "BubbleChart", data_source, options
+    end
+
     def area_chart(data_source, options = {})
       chartkick_chart "AreaChart", data_source, options
     end
