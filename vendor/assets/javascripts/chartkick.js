@@ -1708,7 +1708,7 @@
       var parts = value.split(".")
       value = parts[0];
       if (options.thousands) {
-        value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, options.thousands);
+        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousands);
       }
       if (parts.length > 1) {
         value += (options.decimal || ".") + parts[1];
