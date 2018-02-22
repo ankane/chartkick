@@ -1,6 +1,7 @@
-## 2.2.6 [unreleased]
+## 2.3.0
 
 - Fixed deep merge error for non-Rails apps
+- Updated Chartkick.js to 2.3.0
 
 ## 2.2.5
 

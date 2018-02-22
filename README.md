@@ -182,6 +182,36 @@ Donut chart
 <%= pie_chart data, donut: true %>
 ```
 
+Prefix, useful for currency - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, prefix: "$" %>
+```
+
+Suffix, useful for percentages - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, suffix: "%" %>
+```
+
+Set a thousands separator - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, thousands: "," %>
+```
+
+Set a decimal separator - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, decimal: "," %>
+```
+
+Show a message when data is empty
+
+```erb
+<%= line_chart data, messages: {empty: "No data"} %>
+```
+
 Refresh data from a remote source every `n` seconds
 
 ```erb
