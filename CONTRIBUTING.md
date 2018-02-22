@@ -21,10 +21,11 @@ Think you’ve discovered an issue?
 gem "chartkick", github: "ankane/chartkick"
 ```
 
-If the above steps don’t help, create an issue.
+If the above steps don’t help, create an issue. Include:
 
-- Include the JavaScript rendered by Chartkick.
-- For exceptions, include the complete backtrace.
+- Detailed steps to reproduce
+- JavaScript rendered by Chartkick
+- Complete backtraces for exceptions
 
 ## Pull Requests
 
