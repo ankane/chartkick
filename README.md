@@ -372,6 +372,9 @@ window.Chart = Chart;
 // for Highcharts
 import Highcharts from "highcharts";
 window.Highcharts = Highcharts;
+
+// for Google Charts
+// just include https://www.gstatic.com/charts/loader.js in your views
 ```
 
 ### Sinatra and Padrino
