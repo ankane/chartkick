@@ -1614,7 +1614,12 @@
         return adapter[fnName](chart);
       }
     }
-    throw new Error("No adapter found");
+
+    if (adapters.length > 0) {
+      throw new Error("No charting library found for " + chartType);
+    } else {
+      throw new Error("No charting libraries found - be sure to include one before your charts");
+    }
   }
 
   // process data
@@ -1703,6 +1708,15 @@
   }
 
   function formatValue(pre, value, options) {
+    pre = pre || "";
+    if (options.prefix) {
+      if (value < 0) {
+        value = value * -1;
+        pre += "-";
+      }
+      pre += options.prefix;
+    }
+
     if (options.thousands || options.decimal) {
       value = toStr(value);
       var parts = value.split(".")
@@ -1713,15 +1727,6 @@
       if (parts.length > 1) {
         value += (options.decimal || ".") + parts[1];
       }
-    }
-
-    pre = pre || "";
-    if (options.prefix) {
-      if (value < 0) {
-        value = value * -1;
-        pre += "-";
-      }
-      pre += options.prefix;
     }
 
     return pre + value + (options.suffix || "");
