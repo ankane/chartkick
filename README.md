@@ -224,7 +224,7 @@ You can pass options directly to the charting library with:
 <%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
-See the documentation for [Chart.js](http://www.chartjs.org/docs/), [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), and [Highcharts](http://api.highcharts.com/highcharts) for more info.
+See the documentation for [Chart.js](http://www.chartjs.org/docs/), [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), and [Highcharts](https://api.highcharts.com/highcharts) for more info.
 
 ### Global Options
 
@@ -488,7 +488,7 @@ Chartkick uses [iso8601.js](https://github.com/Do/iso8601.js) to parse dates and
 
 View the [changelog](https://github.com/ankane/chartkick/blob/master/CHANGELOG.md)
 
-Chartkick follows [Semantic Versioning](http://semver.org/)
+Chartkick follows [Semantic Versioning](https://semver.org/)
 
 ## Contributing
 
