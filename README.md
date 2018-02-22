@@ -312,7 +312,7 @@ Next, choose your charting library.
 
 ### Charting Libraries
 
-**Note:** In the instructions below, `application.js` must be included **before** the helper methods in your views, unless using the `:content_for` option.
+**Note:** In the instructions below, `application.js` must be included **before** the charts in your views, unless using the `:content_for` option.
 
 #### Chart.js
 
@@ -376,6 +376,8 @@ window.Highcharts = Highcharts;
 // for Google Charts
 // just include https://www.gstatic.com/charts/loader.js in your views
 ```
+
+You pack must be included **before** the charts in your views, unless using the `:content_for` option.
 
 ### Sinatra and Padrino
 
