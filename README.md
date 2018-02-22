@@ -310,6 +310,8 @@ gem "chartkick"
 
 Next, choose your charting library.
 
+### Charting Libraries
+
 **Note:** In the instructions below, `application.js` must be included **before** the helper methods in your views, unless using the `:content_for` option.
 
 #### Chart.js
@@ -337,7 +339,7 @@ In your views, before `application.js`, add:
 
 #### Highcharts
 
-Download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts`.
+Download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts` (or use `yarn add highcharts` in Rails 5.1+).
 
 In `application.js`, add:
 
@@ -347,6 +349,30 @@ In `application.js`, add:
 ```
 
 Works with Highcharts 2.1+
+
+### Webpacker
+
+For Webpacker, use Yarn to install the JavaScript libraries:
+
+```sh
+yarn add chartkick
+yarn add chart.js # or highcharts
+```
+
+Then include them in your pack.
+
+```es6
+import Chartkick from "chartkick";
+window.Chartkick = Chartkick;
+
+// for Chart.js
+import Chart from "chart.js";
+window.Chart = Chart;
+
+// for Highcharts
+import Highcharts from "highcharts";
+window.Highcharts = Highcharts;
+```
 
 ### Sinatra and Padrino
 
