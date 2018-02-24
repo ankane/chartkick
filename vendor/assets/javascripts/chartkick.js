@@ -1,76 +1,76 @@
 (function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
-	else if(typeof define === 'function' && define.amd)
-		define([], factory);
-	else {
-		var a = factory();
-		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
-	}
+  if(typeof exports === 'object' && typeof module === 'object')
+    module.exports = factory();
+  else if(typeof define === 'function' && define.amd)
+    define([], factory);
+  else if(typeof exports === 'object')
+    exports["Chartkick"] = factory();
+  else
+    root["Chartkick"] = factory();
 })(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
+/******/  // The module cache
+/******/  var installedModules = {};
 /******/
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
+/******/  // The require function
+/******/  function __webpack_require__(moduleId) {
 /******/
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
-/******/ 			exports: {}
-/******/ 		};
+/******/    // Check if module is in cache
+/******/    if(installedModules[moduleId]) {
+/******/      return installedModules[moduleId].exports;
+/******/    }
+/******/    // Create a new module (and put it into the cache)
+/******/    var module = installedModules[moduleId] = {
+/******/      i: moduleId,
+/******/      l: false,
+/******/      exports: {}
+/******/    };
 /******/
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/    // Execute the module function
+/******/    modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
+/******/    // Flag the module as loaded
+/******/    module.l = true;
 /******/
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
+/******/    // Return the exports of the module
+/******/    return module.exports;
+/******/  }
 /******/
 /******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
+/******/  // expose the modules object (__webpack_modules__)
+/******/  __webpack_require__.m = modules;
 /******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
+/******/  // expose the module cache
+/******/  __webpack_require__.c = installedModules;
 /******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
-/******/ 		}
-/******/ 	};
+/******/  // define getter function for harmony exports
+/******/  __webpack_require__.d = function(exports, name, getter) {
+/******/    if(!__webpack_require__.o(exports, name)) {
+/******/      Object.defineProperty(exports, name, {
+/******/        configurable: false,
+/******/        enumerable: true,
+/******/        get: getter
+/******/      });
+/******/    }
+/******/  };
 /******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
+/******/  // getDefaultExport function for compatibility with non-harmony modules
+/******/  __webpack_require__.n = function(module) {
+/******/    var getter = module && module.__esModule ?
+/******/      function getDefault() { return module['default']; } :
+/******/      function getModuleExports() { return module; };
+/******/    __webpack_require__.d(getter, 'a', getter);
+/******/    return getter;
+/******/  };
 /******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/  // Object.prototype.hasOwnProperty.call
+/******/  __webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+/******/  // __webpack_public_path__
+/******/  __webpack_require__.p = "";
 /******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/  // Load entry module and return exports
+/******/  return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -379,7 +379,6 @@ exports.isDate = isDate;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Chartkick = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -387,7 +386,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
                                                                                                                                                                                                                                                                               * Chartkick.js
                                                                                                                                                                                                                                                                               * Create beautiful charts with one line of JavaScript
                                                                                                                                                                                                                                                                               * https://github.com/ankane/chartkick.js
-                                                                                                                                                                                                                                                                              * v2.3.1
+                                                                                                                                                                                                                                                                              * v2.3.2
                                                                                                                                                                                                                                                                               * MIT License
                                                                                                                                                                                                                                                                               */
 
@@ -405,6 +404,8 @@ var _google2 = _interopRequireDefault(_google);
 
 var _helpers = __webpack_require__(0);
 
+var _request_queue = __webpack_require__(5);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -415,9 +416,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var config = window.Chartkick || {};
 var adapters = [];
-var pendingRequests = [],
-    runningRequests = 0,
-    maxRequests = 4;
 
 // helpers
 
@@ -434,61 +432,6 @@ function chartError(element, message) {
   element.style.color = "#ff0000";
 }
 
-function pushRequest(element, url, success) {
-  pendingRequests.push([element, url, success]);
-  runNext();
-}
-
-function runNext() {
-  if (runningRequests < maxRequests) {
-    var request = pendingRequests.shift();
-    if (request) {
-      runningRequests++;
-      getJSON(request[0], request[1], request[2]);
-      runNext();
-    }
-  }
-}
-
-function requestComplete() {
-  runningRequests--;
-  runNext();
-}
-
-function getJSON(element, url, success) {
-  ajaxCall(url, success, function (jqXHR, textStatus, errorThrown) {
-    var message = typeof errorThrown === "string" ? errorThrown : errorThrown.message;
-    chartError(element, message);
-  });
-}
-
-function ajaxCall(url, success, error) {
-  var $ = window.jQuery || window.Zepto || window.$;
-
-  if ($) {
-    $.ajax({
-      dataType: "json",
-      url: url,
-      success: success,
-      error: error,
-      complete: requestComplete
-    });
-  } else {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onload = function () {
-      requestComplete();
-      if (xhr.status === 200) {
-        success(JSON.parse(xhr.responseText), xhr.statusText, xhr);
-      } else {
-        error(xhr, "error", xhr.statusText);
-      }
-    };
-    xhr.send();
-  }
-}
-
 function errorCatcher(chart) {
   try {
     chart.__render();
@@ -500,9 +443,11 @@ function errorCatcher(chart) {
 
 function fetchDataSource(chart, dataSource) {
   if (typeof dataSource === "string") {
-    pushRequest(chart.element, dataSource, function (data) {
+    (0, _request_queue.pushRequest)(dataSource, function (data) {
       chart.rawData = data;
       errorCatcher(chart);
+    }, function (message) {
+      chartError(chart.element, message);
     });
   } else {
     chart.rawData = dataSource;
@@ -1071,7 +1016,7 @@ var Timeline = function (_Chart9) {
   return Timeline;
 }(Chart);
 
-var Chartkick = exports.Chartkick = {
+var Chartkick = {
   LineChart: LineChart,
   PieChart: PieChart,
   ColumnChart: ColumnChart,
@@ -1100,6 +1045,8 @@ var Chartkick = exports.Chartkick = {
   options: {},
   adapters: adapters
 };
+
+exports.default = Chartkick;
 
 /***/ }),
 /* 2 */
@@ -1723,7 +1670,7 @@ var setMax = function setMax(options, max) {
 };
 
 var setStacked = function setStacked(options, stacked) {
-  options.plotOptions.series.stacking = stacked ? "normal" : null;
+  options.plotOptions.series.stacking = stacked ? stacked === true ? "normal" : stacked : null;
 };
 
 var setXtitle = function setXtitle(options, title) {
@@ -2077,7 +2024,7 @@ var setBarMax = function setBarMax(options, max) {
 };
 
 var setStacked = function setStacked(options, stacked) {
-  options.isStacked = !!stacked;
+  options.isStacked = stacked ? stacked : false;
 };
 
 var setXtitle = function setXtitle(options, title) {
@@ -2361,6 +2308,77 @@ exports.default = {
   renderTimeline: renderTimeline
 };
 
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var pendingRequests = [],
+    runningRequests = 0,
+    maxRequests = 4;
+
+function pushRequest(url, success, error) {
+  pendingRequests.push([url, success, error]);
+  runNext();
+}
+
+function runNext() {
+  if (runningRequests < maxRequests) {
+    var request = pendingRequests.shift();
+    if (request) {
+      runningRequests++;
+      getJSON(request[0], request[1], request[2]);
+      runNext();
+    }
+  }
+}
+
+function requestComplete() {
+  runningRequests--;
+  runNext();
+}
+
+function getJSON(url, success, error) {
+  ajaxCall(url, success, function (jqXHR, textStatus, errorThrown) {
+    var message = typeof errorThrown === "string" ? errorThrown : errorThrown.message;
+    error(message);
+  });
+}
+
+function ajaxCall(url, success, error) {
+  var $ = window.jQuery || window.Zepto || window.$;
+
+  if ($) {
+    $.ajax({
+      dataType: "json",
+      url: url,
+      success: success,
+      error: error,
+      complete: requestComplete
+    });
+  } else {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onload = function () {
+      requestComplete();
+      if (xhr.status === 200) {
+        success(JSON.parse(xhr.responseText), xhr.statusText, xhr);
+      } else {
+        error(xhr, "error", xhr.statusText);
+      }
+    };
+    xhr.send();
+  }
+}
+
+exports.pushRequest = pushRequest;
+
 /***/ })
-/******/ ]);
+/******/ ])["default"];
 });
