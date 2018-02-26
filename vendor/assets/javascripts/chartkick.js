@@ -832,7 +832,7 @@ var Chart = function () {
     key: "__render",
     value: function __render() {
       this.data = this.__processData();
-      renderChart(this.constructor.name, this);
+      renderChart(this.__chartName(), this);
     }
   }]);
 
@@ -853,6 +853,11 @@ var LineChart = function (_Chart) {
     value: function __processData() {
       return processSeries(this, "datetime");
     }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "LineChart";
+    }
   }]);
 
   return LineChart;
@@ -871,6 +876,11 @@ var PieChart = function (_Chart2) {
     key: "__processData",
     value: function __processData() {
       return processSimple(this);
+    }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "PieChart";
     }
   }]);
 
@@ -891,6 +901,11 @@ var ColumnChart = function (_Chart3) {
     value: function __processData() {
       return processSeries(this, "string");
     }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "ColumnChart";
+    }
   }]);
 
   return ColumnChart;
@@ -909,6 +924,11 @@ var BarChart = function (_Chart4) {
     key: "__processData",
     value: function __processData() {
       return processSeries(this, "string");
+    }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "BarChart";
     }
   }]);
 
@@ -929,6 +949,11 @@ var AreaChart = function (_Chart5) {
     value: function __processData() {
       return processSeries(this, "datetime");
     }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "AreaChart";
+    }
   }]);
 
   return AreaChart;
@@ -947,6 +972,11 @@ var GeoChart = function (_Chart6) {
     key: "__processData",
     value: function __processData() {
       return processSimple(this);
+    }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "GeoChart";
     }
   }]);
 
@@ -967,6 +997,11 @@ var ScatterChart = function (_Chart7) {
     value: function __processData() {
       return processSeries(this, "number");
     }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "ScatterChart";
+    }
   }]);
 
   return ScatterChart;
@@ -985,6 +1020,11 @@ var BubbleChart = function (_Chart8) {
     key: "__processData",
     value: function __processData() {
       return processSeries(this, "bubble");
+    }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "BubbleChart";
     }
   }]);
 
@@ -1010,6 +1050,11 @@ var Timeline = function (_Chart9) {
         data[i][2] = (0, _helpers.toDate)(data[i][2]);
       }
       return data;
+    }
+  }, {
+    key: "__chartName",
+    value: function __chartName() {
+      return "Timeline";
     }
   }]);
 
