@@ -2280,6 +2280,8 @@ var renderGeoChart = function renderGeoChart(chart) {
     var data = new window.google.visualization.DataTable();
     data.addColumn("string", "");
     data.addColumn("number", chart.options.label || "Value");
+    data.addColumn("number", "latitude");
+    data.addColumn("number", "longitude");
     data.addRows(chart.data);
 
     drawChart(chart, window.google.visualization.GeoChart, data, options);
