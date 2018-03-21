@@ -2241,9 +2241,21 @@ var renderBarChart = function renderBarChart(chart) {
         }
       }
     };
+    if (chart.options.customToolTip) {
+      var data = new google.visualization.DataTable()
+      data.addColumn('string')
+      data.addColumn('number')
+      // A column for custom tooltip content
+      data.addColumn({ type: 'string', role: 'tooltip' })
+      data.addRows(chart.dataSource)
+    } else {
+      var data = createDataTable(
+        chart.data,
+        'string',
+        chart.options.xtype
+      )
+    }
     var options = (0, _helpers.jsOptionsFunc)(defaultOptions, hideLegend, setTitle, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart, chart.options, chartOptions);
-    var data = createDataTable(chart.data, "string", chart.options.xtype);
-
     drawChart(chart, window.google.visualization.BarChart, data, options);
   });
 };
