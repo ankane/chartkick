@@ -1,3 +1,25 @@
+## 2.3.4 [unreleased]
+
+- Updated Chartkick.js to 2.3.5
+- Updated Chart.js to 2.7.2
+
+## 2.3.3
+
+- Updated Chartkick.js to 2.3.4
+
+## 2.3.2
+
+- Updated Chartkick.js to 2.3.3
+
+## 2.3.1
+
+- Updated Chartkick.js to 2.3.1
+
+## 2.3.0
+
+- Fixed deep merge error for non-Rails apps
+- Updated Chartkick.js to 2.3.0
+
 ## 2.2.5
 
 - Updated Chart.js to 2.7.1

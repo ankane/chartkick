@@ -182,6 +182,36 @@ Donut chart
 <%= pie_chart data, donut: true %>
 ```
 
+Prefix, useful for currency - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, prefix: "$" %>
+```
+
+Suffix, useful for percentages - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, suffix: "%" %>
+```
+
+Set a thousands separator - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, thousands: "," %>
+```
+
+Set a decimal separator - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, decimal: "," %>
+```
+
+Show a message when data is empty
+
+```erb
+<%= line_chart data, messages: {empty: "No data"} %>
+```
+
 Refresh data from a remote source every `n` seconds
 
 ```erb
@@ -194,7 +224,7 @@ You can pass options directly to the charting library with:
 <%= line_chart data, library: {backgroundColor: "#eee"} %>
 ```
 
-See the documentation for [Chart.js](http://www.chartjs.org/docs/), [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), and [Highcharts](http://api.highcharts.com/highcharts) for more info.
+See the documentation for [Chart.js](https://www.chartjs.org/docs/), [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), and [Highcharts](https://api.highcharts.com/highcharts) for more info.
 
 ### Global Options
 
@@ -280,7 +310,9 @@ gem "chartkick"
 
 Next, choose your charting library.
 
-**Note:** In the instructions below, `application.js` must be included **before** the helper methods in your views, unless using the `:content_for` option.
+### Charting Libraries
+
+**Note:** In the instructions below, `application.js` must be included **before** the charts in your views, unless using the `:content_for` option.
 
 #### Chart.js
 
@@ -307,7 +339,7 @@ In your views, before `application.js`, add:
 
 #### Highcharts
 
-Download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts`.
+Download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts` (or use `yarn add highcharts` in Rails 5.1+).
 
 In `application.js`, add:
 
@@ -317,6 +349,35 @@ In `application.js`, add:
 ```
 
 Works with Highcharts 2.1+
+
+### Webpacker
+
+For Webpacker, use Yarn to install the JavaScript libraries:
+
+```sh
+yarn add chartkick
+yarn add chart.js # or highcharts
+```
+
+Then include them in your pack.
+
+```es6
+import Chartkick from "chartkick";
+window.Chartkick = Chartkick;
+
+// for Chart.js
+import Chart from "chart.js";
+window.Chart = Chart;
+
+// for Highcharts
+import Highcharts from "highcharts";
+window.Highcharts = Highcharts;
+
+// for Google Charts
+// just include https://www.gstatic.com/charts/loader.js in your views
+```
+
+You pack must be included **before** the charts in your views, unless using the `:content_for` option.
 
 ### Sinatra and Padrino
 
@@ -341,7 +402,7 @@ after the JavaScript files and before your charts.
 If more than one charting library is loaded, choose between them with:
 
 ```erb
-<%= line_chart data, adapter: "google" %> <!-- or highcharts -->
+<%= line_chart data, adapter: "google" %> <!-- or highcharts or chartjs -->
 ```
 
 ## JavaScript API
@@ -429,7 +490,7 @@ Chartkick uses [iso8601.js](https://github.com/Do/iso8601.js) to parse dates and
 
 View the [changelog](https://github.com/ankane/chartkick/blob/master/CHANGELOG.md)
 
-Chartkick follows [Semantic Versioning](http://semver.org/)
+Chartkick follows [Semantic Versioning](https://semver.org/)
 
 ## Contributing
 
