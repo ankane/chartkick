@@ -355,8 +355,7 @@ Works with Highcharts 2.1+
 For Webpacker, use Yarn to install the JavaScript libraries:
 
 ```sh
-yarn add chartkick
-yarn add chart.js # or highcharts
+yarn add chartkick chart.js # or highcharts
 ```
 
 Then include them in your pack.
@@ -367,11 +366,11 @@ window.Chartkick = Chartkick;
 
 // for Chart.js
 import Chart from "chart.js";
-window.Chart = Chart;
+Chartkick.addAdapter(Chart);
 
 // for Highcharts
 import Highcharts from "highcharts";
-window.Highcharts = Highcharts;
+Chartkick.addAdapter(Highcharts);
 
 // for Google Charts
 // just include https://www.gstatic.com/charts/loader.js in your views
