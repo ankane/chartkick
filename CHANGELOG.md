@@ -1,3 +1,7 @@
+## 3.0.0
+
+- Removed asset precompile
+
 ## 2.3.4
 
 - Updated Chartkick.js to 2.3.5
