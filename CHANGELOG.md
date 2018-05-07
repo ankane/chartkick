@@ -1,6 +1,7 @@
 ## 3.0.0
 
 - Removed asset precompile
+- Added support for `nonce: true`
 
 ## 2.3.4
 
