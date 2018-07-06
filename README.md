@@ -226,6 +226,14 @@ You can pass options directly to the charting library with:
 
 See the documentation for [Chart.js](https://www.chartjs.org/docs/), [Google Charts](https://developers.google.com/chart/interactive/docs/gallery), and [Highcharts](https://api.highcharts.com/highcharts) for more info.
 
+To customize datasets in Chart.js, use:
+
+```erb
+<%= line_chart data, dataset: {borderWidth: 10} %>
+```
+
+You can pass this option to individual series as well.
+
 ### Global Options
 
 To set options for all of your charts, create an initializer `config/initializers/chartkick.rb` with:

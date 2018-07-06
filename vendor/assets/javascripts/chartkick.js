@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v2.3.5
+ * v2.3.6
  * MIT License
  */
 
@@ -532,6 +532,7 @@
         borderColor: color,
         backgroundColor: backgroundColor,
         pointBackgroundColor: color,
+        pointHoverBackgroundColor: color,
         borderWidth: 2
       };
 
@@ -548,7 +549,11 @@
         dataset.pointHitRadius = 5;
       }
 
-      datasets.push(merge(dataset, s.library || {}));
+      dataset = merge(dataset, chart.options.dataset || {});
+      dataset = merge(dataset, s.library || {});
+      dataset = merge(dataset, s.dataset || {});
+
+      datasets.push(dataset);
     }
 
     if (detectType && labels.length > 0) {
@@ -666,14 +671,15 @@
       values.push(point[1]);
     }
 
+    var dataset = {
+      data: values,
+      backgroundColor: chart.options.colors || defaultColors
+    };
+    dataset = merge(dataset, chart.options.dataset || {});
+
     var data = {
       labels: labels,
-      datasets: [
-        {
-          data: values,
-          backgroundColor: chart.options.colors || defaultColors
-        }
-      ]
+      datasets: [dataset]
     };
 
     this.drawChart(chart, "pie", data, options);
@@ -758,10 +764,14 @@
     this.renderScatterChart(chart, "bubble");
   };
 
-  defaultExport.prototype.drawChart = function drawChart (chart, type, data, options) {
+  defaultExport.prototype.destroy = function destroy (chart) {
     if (chart.chart) {
       chart.chart.destroy();
     }
+  };
+
+  defaultExport.prototype.drawChart = function drawChart (chart, type, data, options) {
+    this.destroy(chart);
 
     chart.element.innerHTML = "<canvas></canvas>";
     var ctx = chart.element.getElementsByTagName("CANVAS")[0];
@@ -1030,10 +1040,14 @@
     this.renderLineChart(chart, "areaspline");
   };
 
-  defaultExport$1.prototype.drawChart = function drawChart (chart, data, options) {
+  defaultExport$1.prototype.destroy = function destroy (chart) {
     if (chart.chart) {
       chart.chart.destroy();
     }
+  };
+
+  defaultExport$1.prototype.drawChart = function drawChart (chart, data, options) {
+    this.destroy(chart);
 
     options.chart.renderTo = chart.element.id;
     options.series = data;
@@ -1337,10 +1351,14 @@
     });
   };
 
-  defaultExport$2.prototype.drawChart = function drawChart (chart, type, data, options) {
+  defaultExport$2.prototype.destroy = function destroy (chart) {
     if (chart.chart) {
       chart.chart.clearChart();
     }
+  };
+
+  defaultExport$2.prototype.drawChart = function drawChart (chart, type, data, options) {
+    this.destroy(chart);
 
     chart.chart = new type(chart.element);
     resize(function () {
@@ -1574,20 +1592,20 @@
     link.appendChild(image);
     element.style.position = "relative";
 
-    chart.downloadAttached = true;
+    chart.__downloadAttached = true;
 
     // mouseenter
-    addEvent(element, "mouseover", function(e) {
+    chart.__enterEvent = addEvent(element, "mouseover", function(e) {
       var related = e.relatedTarget;
       // check download option again to ensure it wasn't changed
-      if (!related || (related !== this && !childOf(this, related)) && chart.options.download) {
+      if ((!related || (related !== this && !childOf(this, related))) && chart.options.download) {
         link.href = chart.toImage();
         element.appendChild(link);
       }
     });
 
     // mouseleave
-    addEvent(element, "mouseout", function(e) {
+    chart.__leaveEvent = addEvent(element, "mouseout", function(e) {
       var related = e.relatedTarget;
       if (!related || (related !== this && !childOf(this, related))) {
         if (link.parentNode) {
@@ -1601,11 +1619,22 @@
   function addEvent(elem, event, fn) {
     if (elem.addEventListener) {
       elem.addEventListener(event, fn, false);
+      return fn;
     } else {
-      elem.attachEvent("on" + event, function() {
+      var fn2 = function() {
         // set the this pointer same as addEventListener when fn is called
         return(fn.call(elem, window.event));
-      });
+      };
+      elem.attachEvent("on" + event, fn2);
+      return fn2;
+    }
+  }
+
+  function removeEvent(elem, event, fn) {
+    if (elem.removeEventListener) {
+      elem.removeEventListener(event, fn, false);
+    } else {
+      elem.detachEvent("on" + event, fn);
     }
   }
 
@@ -1670,7 +1699,7 @@
       setText(chart.element, chart.options.messages.empty);
     } else {
       callAdapter(chartType, chart);
-      if (chart.options.download && !chart.downloadAttached && chart.adapter === "chartjs") {
+      if (chart.options.download && !chart.__downloadAttached && chart.adapter === "chartjs") {
         addDownloadButton(chart);
       }
     }
@@ -1689,6 +1718,7 @@
       adapter = adapters[i];
       if ((!adapterName || adapterName === adapter.name) && isFunction(adapter[fnName])) {
         chart.adapter = adapter.name;
+        chart.__adapterObject = adapter;
         return adapter[fnName](chart);
       }
     }
@@ -1904,6 +1934,20 @@
       return this.chart.toBase64Image();
     } else {
       return null;
+    }
+  };
+
+  Chart.prototype.destroy = function destroy () {
+    if (this.__adapterObject) {
+      this.__adapterObject.destroy(this);
+    }
+
+    if (this.__enterEvent) {
+      removeEvent(this.element, "mouseover", this.__enterEvent);
+    }
+
+    if (this.__leaveEvent) {
+      removeEvent(this.element, "mouseout", this.__leaveEvent);
     }
   };
 
