@@ -471,7 +471,7 @@ Chartkick.eachChart( function(chart) {
 
 ## Content Security Policy (CSP)
 
-Check out [this doc](https://github.com/ankane/chartkick/blob/master/guides/Content-Security-Policy.md)
+Check out [how to configure CSP](https://github.com/ankane/chartkick/blob/master/guides/Content-Security-Policy.md)
 
 ## No Ruby? No Problem
 
