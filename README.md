@@ -469,6 +469,10 @@ Chartkick.eachChart( function(chart) {
 })
 ```
 
+## Content Security Policy (CSP)
+
+Check out [this doc](https://github.com/ankane/chartkick/blob/master/guides/Content-Security-Policy.md)
+
 ## No Ruby? No Problem
 
 Check out [chartkick.js](https://github.com/ankane/chartkick.js)
