@@ -11,18 +11,28 @@ Google Charts also requires `unsafe-eval` and as well as styles and scripts from
 
 ## Rails 5.2
 
-Rails 5.2 has built-in support for CSP. Enable unsafe inline styles and automatic nonce generation in `config/initializers/content_security_policy.rb` with:
+Rails 5.2 has built-in support for CSP. Configure CSP and enable automatic nonce generation in `config/initializers/content_security_policy.rb` with:
 
 ```ruby
 Rails.application.config.content_security_policy do |policy|
   policy.script_src  :self
-  policy.style_src   :self, :unsafe_inline
+  policy.style_src   :self
 end
 
 Rails.application.config.content_security_policy_nonce_generator = -> request { SecureRandom.base64(16) }
 ```
 
-Use the nonce with:
+Enable unsafe inline styles on actions that have charts
+
+```ruby
+class ChartsController < ApplicationController
+  content_security_policy only: :index do |policy|
+    policy.style_src :self, :unsafe_inline
+  end
+end
+```
+
+And use the nonce with:
 
 ```erb
 <%= line_chart data, nonce: content_security_policy_nonce %>
@@ -30,14 +40,29 @@ Use the nonce with:
 
 ## Secure Headers
 
-Enable unsafe inline styles in `config/initializers/secure_headers.rb` with:
+Configure CSP in `config/initializers/secure_headers.rb` with:
 
 ```ruby
 SecureHeaders::Configuration.default do |config|
   config.csp = {
+    default_src: %w('none'),
     script_src: %w('self'),
-    style_src: %w('self' 'unsafe-inline')
+    style_src: %w('self')
   }
+end
+
+SecureHeaders::Configuration.named_append(:charts) do |request|
+  {style_src: %w('unsafe-inline')}
+end
+```
+
+Enable unsafe inline styles on actions that have charts
+
+```ruby
+class ChartsController < ApplicationController
+  def index
+    use_content_security_policy_named_append(:charts)
+  end
 end
 ```
 
