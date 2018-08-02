@@ -1,6 +1,6 @@
 # Content Security Policy (CSP)
 
-Unfortunately, `unsafe-inline` styles must be enabled for charts to work. `strict-dynamic` should work once [Rails](https://github.com/rails/rails/issues/32920) and Secure Headers support it for `style-src`.
+Unfortunately, `unsafe-inline` styles must be enabled for charts to work.
 
 There are open issues to resolve this with some of the charting libraries.
 
