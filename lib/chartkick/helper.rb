@@ -49,7 +49,7 @@ module Chartkick
 
       nonce = options.delete(:nonce)
       if nonce == true
-        if respond_to?(:content_security_policy_nonce)
+        if respond_to?(:content_security_policy_nonce) && content_security_policy_nonce
           # Rails 5.2
           nonce = content_security_policy_nonce
         elsif respond_to?(:content_security_policy_script_nonce)
