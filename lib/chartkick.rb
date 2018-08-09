@@ -33,7 +33,7 @@ module Enumerable
       end
     elsif is_a?(Array)
       map do |v|
-        if v[:data].is_a?(Hash)
+        if v.is_a?(Hash) && v[:data].is_a?(Hash)
           v = v.dup
           v[:data] = v[:data].to_a
         end
