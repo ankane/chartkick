@@ -32,10 +32,12 @@ class ChartsController < ApplicationController
 end
 ```
 
-And use the nonce with:
+And create an initializer with:
 
-```erb
-<%= line_chart data, nonce: content_security_policy_nonce %>
+```rb
+Chartkick.options = {
+  nonce: true
+}
 ```
 
 ## Secure Headers
@@ -66,8 +68,10 @@ class ChartsController < ApplicationController
 end
 ```
 
-Use the nonce with:
+And create an initializer with:
 
-```erb
-<%= line_chart data, nonce: content_security_policy_script_nonce %>
+```rb
+Chartkick.options = {
+  nonce: true
+}
 ```
