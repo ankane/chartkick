@@ -1,3 +1,17 @@
+## 3.0.0 [unreleased]
+
+- Updated Chartkick.js to 3.0.0
+- Added `eject` option
+- Added support for `nonce: true`
+
+Breaking changes
+
+- Removed support for Rails < 4.2
+- Removed chartkick.js from asset precompile (no longer needed)
+- Removed `xtype` option - numeric axes are automatically detected
+- Removed `window.Chartkick = {...}` way to set config - use `Chartkick.configure` instead
+- Removed support for the Google Charts jsapi loader - use loader.js instead
+
 ## 2.3.5
 
 - Updated Chartkick.js to 2.3.6

@@ -284,11 +284,21 @@ For multiple series, use the format
 ] %>
 ```
 
-Times can be a time, a timestamp, or a string (strings are parsed)
+Times can be a time or a string (strings are parsed)
 
 ```erb
-<%= line_chart({20.day.ago => 5, 1368174456 => 4, "2013-05-07 00:00:00 UTC" => 7}) %>
+<%= line_chart({20.day.ago => 5, "2013-05-07 00:00:00 UTC" => 7}) %>
 ```
+
+### Code
+
+If you want to use the charting library directly, get the code with:
+
+```erb
+<%= line_chart data, code: true %>
+```
+
+The code will be logged to the JavaScript console.
 
 ### Download Charts
 
@@ -484,6 +494,16 @@ Check out [chartkick.js](https://github.com/ankane/chartkick.js)
 - [Practical Graphs on Rails: Chartkick in Practice](https://www.sitepoint.com/graphs-on-rails-chartkick-in-practice/)
 
 ## Upgrading
+
+### 3.0
+
+Breaking changes
+
+- Removed support for Rails < 4.2
+- Removed chartkick.js from asset precompile (no longer needed)
+- Removed `xtype` option - numeric axes are automatically detected
+- Removed `window.Chartkick = {...}` way to set config - use `Chartkick.configure` instead
+- Removed support for the Google Charts jsapi loader - use loader.js instead
 
 ### 2.0
 
