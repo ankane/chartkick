@@ -300,6 +300,8 @@ If you want to use the charting library directly, get the code with:
 
 The code will be logged to the JavaScript console.
 
+**Note:** JavaScript functions cannot be logged, so it may not be identical.
+
 ### Download Charts
 
 *Chart.js only*
