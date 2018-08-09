@@ -1,8 +1,6 @@
 # Content Security Policy (CSP)
 
-Unfortunately, `unsafe-inline` styles must be enabled for charts to work.
-
-There are open issues to resolve this with some of the charting libraries.
+Chartkick tries to make CSP as easy as possible. Currently, `unsafe-inline` styles must be enabled for charts to work. There are open issues to resolve this with some of the charting libraries.
 
 - [Chart.js](https://github.com/chartjs/Chart.js/issues/5208)
 - [Highcharts](https://github.com/highcharts/highcharts/issues/6173)
