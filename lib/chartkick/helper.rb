@@ -48,8 +48,14 @@ module Chartkick
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
       nonce = options.delete(:nonce)
-      if nonce == true && respond_to?(:content_security_policy_nonce)
-        nonce = content_security_policy_nonce
+      if nonce == true
+        if respond_to?(:content_security_policy_nonce)
+          # Rails 5.2
+          nonce = content_security_policy_nonce
+        elsif respond_to?(:content_security_policy_script_nonce)
+          # Secure Headers
+          nonce = content_security_policy_script_nonce
+        end
       end
       nonce_html = nonce ? " nonce=\"#{ERB::Util.html_escape(nonce)}\"" : nil
 
