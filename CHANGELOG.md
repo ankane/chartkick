@@ -1,7 +1,7 @@
-## 3.0.0 [unreleased]
+## 3.0.0
 
 - Updated Chartkick.js to 3.0.0
-- Added `eject` option
+- Added `code` option
 - Added support for `nonce: true`
 
 Breaking changes
