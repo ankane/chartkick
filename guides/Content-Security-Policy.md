@@ -35,9 +35,7 @@ end
 And create an initializer with:
 
 ```rb
-Chartkick.options = {
-  nonce: true
-}
+Chartkick.options[:nonce] = true
 ```
 
 ## Secure Headers
@@ -71,7 +69,5 @@ end
 And create an initializer with:
 
 ```rb
-Chartkick.options = {
-  nonce: true
-}
+Chartkick.options[:nonce] = true
 ```
