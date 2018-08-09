@@ -2,7 +2,7 @@
 
 Create beautiful JavaScript charts with one line of Ruby. No more fighting with charting libraries!
 
-[See it in action](https://www.chartkick.com)
+[See it in action](https://chartkick.com)
 
 :fire: For admin charts and dashboards, check out [Blazer](https://github.com/ankane/blazer/)
 
