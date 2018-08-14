@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v3.0.0
+ * v3.0.1
  * MIT License
  */
 
@@ -501,25 +501,7 @@
 
     var i, j, s, d, key, rows = [], rows2 = [];
 
-    if (chart.xtype === "number" || chartType === "bubble") {
-      for (var i$2 = 0; i$2 < series.length; i$2++) {
-        var s$2 = series[i$2];
-        var d$1 = [];
-        for (var j$2 = 0; j$2 < s$2.data.length; j$2++) {
-          var point = {
-            x: toFloat(s$2.data[j$2][0]),
-            y: toFloat(s$2.data[j$2][1])
-          };
-          if (chartType === "bubble") {
-            point.r = toFloat(s$2.data[j$2][2]) * 20 / max;
-            // custom attribute, for tooltip
-            point.v = s$2.data[j$2][2];
-          }
-          d$1.push(point);
-        }
-        rows2.push(d$1);
-      }
-    } else {
+    if (chartType === "bar" || chartType === "column" || (chart.xtype !== "number" && chart.xtype !== "bubble")) {
       var sortedLabels = [];
 
       for (i = 0; i < series.length; i++) {
@@ -538,7 +520,7 @@
         }
       }
 
-      if (chart.xtype === "datetime") {
+      if (chart.xtype === "datetime" || chart.xtype === "number") {
         sortedLabels.sort(sortByNumber);
       }
 
@@ -571,6 +553,24 @@
           rows2[j].push(rows[i][j] === undefined ? null : rows[i][j]);
         }
       }
+    } else {
+      for (var i$2 = 0; i$2 < series.length; i$2++) {
+        var s$2 = series[i$2];
+        var d$1 = [];
+        for (var j$2 = 0; j$2 < s$2.data.length; j$2++) {
+          var point = {
+            x: toFloat(s$2.data[j$2][0]),
+            y: toFloat(s$2.data[j$2][1])
+          };
+          if (chartType === "bubble") {
+            point.r = toFloat(s$2.data[j$2][2]) * 20 / max;
+            // custom attribute, for tooltip
+            point.v = s$2.data[j$2][2];
+          }
+          d$1.push(point);
+        }
+        rows2.push(d$1);
+      }
     }
 
     for (i = 0; i < series.length; i++) {
@@ -580,7 +580,7 @@
       var backgroundColor = chartType !== "line" ? addOpacity(color, 0.5) : color;
 
       var dataset = {
-        label: s.name,
+        label: s.name || "",
         data: rows2[i],
         fill: chartType === "area",
         borderColor: color,
@@ -589,10 +589,6 @@
         borderWidth: 2,
         pointHoverBackgroundColor: color
       };
-
-      if (chartType === "scatter" || chartType === "bubble") {
-        dataset.showLine = false;
-      }
 
       if (s.stack) {
         dataset.stack = s.stack;
@@ -695,7 +691,12 @@
 
     var data = createDataTable(chart, options, chartType || "line");
 
-    options.scales.xAxes[0].type = chart.xtype === "string" ? "category" : (chart.xtype == "number" ? "linear" : "time");
+    if (chart.xtype === "number") {
+      options.scales.xAxes[0].type = "linear";
+      options.scales.xAxes[0].position = "bottom";
+    } else {
+      options.scales.xAxes[0].type = chart.xtype === "string" ? "category" : "time";
+    }
 
     this.drawChart(chart, "line", data, options);
   };
@@ -767,6 +768,10 @@
 
     var options = jsOptions(chart, chart.options);
     setFormatOptions(chart, options, chartType);
+
+    if (!("showLines" in options)) {
+      options.showLines = false;
+    }
 
     var data = createDataTable(chart, options, chartType);
 
