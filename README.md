@@ -290,6 +290,15 @@ Times can be a time or a string (strings are parsed)
 <%= line_chart({20.day.ago => 5, "2013-05-07 00:00:00 UTC" => 7}) %>
 ```
 
+### Multiple Series
+
+You can pass a few options with a series:
+
+- `name`
+- `data`
+- `color`
+- `dataset` - *Chart.js only*
+
 ### Code
 
 If you want to use the charting library directly, get the code with:
