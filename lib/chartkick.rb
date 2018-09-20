@@ -5,7 +5,7 @@ require "chartkick/version"
 require "chartkick/engine" if defined?(Rails)
 require "chartkick/sinatra" if defined?(Sinatra)
 
-if defined?(ActiveSupport)
+if defined?(ActiveSupport.on_load)
   ActiveSupport.on_load(:action_view) do
     include Chartkick::Helper
   end
