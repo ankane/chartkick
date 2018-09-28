@@ -176,6 +176,13 @@ Defer chart creation until after the page loads
 <%= line_chart data, defer: true %>
 ```
 
+Chart creation needs to be triggered manually. This option overrules `defer`
+```erb
+<%= line_chart data, manual_load: true, id: 'my-chart' %>
+
+<%# then in JS: document.getElementById('my-chart').dispatchEvent(new Event('load')); %>
+```
+
 Donut chart
 
 ```erb

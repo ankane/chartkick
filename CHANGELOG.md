@@ -1,6 +1,7 @@
 ## 3.0.2 [unreleased]
 
 - Fixed error with `nonce` option with Secure Headers and Rails < 5.2
+- Add support for `manual_load: true`
 
 ## 3.0.1
 
