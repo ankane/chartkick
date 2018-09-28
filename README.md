@@ -102,10 +102,10 @@ render json: Task.group(:goal_id).group_by_day(:completed_at).count.chart_json
 
 ### Options
 
-Id, width, and height
+Id, class, width, and height
 
 ```erb
-<%= line_chart data, id: "users-chart", width: "800px", height: "500px" %>
+<%= line_chart data, id: "users-chart", class: "my-app-chart", width: "800px", height: "500px" %>
 ```
 
 Min and max values
