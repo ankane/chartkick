@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.name          = "chartkick"
   spec.version       = Chartkick::VERSION
   spec.summary       = "Create beautiful JavaScript charts with one line of Ruby"
-  spec.homepage      = "https://www.chartkick.com"
+  spec.homepage      = "https://chartkick.com"
   spec.license       = "MIT"
 
   spec.author        = "Andrew Kane"
