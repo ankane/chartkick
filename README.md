@@ -315,6 +315,8 @@ You can pass a few options with a series:
 - `data`
 - `color`
 - `dataset` - *Chart.js only*
+- `points` - *Chart.js only*
+- `curve` - *Chart.js only*
 
 ### Code
 
@@ -341,10 +343,16 @@ Give users the ability to download charts. It all happens in the browser - no se
 Set the filename
 
 ```erb
-<%= line_chart data, download: "boom" %>
+<%= line_chart data, download: {filename: "boom"} %>
 ```
 
 **Note:** Safari will open the image in a new window instead of downloading.
+
+Set the background color
+
+```erb
+<%= line_chart data, download: {background: "#ffffff"} %>
+```
 
 ## Installation
 

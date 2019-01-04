@@ -1,4 +1,4 @@
-## 3.0.2 [unreleased]
+## 3.0.2
 
 - Fixed error with `nonce` option with Secure Headers and Rails < 5.2
 - Updated Chartkick.js to 3.0.2
