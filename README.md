@@ -8,6 +8,23 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
 
+## Quick Start
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem "chartkick"
+```
+
+In `application.js`, add:
+
+```js
+//= require Chart.bundle
+//= require chartkick
+```
+
+This sets up Chartkick with Chart.js. For other charting libaries, see [detailed instructions](#instructions).
+
 ## Charts
 
 Line chart
