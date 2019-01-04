@@ -526,6 +526,7 @@ Check out [chartkick.js](https://github.com/ankane/chartkick.js)
 ## Tutorials
 
 - [Charts with Chartkick and Groupdate](https://gorails.com/episodes/charts-with-chartkick-and-groupdate)
+- [Creando gráficos en Ruby on Rails con Chartkick y Chart.js](https://www.youtube.com/watch?v=W92AlkwQn3M)
 - [Make Easy Graphs and Charts on Rails with Chartkick](https://www.sitepoint.com/make-easy-graphs-and-charts-on-rails-with-chartkick/)
 - [Practical Graphs on Rails: Chartkick in Practice](https://www.sitepoint.com/graphs-on-rails-chartkick-in-practice/)
 
