@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v3.0.1
+ * v3.0.2
  * MIT License
  */
 
@@ -260,6 +260,15 @@
     }
 
     return pre + value + (options.suffix || "");
+  }
+
+  function seriesOption(chart, series, option) {
+    if (option in series) {
+      return series[option];
+    } else if (option in chart.options) {
+      return chart.options[option];
+    }
+    return null;
   }
 
   function allZeros(data) {
@@ -594,11 +603,13 @@
         dataset.stack = s.stack;
       }
 
-      if (chart.options.curve === false) {
+      var curve = seriesOption(chart, s, "curve");
+      if (curve === false) {
         dataset.lineTension = 0;
       }
 
-      if (chart.options.points === false) {
+      var points = seriesOption(chart, s, "points");
+      if (points === false) {
         dataset.pointRadius = 0;
         dataset.pointHitRadius = 5;
       }
@@ -1427,12 +1438,10 @@
   };
 
   defaultExport$2.prototype.runCallbacks = function runCallbacks () {
-      var this$1 = this;
-
     var cb, call;
     for (var i = 0; i < callbacks.length; i++) {
       cb = callbacks[i];
-      call = this$1.library.visualization && ((cb.pack === "corechart" && this$1.library.visualization.LineChart) || (cb.pack === "timeline" && this$1.library.visualization.Timeline));
+      call = this.library.visualization && ((cb.pack === "corechart" && this.library.visualization.LineChart) || (cb.pack === "timeline" && this.library.visualization.Timeline));
       if (call) {
         cb.callback();
         callbacks.splice(i, 1);
@@ -1599,7 +1608,15 @@
   function addDownloadButton(chart) {
     var element = chart.element;
     var link = document.createElement("a");
-    link.download = chart.options.download === true ? "chart.png" : chart.options.download; // https://caniuse.com/download
+
+    var download = chart.options.download;
+    if (download === true) {
+      download = {};
+    } else if (typeof download === "string") {
+      download = {filename: download};
+    }
+    link.download = download.filename || "chart.png"; // https://caniuse.com/download
+
     link.style.position = "absolute";
     link.style.top = "20px";
     link.style.right = "20px";
@@ -1622,7 +1639,7 @@
       var related = e.relatedTarget;
       // check download option again to ensure it wasn't changed
       if ((!related || (related !== this && !childOf(this, related))) && chart.options.download) {
-        link.href = chart.toImage();
+        link.href = chart.toImage(download);
         element.appendChild(link);
       }
     });
@@ -1935,6 +1952,10 @@
 
     var refresh = this.options.refresh;
 
+    if (refresh && typeof this.dataSource !== "string") {
+      throw new Error("Data source must be a URL for refresh");
+    }
+
     if (!this.intervalId) {
       if (refresh) {
         this.intervalId = setInterval( function () {
@@ -1953,10 +1974,26 @@
     }
   };
 
-  Chart.prototype.toImage = function toImage () {
+  Chart.prototype.toImage = function toImage (download) {
     if (this.adapter === "chartjs") {
-      return this.chart.toBase64Image();
+      if (download && download.background && download.background !== "transparent") {
+        // https://stackoverflow.com/questions/30464750/chartjs-line-chart-set-background-color
+        var canvas = this.chart.chart.canvas;
+        var ctx = this.chart.chart.ctx;
+        var tmpCanvas = document.createElement("canvas");
+        var tmpCtx = tmpCanvas.getContext("2d");
+        tmpCanvas.width = ctx.canvas.width;
+        tmpCanvas.height = ctx.canvas.height;
+        tmpCtx.fillStyle = download.background;
+        tmpCtx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
+        tmpCtx.drawImage(canvas, 0, 0);
+        return tmpCanvas.toDataURL("image/png");
+      } else {
+        return this.chart.toBase64Image();
+      }
     } else {
+      // TODO throw error in next major version
+      // throw new Error("Feature only available for Chart.js");
       return null;
     }
   };
@@ -1993,7 +2030,7 @@
     return config;
   };
 
-  var LineChart = (function (Chart) {
+  var LineChart = /*@__PURE__*/(function (Chart) {
     function LineChart () {
       Chart.apply(this, arguments);
     }
@@ -2013,7 +2050,7 @@
     return LineChart;
   }(Chart));
 
-  var PieChart = (function (Chart) {
+  var PieChart = /*@__PURE__*/(function (Chart) {
     function PieChart () {
       Chart.apply(this, arguments);
     }
@@ -2033,7 +2070,7 @@
     return PieChart;
   }(Chart));
 
-  var ColumnChart = (function (Chart) {
+  var ColumnChart = /*@__PURE__*/(function (Chart) {
     function ColumnChart () {
       Chart.apply(this, arguments);
     }
@@ -2053,7 +2090,7 @@
     return ColumnChart;
   }(Chart));
 
-  var BarChart = (function (Chart) {
+  var BarChart = /*@__PURE__*/(function (Chart) {
     function BarChart () {
       Chart.apply(this, arguments);
     }
@@ -2073,7 +2110,7 @@
     return BarChart;
   }(Chart));
 
-  var AreaChart = (function (Chart) {
+  var AreaChart = /*@__PURE__*/(function (Chart) {
     function AreaChart () {
       Chart.apply(this, arguments);
     }
@@ -2093,7 +2130,7 @@
     return AreaChart;
   }(Chart));
 
-  var GeoChart = (function (Chart) {
+  var GeoChart = /*@__PURE__*/(function (Chart) {
     function GeoChart () {
       Chart.apply(this, arguments);
     }
@@ -2113,7 +2150,7 @@
     return GeoChart;
   }(Chart));
 
-  var ScatterChart = (function (Chart) {
+  var ScatterChart = /*@__PURE__*/(function (Chart) {
     function ScatterChart () {
       Chart.apply(this, arguments);
     }
@@ -2133,7 +2170,7 @@
     return ScatterChart;
   }(Chart));
 
-  var BubbleChart = (function (Chart) {
+  var BubbleChart = /*@__PURE__*/(function (Chart) {
     function BubbleChart () {
       Chart.apply(this, arguments);
     }
@@ -2153,7 +2190,7 @@
     return BubbleChart;
   }(Chart));
 
-  var Timeline = (function (Chart) {
+  var Timeline = /*@__PURE__*/(function (Chart) {
     function Timeline () {
       Chart.apply(this, arguments);
     }
@@ -2195,6 +2232,9 @@
           config[key] = options[key];
         }
       }
+    },
+    setDefaultOptions: function (opts) {
+      Chartkick.options = opts;
     },
     eachChart: function (callback) {
       for (var chartId in Chartkick.charts) {
