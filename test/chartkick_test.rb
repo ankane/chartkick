@@ -1,9 +1,7 @@
-require "test_helper"
+require_relative "test_helper"
 
-class TestChartkick < Minitest::Test
+class ChartkickTest < Minitest::Test
   include Chartkick::Helper
-
-  # TODO actual tests
 
   def setup
     @data = [[34, 42], [56, 49]]
