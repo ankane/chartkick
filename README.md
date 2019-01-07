@@ -131,6 +131,12 @@ Id, width, and height
 <%= line_chart data, id: "users-chart", width: "800px", height: "500px" %>
 ```
 
+Class and div style [master]
+
+```erb
+<%= line_chart data, class: "chart", style: "margin-bottom: 20px;" %>
+```
+
 Min and max values
 
 ```erb

@@ -43,6 +43,8 @@ module Chartkick
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
       width = options.delete(:width) || "100%"
+      css_class = options.delete(:class)
+      style = options.delete(:style)
       defer = !!options.delete(:defer)
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
@@ -60,8 +62,17 @@ module Chartkick
         end
       end
       nonce_html = nonce ? " nonce=\"#{ERB::Util.html_escape(nonce)}\"" : nil
+      class_html = css_class ? " class=\"%{class}\"" : nil
+      style_html = style ? " %{style}" : nil
 
-      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width)}
+      vars = {
+        id: ERB::Util.html_escape(element_id),
+        height: ERB::Util.html_escape(height),
+        width: ERB::Util.html_escape(width),
+        style: ERB::Util.html_escape(style),
+        :class => ERB::Util.html_escape(css_class)
+      }
+      html = (options.delete(:html) || %(<div id="%{id}"#{class_html} style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;#{style_html}">Loading...</div>)) % vars
 
       createjs = "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json}, #{options.to_json});"
       if defer
