@@ -352,6 +352,12 @@ Set the filename
 <%= line_chart data, download: {filename: "boom"} %>
 ```
 
+Title for a chart:
+
+```erb
+<%= line_chart data, download: { filename: "boom" }, title: 'Awesome chart' %>
+```
+
 **Note:** Safari will open the image in a new window instead of downloading.
 
 Set the background color
