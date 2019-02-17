@@ -346,24 +346,24 @@ Give users the ability to download charts. It all happens in the browser - no se
 <%= line_chart data, download: true %>
 ```
 
+**Note:** Safari will open the image in a new window instead of downloading.
+
 Set the filename
 
 ```erb
 <%= line_chart data, download: {filename: "boom"} %>
 ```
 
-Title for a chart:
-
-```erb
-<%= line_chart data, download: { filename: "boom" }, title: 'Awesome chart' %>
-```
-
-**Note:** Safari will open the image in a new window instead of downloading.
-
 Set the background color
 
 ```erb
 <%= line_chart data, download: {background: "#ffffff"} %>
+```
+
+Set title
+
+```erb
+<%= line_chart data, title: "Awesome chart" %>
 ```
 
 ## Installation
