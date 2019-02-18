@@ -291,7 +291,7 @@ This is great for including all of your JavaScript at the bottom of the page.
 
 ### Data
 
-Pass data as a Hash or Array
+Pass data as a hash or array
 
 ```erb
 <%= pie_chart({"Football" => 10, "Basketball" => 5}) %>
