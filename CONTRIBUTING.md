@@ -33,6 +33,7 @@ If you’d like to discuss a new feature, create an issue and start the title wi
 
 Fork the project and create a pull request. A few tips:
 
+- Submit JavaScript changes to the [Chartkick.js](https://github.com/ankane/chartkick.js) repo.
 - Keep changes to a minimum. If you have multiple features or fixes, submit multiple pull requests.
 - Follow the existing style. The code should read like it’s written by a single person.
 
