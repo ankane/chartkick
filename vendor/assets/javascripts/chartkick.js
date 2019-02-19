@@ -1224,7 +1224,7 @@
       }
 
       var options = jsOptions$2(chart, chart.options, chartOptions);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1.createDataTable(chart, chart.xtype);
 
       this$1.drawChart(chart, "LineChart", data, options);
     });
@@ -1269,7 +1269,7 @@
 
     this.waitForLoaded(chart, function () {
       var options = jsOptions$2(chart, chart.options);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1.createDataTable(chart, chart.xtype);
 
       this$1.drawChart(chart, "ColumnChart", data, options);
     });
@@ -1287,7 +1287,7 @@
         }
       };
       var options = jsOptionsFunc(defaultOptions$2, hideLegend$2, setTitle$2, setBarMin$1, setBarMax$1, setStacked$2, setXtitle$2, setYtitle$2)(chart, chart.options, chartOptions);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1.createDataTable(chart, chart.xtype);
 
       this$1.drawChart(chart, "BarChart", data, options);
     });
@@ -1304,7 +1304,7 @@
       };
 
       var options = jsOptions$2(chart, chart.options, chartOptions);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1.createDataTable(chart, chart.xtype);
 
       this$1.drawChart(chart, "AreaChart", data, options);
     });
@@ -1451,8 +1451,10 @@
   };
 
   // cant use object as key
-  defaultExport$2.prototype.createDataTable = function createDataTable (series, columnType) {
-    var i, j, s, d, key, rows = [], sortedLabels = [];
+  defaultExport$2.prototype.createDataTable = function createDataTable (chart, columnType) {
+    var i, j, s, d, key, rows = [], sortedLabels = [], series = chart.data;
+    var withAnnotations = 'series' in chart.options.library
+
     for (i = 0; i < series.length; i++) {
       s = series[i];
       series[i].name = series[i].name || "Value";
@@ -1464,11 +1466,18 @@
           rows[key] = new Array(series.length);
           sortedLabels.push(key);
         }
-        rows[key][i] = toFloat(d[1]);
+
+        if (withAnnotations) {
+          d = chart.rawData[i].data[j];
+          rows[key][i] = [toFloat(d[1]), d[2]];
+        } else {
+          rows[key][i] = toFloat(d[1]);
+        }
       }
     }
 
     var rows2 = [];
+    var formated_row = [];
     var day = true;
     var value;
     for (j = 0; j < sortedLabels.length; j++) {
@@ -1481,7 +1490,9 @@
       } else {
         value = i;
       }
-      rows2.push([value].concat(rows[i]));
+
+      formated_row = [value].concat(rows[i]).flat(1)
+      rows2.push(formated_row);
     }
     if (columnType === "datetime") {
       rows2.sort(sortByTime);
@@ -1501,9 +1512,10 @@
     data.addColumn(columnType, "");
     for (i = 0; i < series.length; i++) {
       data.addColumn("number", series[i].name);
+      if (withAnnotations) data.addColumn(chart.options.library.series[i]); 
     }
-    data.addRows(rows2);
 
+    data.addRows(rows2);
     return data;
   };
 
