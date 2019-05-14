@@ -1,3 +1,7 @@
+## 3.0.3 [unreleased]
+
+- Updated Chart.js to 2.8.0
+
 ## 3.0.2
 
 - Fixed error with `nonce` option with Secure Headers and Rails < 5.2
