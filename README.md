@@ -440,7 +440,7 @@ You pack must be included **before** the charts in your views, unless using the 
 
 ### Sinatra and Padrino
 
-You must include `chartkick.js` manually. [Download it here](https://raw.githubusercontent.com/ankane/chartkick/master/vendor/assets/javascripts/chartkick.js)
+Download [chartkick.js](https://raw.githubusercontent.com/ankane/chartkick/master/vendor/assets/javascripts/chartkick.js) and include it manually.
 
 ```html
 <script src="chartkick.js"></script>
