@@ -148,7 +148,7 @@ Min and max values
 
 `min` defaults to 0 for charts with non-negative values. Use `nil` to let the charting library decide.
 
-Min and max for x-axis - *Chart.js* [master]
+Min and max for x-axis - *Chart.js*
 
 ```erb
 <%= line_chart data, xmin: "2018-01-01", xmax: "2019-01-01" %>
