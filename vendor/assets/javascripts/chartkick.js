@@ -2,15 +2,15 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v3.0.2
+ * v3.1.0
  * MIT License
  */
 
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global.Chartkick = factory());
-}(this, (function () { 'use strict';
+  (global = global || self, global.Chartkick = factory());
+}(this, function () { 'use strict';
 
   function isArray(variable) {
     return Object.prototype.toString.call(variable) === "[object Array]";
@@ -21,7 +21,7 @@
   }
 
   function isPlainObject(variable) {
-    return !isFunction(variable) && variable instanceof Object;
+    return Object.prototype.toString.call(variable) === "[object Object]";
   }
 
   // https://github.com/madrobby/zepto/blob/master/src/zepto.js
@@ -390,6 +390,12 @@
     return result ? "rgba(" + parseInt(result[1], 16) + ", " + parseInt(result[2], 16) + ", " + parseInt(result[3], 16) + ", " + opacity + ")" : hex;
   };
 
+  // check if not null or undefined
+  // https://stackoverflow.com/a/27757708/1177228
+  var notnull = function(x) {
+    return x != null;
+  };
+
   var setLabelSize = function (chart, data, options) {
     var maxLabelSize = Math.ceil(chart.element.offsetWidth / 4.0 / data.labels.length);
     if (maxLabelSize > 25) {
@@ -621,9 +627,29 @@
       datasets.push(dataset);
     }
 
+    var xmin = chart.options.xmin;
+    var xmax = chart.options.xmax;
+
+    if (chart.xtype === "datetime") {
+      if (notnull(xmin)) {
+        options.scales.xAxes[0].time.min = toDate(xmin).getTime();
+      }
+      if (notnull(xmax)) {
+        options.scales.xAxes[0].time.max = toDate(xmax).getTime();
+      }
+    } else if (chart.xtype === "number") {
+      if (notnull(xmin)) {
+        options.scales.xAxes[0].ticks.min = xmin;
+      }
+      if (notnull(xmax)) {
+        options.scales.xAxes[0].ticks.max = xmax;
+      }
+    }
+
     if (chart.xtype === "datetime" && labels.length > 0) {
-      var minTime = labels[0].getTime();
-      var maxTime = labels[0].getTime();
+      var minTime = (notnull(xmin) ? toDate(xmin) : labels[0]).getTime();
+      var maxTime = (notnull(xmax) ? toDate(xmax) : labels[0]).getTime();
+
       for (i = 1; i < labels.length; i++) {
         var value$1 = labels[i].getTime();
         if (value$1 < minTime) {
@@ -923,7 +949,7 @@
 
     if (!options.tooltip.pointFormatter) {
       options.tooltip.pointFormatter = function () {
-        return '<span style="color:' + this.color + '>\u25CF</span> ' + formatValue(this.series.name + ': <b>', this.y, formatOptions) + '</b><br/>';
+        return '<span style="color:' + this.color + '">\u25CF</span> ' + formatValue(this.series.name + ': <b>', this.y, formatOptions) + '</b><br/>';
       };
     }
   };
@@ -2246,9 +2272,21 @@
     config: config,
     options: {},
     adapters: adapters,
-    addAdapter: addAdapter
+    addAdapter: addAdapter,
+    use: function(adapter) {
+      addAdapter(adapter);
+      return Chartkick;
+    }
   };
+
+  // not ideal, but allows for simpler integration
+  if (typeof window !== "undefined" && !window.Chartkick) {
+    window.Chartkick = Chartkick;
+  }
+
+  // backwards compatibility for esm require
+  Chartkick.default = Chartkick;
 
   return Chartkick;
 
-})));
+}));
