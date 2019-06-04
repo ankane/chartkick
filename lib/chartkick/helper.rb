@@ -74,7 +74,7 @@ module Chartkick
 
       # js vars
       js_vars = {
-        type: klass, # don't convert to JSON, but still escape
+        type: klass.to_json,
         id: element_id.to_json,
         data: data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json,
         options: options.to_json
@@ -82,7 +82,7 @@ module Chartkick
       js_vars.each_key do |k|
         js_vars[k] = chartkick_json_escape(js_vars[k])
       end
-      createjs = "new Chartkick.%{type}(%{id}, %{data}, %{options});" % js_vars
+      createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % js_vars
 
       if defer
         js = <<JS
