@@ -61,9 +61,21 @@ module Chartkick
       end
       nonce_html = nonce ? " nonce=\"#{ERB::Util.html_escape(nonce)}\"" : nil
 
-      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % {id: ERB::Util.html_escape(element_id), height: ERB::Util.html_escape(height), width: ERB::Util.html_escape(width)}
+      vars = {
+        id: element_id,
+        height: height,
+        width: width
+      }
 
-      createjs = "new Chartkick.#{klass}(#{element_id.to_json}, #{data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json}, #{options.to_json});"
+      vars.each_key do |k|
+        vars[k] = ERB::Util.html_escape(vars[k])
+      end
+
+      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % vars
+
+      data = data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json
+
+      createjs = "new Chartkick.#{klass}(#{element_id.to_json}, #{data}, #{options.to_json});"
       if defer
         js = <<JS
 <script type="text/javascript"#{nonce_html}>
