@@ -61,21 +61,29 @@ module Chartkick
       end
       nonce_html = nonce ? " nonce=\"#{ERB::Util.html_escape(nonce)}\"" : nil
 
-      vars = {
+      # html vars
+      html_vars = {
         id: element_id,
         height: height,
         width: width
       }
-
-      vars.each_key do |k|
-        vars[k] = ERB::Util.html_escape(vars[k])
+      html_vars.each_key do |k|
+        html_vars[k] = ERB::Util.html_escape(html_vars[k])
       end
+      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % html_vars
 
-      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % vars
+      # js vars
+      js_vars = {
+        type: klass, # don't convert to JSON, but still escape
+        id: element_id.to_json,
+        data: data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json,
+        options: options.to_json
+      }
+      js_vars.each_key do |k|
+        js_vars[k] = chartkick_json_escape(js_vars[k])
+      end
+      createjs = "new Chartkick.%{type}(%{id}, %{data}, %{options});" % js_vars
 
-      data = data_source.respond_to?(:chart_json) ? data_source.chart_json : data_source.to_json
-
-      createjs = "new Chartkick.#{klass}(#{element_id.to_json}, #{data}, #{options.to_json});"
       if defer
         js = <<JS
 <script type="text/javascript"#{nonce_html}>
@@ -116,6 +124,17 @@ JS
         hash_a[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? chartkick_deep_merge(tv, v) : v
       end
       hash_a
+    end
+
+    # from https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/string/output_safety.rb
+    JSON_ESCAPE = { "&" => '\u0026', ">" => '\u003e', "<" => '\u003c', "\u2028" => '\u2028', "\u2029" => '\u2029' }
+    JSON_ESCAPE_REGEXP = /[\u2028\u2029&><]/u
+    def chartkick_json_escape(s)
+      if ERB::Util.respond_to?(:json_escape)
+        ERB::Util.json_escape(s)
+      else
+        s.to_s.gsub(JSON_ESCAPE_REGEXP, JSON_ESCAPE)
+      end
     end
   end
 end

@@ -1,3 +1,7 @@
+## 3.2.0
+
+- Fixed XSS vulnerability - see [#488](https://github.com/ankane/chartkick/issues/488)
+
 ## 3.1.0
 
 - Updated Chartkick.js to 3.1.0
