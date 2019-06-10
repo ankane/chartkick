@@ -780,7 +780,9 @@
   defaultExport.prototype.renderColumnChart = function renderColumnChart (chart, chartType) {
     var options;
     if (chartType === "bar") {
-      options = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setTitle, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart, chart.options);
+      var barOptions = merge(baseOptions, defaultOptions);
+      delete barOptions.scales.yAxes[0].ticks.maxTicksLimit;
+      options = jsOptionsFunc(barOptions, hideLegend, setTitle, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart, chart.options);
     } else {
       options = jsOptions(chart, chart.options);
     }
