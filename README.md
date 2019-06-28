@@ -36,6 +36,12 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require Chart.bundle
 ```
 
+For Integration with Trailblazer, in the trailblazer cells include:
+
+```ruby
+include Chartkick::Helper
+```
+
 This sets up Chartkick with Chart.js. For other charting libraries, see [detailed instructions](#installation).
 
 ## Charts
