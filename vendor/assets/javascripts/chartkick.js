@@ -674,11 +674,11 @@
           options.scales.xAxes[0].time.unit = "day";
           step = 1;
         } else if (hour || timeDiff > 0.5) {
-          options.scales.xAxes[0].time.displayFormats = {hour: "MMM D, h a"};
+          options.scales.xAxes[0].time.displayFormats = {hour: chart.options.day_format || "MMM D, h a"};
           options.scales.xAxes[0].time.unit = "hour";
           step = 1 / 24.0;
         } else if (minute) {
-          options.scales.xAxes[0].time.displayFormats = {minute: "h:mm a"};
+          options.scales.xAxes[0].time.displayFormats = {minute: chart.options.time_format || "h:mm a"};
           options.scales.xAxes[0].time.unit = "minute";
           step = 1 / 24.0 / 60.0;
         }
@@ -696,9 +696,9 @@
         if (day) {
           options.scales.xAxes[0].time.tooltipFormat = "ll";
         } else if (hour) {
-          options.scales.xAxes[0].time.tooltipFormat = "MMM D, h a";
+          options.scales.xAxes[0].time.tooltipFormat = chart.options.day_format || "MMM D, h a";
         } else if (minute) {
-          options.scales.xAxes[0].time.tooltipFormat = "h:mm a";
+          options.scales.xAxes[0].time.tooltipFormat = chart.options.time_format || "h:mm a";
         }
       }
     }
