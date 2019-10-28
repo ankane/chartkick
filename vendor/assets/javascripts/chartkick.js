@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v3.1.2
+ * v3.1.3
  * MIT License
  */
 
@@ -1613,8 +1613,12 @@
     }
   }
 
-  function chartError(element, message) {
-    setText(element, "Error Loading Chart: " + message);
+  // TODO remove prefix for all messages
+  function chartError(element, message, noPrefix) {
+    if (!noPrefix) {
+      message = "Error Loading Chart: " + message;
+    }
+    setText(element, message);
     element.style.color = "#ff0000";
   }
 
@@ -1641,10 +1645,10 @@
           chart.rawData = data;
           errorCatcher(chart);
         }, function (message) {
-          chartError(chart.element, message);
+          chartError(chart.element, message, true);
         });
       } catch (err) {
-        chartError(chart.element, err);
+        chartError(chart.element, err, true);
       }
     } else {
       chart.rawData = dataSource;
