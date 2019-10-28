@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v3.1.1
+ * v3.1.2
  * MIT License
  */
 
@@ -486,7 +486,7 @@
 
   var jsOptions = jsOptionsFunc(merge(baseOptions, defaultOptions), hideLegend, setTitle, setMin, setMax, setStacked, setXtitle, setYtitle);
 
-  var createDataTable = function (chart, options, chartType) {
+  var createDataTable = function (chart, options, chartType, library) {
     var datasets = [];
     var labels = [];
 
@@ -631,11 +631,15 @@
     var xmax = chart.options.xmax;
 
     if (chart.xtype === "datetime") {
+      // hacky check for Chart.js >= 2.9.0
+      // https://github.com/chartjs/Chart.js/compare/v2.8.0...v2.9.0
+      var gte29 = "math" in library.helpers;
+      var ticksKey = gte29 ? "ticks" : "time";
       if (notnull(xmin)) {
-        options.scales.xAxes[0].time.min = toDate(xmin).getTime();
+        options.scales.xAxes[0][ticksKey].min = toDate(xmin).getTime();
       }
       if (notnull(xmax)) {
-        options.scales.xAxes[0].time.max = toDate(xmax).getTime();
+        options.scales.xAxes[0][ticksKey].max = toDate(xmax).getTime();
       }
     } else if (chart.xtype === "number") {
       if (notnull(xmin)) {
@@ -726,7 +730,7 @@
     var options = jsOptions(chart, merge(chartOptions, chart.options));
     setFormatOptions(chart, options, chartType);
 
-    var data = createDataTable(chart, options, chartType || "line");
+    var data = createDataTable(chart, options, chartType || "line", this.library);
 
     if (chart.xtype === "number") {
       options.scales.xAxes[0].type = "linear";
@@ -787,7 +791,7 @@
       options = jsOptions(chart, chart.options);
     }
     setFormatOptions(chart, options, chartType);
-    var data = createDataTable(chart, options, "column");
+    var data = createDataTable(chart, options, "column", this.library);
     if (chartType !== "bar") {
       setLabelSize(chart, data, options);
     }
@@ -812,7 +816,7 @@
       options.showLines = false;
     }
 
-    var data = createDataTable(chart, options, chartType);
+    var data = createDataTable(chart, options, chartType, this.library);
 
     options.scales.xAxes[0].type = "linear";
     options.scales.xAxes[0].position = "bottom";
@@ -886,6 +890,7 @@
     },
     plotOptions: {
       areaspline: {},
+      area: {},
       series: {
         marker: {}
       }
@@ -922,7 +927,10 @@
   };
 
   var setStacked$1 = function (options, stacked) {
-    options.plotOptions.series.stacking = stacked ? (stacked === true ? "normal" : stacked) : null;
+    var stackedValue = stacked ? (stacked === true ? "normal" : stacked) : null;
+    options.plotOptions.series.stacking = stackedValue;
+    options.plotOptions.area.stacking = stackedValue;
+    options.plotOptions.areaspline.stacking = stackedValue;
   };
 
   var setXtitle$1 = function (options, title) {
@@ -1568,7 +1576,7 @@
   function ajaxCall(url, success, error) {
     var $ = window.jQuery || window.Zepto || window.$;
 
-    if ($) {
+    if ($ && $.ajax) {
       $.ajax({
         dataType: "json",
         url: url,
@@ -1627,6 +1635,17 @@
       }, function (message) {
         chartError(chart.element, message);
       });
+    } else if (typeof dataSource === "function") {
+      try {
+        dataSource(function (data) {
+          chart.rawData = data;
+          errorCatcher(chart);
+        }, function (message) {
+          chartError(chart.element, message);
+        });
+      } catch (err) {
+        chartError(chart.element, err);
+      }
     } else {
       chart.rawData = dataSource;
       errorCatcher(chart);
@@ -1972,6 +1991,8 @@
       var sep = this.dataSource.indexOf("?") === -1 ? "?" : "&";
       var url = this.dataSource + sep + "_=" + (new Date()).getTime();
       fetchDataSource(this, url);
+    } else if (typeof this.dataSource === "function") {
+      fetchDataSource(this, this.dataSource);
     }
   };
 
@@ -1980,8 +2001,8 @@
 
     var refresh = this.options.refresh;
 
-    if (refresh && typeof this.dataSource !== "string") {
-      throw new Error("Data source must be a URL for refresh");
+    if (refresh && typeof this.dataSource !== "string" && typeof this.dataSource !== "function") {
+      throw new Error("Data source must be a URL or callback for refresh");
     }
 
     if (!this.intervalId) {
