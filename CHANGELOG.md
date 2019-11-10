@@ -1,6 +1,6 @@
-## 3.2.3 [unreleased]
+## 3.3.0 [unreleased]
 
-- Updated Chart.js to 2.9.2
+- Rolled back Chart.js to 2.8.0 due to legend change
 
 ## 3.2.2
 
