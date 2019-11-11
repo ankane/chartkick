@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v3.1.3
+ * v3.2.0
  * MIT License
  */
 
@@ -10,7 +10,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = global || self, global.Chartkick = factory());
-}(this, function () { 'use strict';
+}(this, (function () { 'use strict';
 
   function isArray(variable) {
     return Object.prototype.toString.call(variable) === "[object Array]";
@@ -21,13 +21,17 @@
   }
 
   function isPlainObject(variable) {
-    return Object.prototype.toString.call(variable) === "[object Object]";
+    // protect against prototype pollution, defense 2
+    return Object.prototype.toString.call(variable) === "[object Object]" && !isFunction(variable) && variable instanceof Object;
   }
 
   // https://github.com/madrobby/zepto/blob/master/src/zepto.js
   function extend(target, source) {
     var key;
     for (key in source) {
+      // protect against prototype pollution, defense 1
+      if (key === "__proto__") { continue; }
+
       if (isPlainObject(source[key]) || isArray(source[key])) {
         if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
           target[key] = {};
@@ -237,7 +241,7 @@
     return typeof obj === "number";
   }
 
-  function formatValue(pre, value, options) {
+  function formatValue(pre, value, options, axis) {
     pre = pre || "";
     if (options.prefix) {
       if (value < 0) {
@@ -245,6 +249,58 @@
         pre += "-";
       }
       pre += options.prefix;
+    }
+
+    var suffix = options.suffix || "";
+    var precision = options.precision;
+    var round = options.round;
+
+    if (options.byteScale) {
+      var baseValue = axis ? options.byteScale : value;
+      if (baseValue >= 1099511627776) {
+        value /= 1099511627776;
+        suffix = " TB";
+      } else if (baseValue >= 1073741824) {
+        value /= 1073741824;
+        suffix = " GB";
+      } else if (baseValue >= 1048576) {
+        value /= 1048576;
+        suffix = " MB";
+      } else if (baseValue >= 1024) {
+        value /= 1024;
+        suffix = " KB";
+      } else {
+        suffix = " bytes";
+      }
+
+      if (precision === undefined && round === undefined) {
+        precision = 3;
+      }
+    }
+
+    if (precision !== undefined && round !== undefined) {
+      throw Error("Use either round or precision, not both");
+    }
+
+    if (!axis) {
+      if (precision !== undefined) {
+        value = value.toPrecision(precision);
+        if (!options.zeros) {
+          value = parseFloat(value);
+        }
+      }
+
+      if (round !== undefined) {
+        if (round < 0) {
+          var num = Math.pow(10, -1 * round);
+          value = parseInt((1.0 * value / num).toFixed(0)) * num;
+        } else {
+          value = value.toFixed(round);
+          if (!options.zeros) {
+            value = parseFloat(value);
+          }
+        }
+      }
     }
 
     if (options.thousands || options.decimal) {
@@ -259,7 +315,7 @@
       }
     }
 
-    return pre + value + (options.suffix || "");
+    return pre + value + suffix;
   }
 
   function seriesOption(chart, series, option) {
@@ -420,8 +476,39 @@
       prefix: chart.options.prefix,
       suffix: chart.options.suffix,
       thousands: chart.options.thousands,
-      decimal: chart.options.decimal
+      decimal: chart.options.decimal,
+      precision: chart.options.precision,
+      round: chart.options.round,
+      zeros: chart.options.zeros
     };
+
+    if (chart.options.bytes) {
+      var series = chart.data;
+      if (chartType === "pie") {
+        series = [{data: series}];
+      }
+
+      // calculate max
+      var max = 0;
+      for (var i = 0; i < series.length; i++) {
+        var s = series[i];
+        for (var j = 0; j < s.data.length; j++) {
+          if (s.data[j][1] > max) {
+            max = s.data[j][1];
+          }
+        }
+      }
+
+      // calculate scale
+      var scale = 1;
+      while (max >= 1024) {
+        scale *= 1024;
+        max /= 1024;
+      }
+
+      // set step size
+      formatOptions.byteScale = scale;
+    }
 
     if (chartType !== "pie") {
       var myAxes = options.scales.yAxes;
@@ -429,9 +516,18 @@
         myAxes = options.scales.xAxes;
       }
 
+      if (formatOptions.byteScale) {
+        if (!myAxes[0].ticks.stepSize) {
+          myAxes[0].ticks.stepSize = formatOptions.byteScale / 2;
+        }
+        if (!myAxes[0].ticks.maxTicksLimit) {
+          myAxes[0].ticks.maxTicksLimit = 4;
+        }
+      }
+
       if (!myAxes[0].ticks.callback) {
         myAxes[0].ticks.callback = function (value) {
-          return formatValue("", value, formatOptions);
+          return formatValue("", value, formatOptions, true);
         };
       }
     }
@@ -948,7 +1044,10 @@
       prefix: chart.options.prefix,
       suffix: chart.options.suffix,
       thousands: chart.options.thousands,
-      decimal: chart.options.decimal
+      decimal: chart.options.decimal,
+      precision: chart.options.precision,
+      round: chart.options.round,
+      zeros: chart.options.zeros
     };
 
     if (chartType !== "pie" && !options.yAxis.labels.formatter) {
@@ -2316,4 +2415,4 @@
 
   return Chartkick;
 
-}));
+})));

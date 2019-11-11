@@ -1,3 +1,8 @@
+## 3.3.0
+
+- Updated Chartkick.js to 3.2.0
+- Rolled back Chart.js to 2.8.0 due to legend change
+
 ## 3.2.2
 
 - Updated Chartkick.js to 3.1.3

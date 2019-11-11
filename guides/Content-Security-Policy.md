@@ -7,9 +7,9 @@ Chartkick tries to make CSP as easy as possible. Currently, `unsafe-inline` styl
 
 Google Charts also requires `unsafe-eval` and as well as styles and scripts from the `https://www.gstatic.com` domain.
 
-## Rails 5.2
+## Rails 5.2+
 
-Rails 5.2 has built-in support for CSP. Configure CSP and enable automatic nonce generation in `config/initializers/content_security_policy.rb` with:
+Rails 5.2+ has built-in support for CSP. Configure CSP and enable automatic nonce generation in `config/initializers/content_security_policy.rb` with:
 
 ```ruby
 Rails.application.config.content_security_policy do |policy|

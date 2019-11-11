@@ -242,6 +242,30 @@ Set a decimal separator - *Chart.js, Highcharts*
 <%= line_chart data, decimal: "," %>
 ```
 
+Set significant digits - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, precision: 3 %>
+```
+
+Set rounding - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, round: 2 %>
+```
+
+Show insignificant zeros, useful for currency - *Chart.js, Highcharts*
+
+```erb
+<%= line_chart data, round: 2, zeros: true %>
+```
+
+Friendly byte sizes - *Chart.js 2.8+*
+
+```erb
+<%= line_chart data, bytes: true %>
+```
+
 Show a message when data is empty
 
 ```erb
