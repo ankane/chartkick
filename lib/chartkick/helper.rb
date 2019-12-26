@@ -4,35 +4,35 @@ require "erb"
 module Chartkick
   module Helper
     def line_chart(data_source, **options)
-      chartkick_chart "LineChart", data_source, options
+      chartkick_chart "LineChart", data_source, **options
     end
 
     def pie_chart(data_source, **options)
-      chartkick_chart "PieChart", data_source, options
+      chartkick_chart "PieChart", data_source, **options
     end
 
     def column_chart(data_source, **options)
-      chartkick_chart "ColumnChart", data_source, options
+      chartkick_chart "ColumnChart", data_source, **options
     end
 
     def bar_chart(data_source, **options)
-      chartkick_chart "BarChart", data_source, options
+      chartkick_chart "BarChart", data_source, **options
     end
 
     def area_chart(data_source, **options)
-      chartkick_chart "AreaChart", data_source, options
+      chartkick_chart "AreaChart", data_source, **options
     end
 
     def scatter_chart(data_source, **options)
-      chartkick_chart "ScatterChart", data_source, options
+      chartkick_chart "ScatterChart", data_source, **options
     end
 
     def geo_chart(data_source, **options)
-      chartkick_chart "GeoChart", data_source, options
+      chartkick_chart "GeoChart", data_source, **options
     end
 
     def timeline(data_source, **options)
-      chartkick_chart "Timeline", data_source, options
+      chartkick_chart "Timeline", data_source, **options
     end
 
     private

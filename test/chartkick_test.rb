@@ -27,13 +27,13 @@ class ChartkickTest < Minitest::Test
 
   def test_escape_options
     bad_options = {xss: "</script><script>alert('xss')</script>"}
-    assert_includes column_chart([], bad_options), "\\u003cscript\\u003e"
-    refute_includes column_chart([], bad_options), "<script>"
+    assert_includes column_chart([], **bad_options), "\\u003cscript\\u003e"
+    refute_includes column_chart([], **bad_options), "<script>"
   end
 
   def test_options_not_mutated
     options = {id: "boom"}
-    line_chart @data, options
+    line_chart @data, **options
     assert_equal "boom", options[:id]
   end
 
