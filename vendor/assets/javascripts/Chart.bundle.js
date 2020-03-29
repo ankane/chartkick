@@ -4437,7 +4437,7 @@ core_defaults._set('global', {
 			borderColor: defaultColor$1,
 			borderWidth: 1,
 			// Hover
-			hitRadius: 1,
+			hitRadius: 100,
 			hoverRadius: 4,
 			hoverBorderWidth: 1
 		}
