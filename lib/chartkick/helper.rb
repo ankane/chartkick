@@ -43,7 +43,7 @@ module Chartkick
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
       height = options.delete(:height) || "300px"
       width = options.delete(:width) || "100%"
-      defer = !!options.delete(:defer)
+      defer = options.delete(:defer)
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
@@ -84,7 +84,20 @@ module Chartkick
       end
       createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % js_vars
 
-      if defer
+      if defer == :turbolinks
+        js = <<JS
+<script type="text/javascript"#{nonce_html}>
+  (function() {
+    var listener = function() {
+      #{createjs}
+      window.removeEventListener("turbolinks:load", listener, true);
+    };
+    window.addEventListener("load", listener, true);
+    window.addEventListener("turbolinks:load", listener, true);
+  })();
+</script>
+JS
+      elsif defer
         js = <<JS
 <script type="text/javascript"#{nonce_html}>
   (function() {
