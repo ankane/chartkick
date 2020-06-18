@@ -91,13 +91,11 @@ module Chartkick
   (function() {
     var createChart = function() {
       #{createjs}
-      window.removeEventListener("load", createChart, true);
       window.removeEventListener("turbolinks:load", createChart, true);
     };
     if (document.documentElement.hasAttribute("data-turbolinks-preview")) {
       createChart();
     } else {
-      window.addEventListener("load", createChart, true);
       window.addEventListener("turbolinks:load", createChart, true);
     }
   })();
