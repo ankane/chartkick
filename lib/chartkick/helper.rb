@@ -85,15 +85,21 @@ module Chartkick
       createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % js_vars
 
       if defer == :turbolinks
+        # render chart on turbolinks preview to match behavior of defer: false
         js = <<JS
 <script type="text/javascript"#{nonce_html}>
   (function() {
-    var listener = function() {
+    var createChart = function() {
       #{createjs}
-      window.removeEventListener("turbolinks:load", listener, true);
+      window.removeEventListener("load", createChart, true);
+      window.removeEventListener("turbolinks:load", createChart, true);
     };
-    window.addEventListener("load", listener, true);
-    window.addEventListener("turbolinks:load", listener, true);
+    if (document.documentElement.hasAttribute("data-turbolinks-preview")) {
+      createChart();
+    } else {
+      window.addEventListener("load", createChart, true);
+      window.addEventListener("turbolinks:load", createChart, true);
+    }
   })();
 </script>
 JS
