@@ -91,13 +91,16 @@ module Chartkick
   (function() {
     var createChart = function() {
       #{createjs}
-      window.removeEventListener("turbolinks:load", createChart, true);
+      document.removeEventListener("turbolinks:load", createChart, true);
     };
-    if (document.documentElement.hasAttribute("data-turbolinks-preview")) {
-      createChart();
-    } else {
-      window.addEventListener("turbolinks:load", createChart, true);
+    var cleanupBeforeCache = function() {
+      Chartkick.eachChart( function(chart) {
+        chart.destroy();
+      });
+      document.removeEventListener("turbolinks:before-cache", cleanupBeforeCache, true);
     }
+    document.addEventListener("turbolinks:load", createChart, true);
+    document.addEventListener("turbolinks:before-cache", cleanupBeforeCache, true);
   })();
 </script>
 JS
