@@ -7,14 +7,13 @@ assignees: ''
 
 ---
 
-**First**
-Search existing issues to see if it’s been reported and make sure you’re on the latest version.
+Found a bug?
 
-**Describe the bug**
-A clear and concise description of the bug.
+1. Search existing issues to see if it’s been reported
+2. Make sure you’re on the latest version
 
-**To reproduce**
-Steps to reproduce.
+If the above steps don’t help, replace all this with:
 
-**Additional context**
-Add any other context.
+- Detailed steps to reproduce
+- The JavaScript rendered by Chartkick
+- The complete backtrace for exceptions
