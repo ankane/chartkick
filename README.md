@@ -323,7 +323,7 @@ Then, in your layout, use:
 <%= yield :charts_js %>
 ```
 
-> For Padrino, use `yield_content` instead of `yield`
+For Padrino, use `yield_content` instead of `yield`.
 
 This is great for including all of your JavaScript at the bottom of the page.
 
@@ -370,9 +370,7 @@ If you want to use the charting library directly, get the code with:
 <%= line_chart data, code: true %>
 ```
 
-The code will be logged to the JavaScript console.
-
-> JavaScript functions cannot be logged, so it may not be identical.
+The code will be logged to the JavaScript console. JavaScript functions cannot be logged, so it may not be identical.
 
 ### Download Charts
 
@@ -384,7 +382,7 @@ Give users the ability to download charts. It all happens in the browser - no se
 <%= line_chart data, download: true %>
 ```
 
-> Safari will open the image in a new window instead of downloading.
+Safari will open the image in a new window instead of downloading.
 
 Set the filename
 
@@ -418,7 +416,7 @@ Next, choose your charting library.
 - [Google Charts](#google-charts)
 - [Highcharts](#highcharts)
 
-> In the instructions below, `application.js` must be included **before** the charts in your views, unless using the `:content_for` option.
+In the instructions below, `application.js` must be included **before** the charts in your views, unless using the `:content_for` option.
 
 ### Chart.js
 
@@ -562,6 +560,12 @@ Redraw the chart with:
 chart.redraw()
 ```
 
+Destroy the chart with:
+
+```javascript
+chart.destroy()
+```
+
 Loop over charts with:
 
 ```javascript
@@ -597,14 +601,6 @@ Breaking changes
 - Removed `window.Chartkick = {...}` way to set config - use `Chartkick.configure` instead
 - Removed support for the Google Charts jsapi loader - use loader.js instead
 
-### 2.0
-
-Breaking changes
-
-- Chart.js is now the default adapter if multiple are loaded - yay open source!
-- Axis types are automatically detected - no need for `discrete: true`
-- Better date support - dates are no longer treated as UTC
-
 ## Credits
 
 Chartkick uses [iso8601.js](https://github.com/Do/iso8601.js) to parse dates and times.
@@ -612,8 +608,6 @@ Chartkick uses [iso8601.js](https://github.com/Do/iso8601.js) to parse dates and
 ## History
 
 View the [changelog](https://github.com/ankane/chartkick/blob/master/CHANGELOG.md)
-
-Chartkick follows [Semantic Versioning](https://semver.org/)
 
 ## Contributing
 
