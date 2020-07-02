@@ -86,7 +86,7 @@ module Chartkick
 
       if defer
         js = <<JS
-<script type="text/javascript"#{nonce_html}>
+<script type="application/javascript"#{nonce_html}>
   (function() {
     var createChart = function() { #{createjs} };
     if (window.addEventListener) {
@@ -101,7 +101,7 @@ module Chartkick
 JS
       else
         js = <<JS
-<script type="text/javascript"#{nonce_html}>
+<script type="application/javascript"#{nonce_html}>
   #{createjs}
 </script>
 JS
