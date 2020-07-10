@@ -85,6 +85,7 @@ module Chartkick
       createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % js_vars
 
       if defer
+        # TODO remove type in 4.0
         js = <<JS
 <script type="text/javascript"#{nonce_html}>
   (function() {
@@ -100,6 +101,7 @@ module Chartkick
 </script>
 JS
       else
+        # TODO remove type in 4.0
         js = <<JS
 <script type="text/javascript"#{nonce_html}>
   #{createjs}
