@@ -73,23 +73,39 @@ class ChartkickTest < Minitest::Test
   end
 
   def test_id
-    assert_match "id=\"test-123\"", line_chart(@data, id: "test-123")
+    assert_match "id=\"test-id\"", line_chart(@data, id: "test-id")
+  end
+
+  def test_id_escaped
+    assert_match "id=\"test-123&quot;\"", line_chart(@data, id: "test-123\"")
   end
 
   def test_height
     assert_match "height: 150px;", line_chart(@data, height: "150px")
   end
 
+  def test_height_escaped
+    assert_match "height: 150px&quot;;", line_chart(@data, height: "150px\"")
+  end
+
   def test_width
     assert_match "width: 80%;", line_chart(@data, width: "80%")
   end
 
-  def test_defer
-    assert_match "window.addEventListener", line_chart(@data, defer: true)
+  def test_width_escaped
+    assert_match "width: 80%&quot;;", line_chart(@data, width: "80%\"")
   end
 
   def test_nonce
     assert_match "nonce=\"test-123\"", line_chart(@data, nonce: "test-123")
+  end
+
+  def test_nonce_escaped
+    assert_match "nonce=\"test-123&quot;\"", line_chart(@data, nonce: "test-123\"")
+  end
+
+  def test_defer
+    assert_match "window.addEventListener", line_chart(@data, defer: true)
   end
 
   def test_content_for
