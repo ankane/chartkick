@@ -8,6 +8,8 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
 
+[![Build Status](https://travis-ci.org/ankane/chartkick.svg?branch=master)](https://travis-ci.org/ankane/chartkick)
+
 ## Quick Start
 
 Add this line to your application's Gemfile:
