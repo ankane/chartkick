@@ -5,6 +5,7 @@ class ChartkickTest < Minitest::Test
 
   def setup
     @data = [[34, 42], [56, 49]]
+    @content_for = {}
   end
 
   def test_line_chart
@@ -71,7 +72,32 @@ class ChartkickTest < Minitest::Test
     assert_equal chartkick_deep_merge(global_option, local_option), correct_merge
   end
 
+  def test_id
+    assert_match "id=\"test-123\"", line_chart(@data, id: "test-123")
+  end
+
+  def test_height
+    assert_match "height: 150px;", line_chart(@data, height: "150px")
+  end
+
+  def test_width
+    assert_match "width: 80%;", line_chart(@data, width: "80%")
+  end
+
+  def test_defer
+    assert_match "window.addEventListener", line_chart(@data, defer: true)
+  end
+
+  def test_content_for
+    refute_match "<script", line_chart(@data, content_for: :charts_js)
+    assert_match "<script", @content_for[:charts_js]
+  end
+
   def assert_chart(chart)
     assert_match "new Chartkick", chart
+  end
+
+  def content_for(value)
+    @content_for[value] = yield
   end
 end
