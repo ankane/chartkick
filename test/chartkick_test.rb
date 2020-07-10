@@ -97,6 +97,13 @@ class ChartkickTest < Minitest::Test
     assert_match "<script", @content_for[:charts_js]
   end
 
+  def test_default_options
+    Chartkick.options = {id: "test-123"}
+    assert_match "id=\"test-123\"", line_chart(@data)
+  ensure
+    Chartkick.options = {}
+  end
+
   def assert_chart(chart)
     assert_match "new Chartkick", chart
   end
