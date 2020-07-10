@@ -8,15 +8,35 @@ class ChartkickTest < Minitest::Test
   end
 
   def test_line_chart
-    assert line_chart(@data)
+    assert_chart line_chart(@data)
   end
 
   def test_pie_chart
-    assert pie_chart(@data)
+    assert_chart pie_chart(@data)
   end
 
   def test_column_chart
-    assert column_chart(@data)
+    assert_chart column_chart(@data)
+  end
+
+  def test_bar_chart
+    assert_chart column_chart(@data)
+  end
+
+  def test_area_chart
+    assert_chart area_chart(@data)
+  end
+
+  def test_scatter_chart
+    assert_chart scatter_chart(@data)
+  end
+
+  def test_geo_chart
+    assert_chart geo_chart(@data)
+  end
+
+  def test_timeline
+    assert_chart timeline(@data)
   end
 
   def test_escape_data
@@ -49,5 +69,9 @@ class ChartkickTest < Minitest::Test
     local_option = {library: {backgroundColor: "#fff"}}
     correct_merge = {library: {backgroundColor: "#fff"}}
     assert_equal chartkick_deep_merge(global_option, local_option), correct_merge
+  end
+
+  def assert_chart(chart)
+    assert_match "new Chartkick", chart
   end
 end
