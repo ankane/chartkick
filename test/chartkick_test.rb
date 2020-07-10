@@ -104,6 +104,13 @@ class ChartkickTest < Minitest::Test
     Chartkick.options = {}
   end
 
+  def test_chart_ids
+    @chartkick_chart_id = 0
+    3.times do |i|
+      assert_match "chart-#{i + 1}", line_chart(@data)
+    end
+  end
+
   def assert_chart(chart)
     assert_match "new Chartkick", chart
   end
