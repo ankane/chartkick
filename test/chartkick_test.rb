@@ -88,6 +88,10 @@ class ChartkickTest < Minitest::Test
     assert_match "window.addEventListener", line_chart(@data, defer: true)
   end
 
+  def test_nonce
+    assert_match "nonce=\"test-123\"", line_chart(@data, nonce: "test-123")
+  end
+
   def test_content_for
     refute_match "<script", line_chart(@data, content_for: :charts_js)
     assert_match "<script", @content_for[:charts_js]
