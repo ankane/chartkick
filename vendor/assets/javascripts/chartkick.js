@@ -241,6 +241,8 @@
     return typeof obj === "number";
   }
 
+  var byteSuffixes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB"];
+
   function formatValue(pre, value, options, axis) {
     pre = pre || "";
     if (options.prefix) {
@@ -256,26 +258,42 @@
     var round = options.round;
 
     if (options.byteScale) {
+      var suffixIdx;
       var baseValue = axis ? options.byteScale : value;
-      if (baseValue >= 1099511627776) {
+
+      if (baseValue >= 1152921504606846976) {
+        value /= 1152921504606846976;
+        suffixIdx = 6;
+      } else if (baseValue >= 1125899906842624) {
+        value /= 1125899906842624;
+        suffixIdx = 5;
+      } else if (baseValue >= 1099511627776) {
         value /= 1099511627776;
-        suffix = " TB";
+        suffixIdx = 4;
       } else if (baseValue >= 1073741824) {
         value /= 1073741824;
-        suffix = " GB";
+        suffixIdx = 3;
       } else if (baseValue >= 1048576) {
         value /= 1048576;
-        suffix = " MB";
+        suffixIdx = 2;
       } else if (baseValue >= 1024) {
         value /= 1024;
-        suffix = " KB";
+        suffixIdx = 1;
       } else {
-        suffix = " bytes";
+        suffixIdx = 0;
       }
 
+      // TODO handle manual precision case
       if (precision === undefined && round === undefined) {
-        precision = 3;
+        if (value >= 1023.5) {
+          if (suffixIdx < byteSuffixes.length - 1) {
+            value = 1.0;
+            suffixIdx += 1;
+          }
+        }
+        precision = value >= 1000 ? 4 : 3;
       }
+      suffix = " " + byteSuffixes[suffixIdx];
     }
 
     if (precision !== undefined && round !== undefined) {
@@ -744,6 +762,22 @@
       if (notnull(xmax)) {
         options.scales.xAxes[0].ticks.max = xmax;
       }
+    }
+
+    // for empty datetime chart
+    if (chart.xtype === "datetime" && labels.length === 0) {
+      if (notnull(xmin)) {
+        labels.push(toDate(xmin));
+      }
+      if (notnull(xmax)) {
+        labels.push(toDate(xmax));
+      }
+      day = false;
+      week = false;
+      month = false;
+      year = false;
+      hour = false;
+      minute = false;
     }
 
     if (chart.xtype === "datetime" && labels.length > 0) {
@@ -1448,7 +1482,7 @@
   defaultExport$2.prototype.renderGeoChart = function renderGeoChart (chart) {
       var this$1 = this;
 
-    this.waitForLoaded(chart, function () {
+    this.waitForLoaded(chart, "geochart", function () {
       var chartOptions = {
         legend: "none",
         colorAxis: {
@@ -1564,7 +1598,7 @@
       if (config.language) {
         loadOptions.language = config.language;
       }
-      if (pack === "corechart" && config.mapsApiKey) {
+      if (pack === "geochart" && config.mapsApiKey) {
         loadOptions.mapsApiKey = config.mapsApiKey;
       }
 
@@ -1576,7 +1610,7 @@
     var cb, call;
     for (var i = 0; i < callbacks.length; i++) {
       cb = callbacks[i];
-      call = this.library.visualization && ((cb.pack === "corechart" && this.library.visualization.LineChart) || (cb.pack === "timeline" && this.library.visualization.Timeline));
+      call = this.library.visualization && ((cb.pack === "corechart" && this.library.visualization.LineChart) || (cb.pack === "timeline" && this.library.visualization.Timeline) || (cb.pack === "geochart" && this.library.visualization.GeoChart));
       if (call) {
         cb.callback();
         callbacks.splice(i, 1);
@@ -1951,8 +1985,14 @@
     return r;
   };
 
-  function detectXType(series, noDatetime) {
-    if (detectXTypeWithFunction(series, isNumber)) {
+  function detectXType(series, noDatetime, options) {
+    if (dataEmpty(series)) {
+      if ((options.xmin || options.xmax) && (!options.xmin || isDate(options.xmin)) && (!options.xmax || isDate(options.xmax))) {
+        return "datetime";
+      } else {
+        return "number";
+      }
+    } else if (detectXTypeWithFunction(series, isNumber)) {
       return "number";
     } else if (!noDatetime && detectXTypeWithFunction(series, isDate)) {
       return "datetime";
@@ -2004,12 +2044,18 @@
       chart.hideLegend = false;
     }
 
-    chart.xtype = keyType ? keyType : (opts.discrete ? "string" : detectXType(series, noDatetime));
-
-    // right format
+    // convert to array
+    // must come before dataEmpty check
     series = copySeries(series);
     for (i = 0; i < series.length; i++) {
-      series[i].data = formatSeriesData(toArr(series[i].data), chart.xtype);
+      series[i].data = toArr(series[i].data);
+    }
+
+    chart.xtype = keyType ? keyType : (opts.discrete ? "string" : detectXType(series, noDatetime, opts));
+
+    // right format
+    for (i = 0; i < series.length; i++) {
+      series[i].data = formatSeriesData(series[i].data, chart.xtype);
     }
 
     return series;
