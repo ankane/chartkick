@@ -875,7 +875,7 @@
   defaultExport.prototype.renderPieChart = function renderPieChart (chart) {
     var options = merge({}, baseOptions);
     if (chart.options.donut) {
-      options.cutoutPercentage = 50;
+      options.cutoutPercentage = chart.options.cutoutPercentage || 50;
     }
 
     if ("legend" in chart.options) {
