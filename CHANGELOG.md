@@ -1,6 +1,6 @@
 ## 3.4.0 (2020-08-04)
 
-- Fixed CSS injection with `width` and `height` options
+- Fixed CSS injection with `width` and `height` options - [more info](https://github.com/ankane/chartkick/issues/546)
 
 ## 3.3.2 (2020-07-23)
 
@@ -27,7 +27,7 @@
 
 ## 3.2.0 (2019-06-04)
 
-- Fixed XSS vulnerability - see [#488](https://github.com/ankane/chartkick/issues/488)
+- Fixed XSS vulnerability - [more info](https://github.com/ankane/chartkick/issues/488)
 
 ## 3.1.0 (2019-05-26)
 
