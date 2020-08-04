@@ -80,20 +80,48 @@ class ChartkickTest < Minitest::Test
     assert_match "id=\"test-123&quot;\"", line_chart(@data, id: "test-123\"")
   end
 
-  def test_height
-    assert_match "height: 150px;", line_chart(@data, height: "150px")
+  def test_height_pixels
+    assert_match "height: 100px;", line_chart(@data, height: "100px")
   end
 
-  def test_height_escaped
-    assert_match "height: 150px&quot;;", line_chart(@data, height: "150px\"")
+  def test_height_percent
+    assert_match "height: 100%;", line_chart(@data, height: "100%")
   end
 
-  def test_width
-    assert_match "width: 80%;", line_chart(@data, width: "80%")
+  def test_height_quote
+    error = assert_raises(ArgumentError) do
+      line_chart(@data, height: "150px\"")
+    end
+    assert_equal "Invalid height", error.message
   end
 
-  def test_width_escaped
-    assert_match "width: 80%&quot;;", line_chart(@data, width: "80%\"")
+  def test_height_semicolon
+    error = assert_raises(ArgumentError) do
+      line_chart(@data, height: "150px;background:123")
+    end
+    assert_equal "Invalid height", error.message
+  end
+
+  def test_width_pixels
+    assert_match "width: 100px;", line_chart(@data, width: "100px")
+  end
+
+  def test_width_percent
+    assert_match "width: 100%;", line_chart(@data, width: "100%")
+  end
+
+  def test_width_quote
+    error = assert_raises(ArgumentError) do
+      line_chart(@data, width: "80%\"")
+    end
+    assert_equal "Invalid width", error.message
+  end
+
+  def test_width_semicolon
+    error = assert_raises(ArgumentError) do
+      line_chart(@data, width: "80%;background:123")
+    end
+    assert_equal "Invalid width", error.message
   end
 
   def test_nonce

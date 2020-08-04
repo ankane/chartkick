@@ -1,3 +1,7 @@
+## 3.4.0 (unreleased)
+
+- Fixed CSS injection with `width` and `height` options
+
 ## 3.3.2 (2020-07-23)
 
 - Updated Chartkick.js to 3.2.1

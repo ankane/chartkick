@@ -41,8 +41,8 @@ module Chartkick
       @chartkick_chart_id ||= 0
       options = chartkick_deep_merge(Chartkick.options, options)
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
-      height = options.delete(:height) || "300px"
-      width = options.delete(:width) || "100%"
+      height = (options.delete(:height) || "300px").to_s
+      width = (options.delete(:width) || "100%").to_s
       defer = !!options.delete(:defer)
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
@@ -63,14 +63,27 @@ module Chartkick
 
       # html vars
       html_vars = {
-        id: element_id,
-        height: height,
-        width: width
+        id: element_id
       }
       html_vars.each_key do |k|
         html_vars[k] = ERB::Util.html_escape(html_vars[k])
       end
-      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % html_vars
+
+      # css vars
+      css_vars = {
+        height: height,
+        width: width
+      }
+      css_vars.each_key do |k|
+        # limit to alphanumeric and % for simplicity
+        # this prevents things like calc() but safety is the priority
+        raise ArgumentError, "Invalid #{k}" unless css_vars[k] =~ /\A[a-zA-Z0-9%]*\z/
+        # we limit above, but escape for safety as fail-safe
+        # to prevent XSS injection in worse-case scenario
+        css_vars[k] = ERB::Util.html_escape(css_vars[k])
+      end
+
+      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % html_vars.merge(css_vars)
 
       # js vars
       js_vars = {
