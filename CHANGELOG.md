@@ -1,4 +1,4 @@
-## 3.4.0 (unreleased)
+## 3.4.0 (2020-08-04)
 
 - Fixed CSS injection with `width` and `height` options
 
