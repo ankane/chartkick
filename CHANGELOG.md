@@ -9,7 +9,7 @@
 ## 3.3.1 (2019-12-26)
 
 - Updated Chart.js to 2.9.3
-- Fixed deprecating warnings in Ruby 2.7
+- Fixed deprecation warnings in Ruby 2.7
 
 ## 3.3.0 (2019-11-09)
 
