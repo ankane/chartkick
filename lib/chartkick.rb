@@ -19,8 +19,8 @@ module Chartkick
   self.options = {}
 end
 
-# for multiple series
-# use Enumerable so it can be called on arrays
+# for both multiple series and
+# making sure hash order is preserved in JavaScript
 module Enumerable
   def chart_json
     if is_a?(Hash)

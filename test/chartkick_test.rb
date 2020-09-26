@@ -155,6 +155,12 @@ class ChartkickTest < Minitest::Test
     end
   end
 
+  def test_chart_json
+    assert_equal "[1,2,3]", [1, 2, 3].chart_json
+    assert_equal %![{"name":"s1","data":[["t1",1],["t2",2]]}]!, {["s1", "t1"] => 1, ["s1", "t2"] => 2}.chart_json
+    assert_equal %![{"name":"s1","data":[["t1",1],["t2",2]]}]!, [{name: "s1", data: {"t1" => 1, "t2" => 2}}].chart_json
+  end
+
   def assert_chart(chart)
     assert_match "new Chartkick", chart
   end
