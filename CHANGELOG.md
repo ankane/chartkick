@@ -1,3 +1,7 @@
+## 3.4.1 (unreleased)
+
+- Relaxed validation for `width` and `height` options
+
 ## 3.4.0 (2020-08-04)
 
 - Fixed CSS injection with `width` and `height` options - [more info](https://github.com/ankane/chartkick/issues/546)

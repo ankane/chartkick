@@ -88,6 +88,10 @@ class ChartkickTest < Minitest::Test
     assert_match "height: 100%;", line_chart(@data, height: "100%")
   end
 
+  def test_height_dot
+    assert_match "height: 2.5rem;", line_chart(@data, height: "2.5rem")
+  end
+
   def test_height_quote
     error = assert_raises(ArgumentError) do
       line_chart(@data, height: "150px\"")
@@ -108,6 +112,10 @@ class ChartkickTest < Minitest::Test
 
   def test_width_percent
     assert_match "width: 100%;", line_chart(@data, width: "100%")
+  end
+
+  def test_width_dot
+    assert_match "width: 2.5rem;", line_chart(@data, width: "2.5rem")
   end
 
   def test_width_quote
