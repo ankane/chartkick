@@ -1,4 +1,4 @@
-## 3.4.1 (unreleased)
+## 3.4.1 (2020-10-06)
 
 - Relaxed validation for `width` and `height` options
 
