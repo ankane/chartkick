@@ -505,6 +505,26 @@ Download [chartkick.js](https://raw.githubusercontent.com/ankane/chartkick/maste
 <script src="chartkick.js"></script>
 ```
 
+Then include the charting library.
+
+Chart.js - download [Chart.bundle.js](https://unpkg.com/chart.js@2/dist/Chart.bundle.js)
+
+```html
+<script src="Chart.bundle.js"></script>
+```
+
+Highcharts - download [highcharts.js](https://code.highcharts.com/highcharts.js)
+
+```html
+<script src="highcharts.js"></script>
+```
+
+Google Charts
+
+```html
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+```
+
 ### Multiple Libraries
 
 If more than one charting library is loaded, choose between them with:
