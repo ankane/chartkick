@@ -513,16 +513,16 @@ Chart.js - download [Chart.bundle.js](https://unpkg.com/chart.js@2/dist/Chart.bu
 <script src="Chart.bundle.js"></script>
 ```
 
-Highcharts - download [highcharts.js](https://code.highcharts.com/highcharts.js)
-
-```html
-<script src="highcharts.js"></script>
-```
-
 Google Charts
 
 ```html
 <script src="https://www.gstatic.com/charts/loader.js"></script>
+```
+
+Highcharts - download [highcharts.js](https://code.highcharts.com/highcharts.js)
+
+```html
+<script src="highcharts.js"></script>
 ```
 
 ### Multiple Libraries
