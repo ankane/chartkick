@@ -1,4 +1,4 @@
-## 3.4.2 (unreleased)
+## 3.4.2 (2020-10-20)
 
 - Updated Chart.js to 2.9.4
 
