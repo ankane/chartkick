@@ -1,3 +1,7 @@
+## 3.4.2 (unreleased)
+
+- Updated Chart.js to 2.9.4
+
 ## 3.4.1 (2020-10-06)
 
 - Relaxed validation for `width` and `height` options
