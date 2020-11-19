@@ -1,8 +1,0 @@
-dist: bionic
-language: ruby
-rvm: 2.7
-script: bundle exec rake test
-notifications:
-  email:
-    on_success: never
-    on_failure: change
