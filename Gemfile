@@ -1,4 +1,6 @@
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in chartkick.gemspec
 gemspec
+
+gem "minitest", ">= 5"
+gem "rake"
