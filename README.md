@@ -631,6 +631,10 @@ Chartkick uses [iso8601.js](https://github.com/Do/iso8601.js) to parse dates and
 
 View the [changelog](https://github.com/ankane/chartkick/blob/master/CHANGELOG.md)
 
+## Troubleshooting
+
+having a `default_scope` set up in your Rails model can prevent the data from being processed correctly, thus the chart will not be rendered.
+
 ## Contributing
 
 Everyone is encouraged to help improve this project. Here are a few ways you can help:
