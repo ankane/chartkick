@@ -1,8 +1,8 @@
 ## 4.0.0 (unreleased)
 
 - Added support for Chart.js 3
-- Made charts deferrable by default
 - Added `loading` option
+- Made charts deferrable by default
 - Set `nonce` automatically when present
 - Prefer `empty` over `messages: {empty: ...}`
 - Removed support for Ruby < 2.6 and Rails < 5.2
