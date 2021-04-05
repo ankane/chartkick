@@ -47,7 +47,7 @@ module Chartkick
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
-      if nonce
+      if nonce == true
         # Secure Headers also defines content_security_policy_nonce but it takes an argument
         # Rails 5.2 overrides this method, but earlier versions do not
         if respond_to?(:content_security_policy_nonce) && (content_security_policy_nonce rescue nil)
@@ -56,6 +56,8 @@ module Chartkick
         elsif respond_to?(:content_security_policy_script_nonce)
           # Secure Headers
           nonce = content_security_policy_script_nonce
+        else
+          nonce = nil
         end
       end
       nonce_html = nonce ? " nonce=\"#{ERB::Util.html_escape(nonce)}\"" : nil

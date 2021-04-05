@@ -43,13 +43,13 @@ class ChartkickTest < Minitest::Test
   def test_escape_data
     bad_data = "</script><script>alert('xss')</script>"
     assert_includes column_chart(bad_data), "\\u003cscript\\u003e"
-    refute_includes column_chart(bad_data), "<script>"
+    refute_includes column_chart(bad_data), "<script>alert"
   end
 
   def test_escape_options
     bad_options = {xss: "</script><script>alert('xss')</script>"}
     assert_includes column_chart([], **bad_options), "\\u003cscript\\u003e"
-    refute_includes column_chart([], **bad_options), "<script>"
+    refute_includes column_chart([], **bad_options), "<script>alert"
   end
 
   def test_options_not_mutated
