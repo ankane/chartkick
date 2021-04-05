@@ -39,12 +39,15 @@ module Chartkick
 
     # don't break out options since need to merge with default options
     def chartkick_chart(klass, data_source, **options)
-      @chartkick_chart_id ||= 0
       options = chartkick_deep_merge(Chartkick.options, options)
+
+      @chartkick_chart_id ||= 0
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
+
       height = (options.delete(:height) || "300px").to_s
       width = (options.delete(:width) || "100%").to_s
       defer = !!options.delete(:defer)
+
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
