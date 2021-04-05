@@ -67,6 +67,7 @@ module Chartkick
         id: element_id,
         height: height,
         width: width,
+        # don't delete loading option since it needs to be passed to JS
         loading: options[:loading] || "Loading..."
       }
 
