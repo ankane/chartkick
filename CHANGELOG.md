@@ -1,4 +1,4 @@
-## 4.0.0 (unreleased)
+## 4.0.0 (2021-04-04)
 
 - Added support for Chart.js 3
 - Added `loading` option
