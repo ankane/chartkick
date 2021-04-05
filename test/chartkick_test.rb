@@ -132,6 +132,15 @@ class ChartkickTest < Minitest::Test
     assert_equal "Invalid width", error.message
   end
 
+  def test_loading
+    assert_match ">Loading!!</div>", line_chart(@data, loading: "Loading!!")
+  end
+
+  def test_loading_escaped
+    assert_match "&lt;b&gt;Loading!!&lt;/b&gt;", line_chart(@data, loading: "<b>Loading!!</b>")
+    refute_match "<b>", line_chart(@data, loading: "<b>Loading!!</b>")
+  end
+
   def test_nonce
     assert_match "nonce=\"test-123\"", line_chart(@data, nonce: "test-123")
   end

@@ -4,6 +4,8 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 [See it in action](https://chartkick.com)
 
+**Chartkick 4.0 was recently released** - see [how to upgrade](#upgrading)
+
 :fire: For admin charts and dashboards, check out [Blazer](https://github.com/ankane/blazer/), and for advanced visualizations, check out [Vega](https://github.com/ankane/vega)
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
@@ -12,7 +14,7 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 ## Quick Start
 
-Add this line to your application's Gemfile:
+Add this line to your application’s Gemfile:
 
 ```ruby
 gem "chartkick"
@@ -21,14 +23,13 @@ gem "chartkick"
 For Rails 6 / Webpacker, run:
 
 ```sh
-yarn add chartkick chart.js
+yarn add chartkick
 ```
 
 And in `app/javascript/packs/application.js`, add:
 
 ```js
-require("chartkick")
-require("chart.js")
+require("chartkick/chart.js")
 ```
 
 For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
@@ -38,7 +39,7 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require Chart.bundle
 ```
 
-This sets up Chartkick with Chart.js. For other charting libraries, see [detailed instructions](#installation).
+This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries, see [detailed instructions](#installation).
 
 ## Charts
 
@@ -262,16 +263,22 @@ Show insignificant zeros, useful for currency - *Chart.js, Highcharts*
 <%= line_chart data, round: 2, zeros: true %>
 ```
 
-Friendly byte sizes - *Chart.js 2.8+*
+Friendly byte sizes
 
 ```erb
 <%= line_chart data, bytes: true %>
 ```
 
+Show a message when data is loading
+
+```erb
+<%= line_chart data, loading: "Loading..." %>
+```
+
 Show a message when data is empty
 
 ```erb
-<%= line_chart data, messages: {empty: "No data"} %>
+<%= line_chart data, empty: "No data" %>
 ```
 
 Refresh data from a remote source every `n` seconds
@@ -310,7 +317,7 @@ Chartkick.options = {
 Customize the html
 
 ```ruby
-Chartkick.options[:html] = '<div id="%{id}" style="height: %{height};">Loading...</div>'
+Chartkick.options[:html] = '<div id="%{id}" style="height: %{height};">%{loading}</div>'
 ```
 
 You capture the JavaScript in a content block with:
@@ -425,14 +432,13 @@ In the instructions below, `application.js` must be included **before** the char
 For Rails 6 / Webpacker, run:
 
 ```sh
-yarn add chartkick chart.js
+yarn add chartkick
 ```
 
 And in `app/javascript/packs/application.js`, add:
 
 ```js
-require("chartkick")
-require("chart.js")
+require("chartkick/chart.js")
 ```
 
 For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
@@ -487,7 +493,7 @@ yarn add chartkick highcharts
 And in `app/javascript/packs/application.js`, add:
 
 ```js
-require("chartkick").use(require("highcharts"))
+require("chartkick/highcharts")
 ```
 
 For Rails 5 / Sprockets, download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts` (or use `yarn add highcharts` in Rails 5.1+), and in `app/assets/javascripts/application.js`, add:
@@ -507,10 +513,11 @@ Download [chartkick.js](https://raw.githubusercontent.com/ankane/chartkick/maste
 
 Then include the charting library.
 
-Chart.js - download [Chart.bundle.js](https://unpkg.com/chart.js@2/dist/Chart.bundle.js)
+Chart.js - download [Chart.js](https://unpkg.com/chart.js@3/dist/chart.js) and the [date-fns adapter bundle](https://unpkg.com/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.js)
 
 ```html
-<script src="Chart.bundle.js"></script>
+<script src="chart.js"></script>
+<script src="chartjs-adapter-date-fns.bundle.js"></script>
 ```
 
 Google Charts
@@ -613,15 +620,28 @@ Check out [chartkick.js](https://github.com/ankane/chartkick.js)
 
 ## Upgrading
 
-### 3.0
+### 4.0
 
-Breaking changes
+If you use Sprockets, update the gem and you’re good to go!
 
-- Removed support for Rails < 4.2
-- Removed chartkick.js from asset precompile (no longer needed)
-- Removed `xtype` option - numeric axes are automatically detected
-- Removed `window.Chartkick = {...}` way to set config - use `Chartkick.configure` instead
-- Removed support for the Google Charts jsapi loader - use loader.js instead
+If you use Webpacker, run:
+
+```sh
+yarn upgrade chartkick --latest
+```
+
+If you use Chart.js with Webpacker, in `app/javascript/packs/application.js`, change:
+
+```js
+require("chartkick")
+require("chart.js")
+```
+
+to:
+
+```js
+require("chartkick/chart.js")
+```
 
 ## Credits
 

@@ -37,7 +37,7 @@ module Chartkick
 
     private
 
-    def chartkick_chart(klass, data_source, **options)
+    def chartkick_chart(klass, data_source, nonce: true, **options)
       @chartkick_chart_id ||= 0
       options = chartkick_deep_merge(Chartkick.options, options)
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
@@ -47,8 +47,7 @@ module Chartkick
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
-      nonce = options.delete(:nonce)
-      if nonce == true
+      if nonce
         # Secure Headers also defines content_security_policy_nonce but it takes an argument
         # Rails 5.2 overrides this method, but earlier versions do not
         if respond_to?(:content_security_policy_nonce) && (content_security_policy_nonce rescue nil)
@@ -63,28 +62,27 @@ module Chartkick
 
       # html vars
       html_vars = {
-        id: element_id
-      }
-      html_vars.each_key do |k|
-        html_vars[k] = ERB::Util.html_escape(html_vars[k])
-      end
-
-      # css vars
-      css_vars = {
+        id: element_id,
         height: height,
-        width: width
+        width: width,
+        loading: options[:loading] || "Loading..."
       }
-      css_vars.each_key do |k|
+
+      [:height, :width].each do |k|
         # limit to alphanumeric and % for simplicity
         # this prevents things like calc() but safety is the priority
         # dot does not need escaped in square brackets
-        raise ArgumentError, "Invalid #{k}" unless css_vars[k] =~ /\A[a-zA-Z0-9%.]*\z/
-        # we limit above, but escape for safety as fail-safe
-        # to prevent XSS injection in worse-case scenario
-        css_vars[k] = ERB::Util.html_escape(css_vars[k])
+        raise ArgumentError, "Invalid #{k}" unless html_vars[k] =~ /\A[a-zA-Z0-9%.]*\z/
       end
 
-      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">Loading...</div>)) % html_vars.merge(css_vars)
+      html_vars.each_key do |k|
+        # escape all variables
+        # we already limit height and width above, but escape for safety as fail-safe
+        # to prevent XSS injection in worse-case scenario
+        html_vars[k] = ERB::Util.html_escape(html_vars[k])
+      end
+
+      html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">%{loading}</div>)) % html_vars
 
       # js vars
       js_vars = {

@@ -1,3 +1,15 @@
+## 4.0.0 (unreleased)
+
+- Added support for Chart.js 3
+- Added `loading` option
+- Set `nonce` automatically when present
+- Prefer `empty` over `messages: {empty: ...}`
+- Removed support for Ruby < 2.6 and Rails < 5.2
+
+Breaking changes
+
+- Removed support for Chart.js 2
+
 ## 3.4.2 (2020-10-20)
 
 - Updated Chart.js to 2.9.4
