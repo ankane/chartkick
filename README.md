@@ -257,7 +257,7 @@ Show insignificant zeros, useful for currency - *Chart.js, Highcharts*
 <%= line_chart data, round: 2, zeros: true %>
 ```
 
-Friendly byte sizes
+Friendly byte sizes - *Chart.js*
 
 ```erb
 <%= line_chart data, bytes: true %>
