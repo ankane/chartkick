@@ -419,8 +419,6 @@ Next, choose your charting library.
 - [Google Charts](#google-charts)
 - [Highcharts](#highcharts)
 
-In the instructions below, `application.js` must be included **before** the charts in your views, unless using the `:content_for` option.
-
 ### Chart.js
 
 For Rails 6 / Webpacker, run:
