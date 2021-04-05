@@ -152,7 +152,7 @@ Min and max values
 Min and max for x-axis - *Chart.js*
 
 ```erb
-<%= line_chart data, xmin: "2018-01-01", xmax: "2019-01-01" %>
+<%= line_chart data, xmin: "2021-01-01", xmax: "2022-01-01" %>
 ```
 
 Colors
