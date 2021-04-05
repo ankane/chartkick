@@ -128,7 +128,7 @@ module Chartkick
       if content_for
         content_for(content_for) { js.respond_to?(:html_safe) ? js.html_safe : js }
       else
-        html += js
+        html += "\n#{js}"
       end
 
       html.respond_to?(:html_safe) ? html.html_safe : html
