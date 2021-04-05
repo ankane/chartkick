@@ -351,7 +351,7 @@ For multiple series, use the format
 Times can be a time or a string (strings are parsed)
 
 ```erb
-<%= line_chart({20.day.ago => 5, "2013-05-07 00:00:00 UTC" => 7}) %>
+<%= line_chart({20.day.ago => 5, "2021-05-07 00:00:00 UTC" => 7}) %>
 ```
 
 ### Multiple Series
