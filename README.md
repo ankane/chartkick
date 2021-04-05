@@ -507,7 +507,7 @@ Download [chartkick.js](https://raw.githubusercontent.com/ankane/chartkick/maste
 
 Then include the charting library.
 
-Chart.js - download [Chart.js](https://unpkg.com/chart.js@3/dist/chart.js) and the [date-fns adapter bundle](https://unpkg.com/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.js)
+Chart.js - download [Chart.js](https://unpkg.com/chart.js@3/dist/chart.js) and the [date-fns adapter bundle](https://unpkg.com/chartjs-adapter-date-fns@2/dist/chartjs-adapter-date-fns.bundle.js)
 
 ```html
 <script src="chart.js"></script>
