@@ -263,13 +263,13 @@ Friendly byte sizes
 <%= line_chart data, bytes: true %>
 ```
 
-Show a message when data is loading
+Specify the message when data is loading
 
 ```erb
 <%= line_chart data, loading: "Loading..." %>
 ```
 
-Show a message when data is empty
+Specify the message when data is empty
 
 ```erb
 <%= line_chart data, empty: "No data" %>
