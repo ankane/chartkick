@@ -37,7 +37,8 @@ module Chartkick
 
     private
 
-    def chartkick_chart(klass, data_source, nonce: true, **options)
+    # don't break out options since need to merge with default options
+    def chartkick_chart(klass, data_source, **options)
       @chartkick_chart_id ||= 0
       options = chartkick_deep_merge(Chartkick.options, options)
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
@@ -47,6 +48,8 @@ module Chartkick
       # content_for: nil must override default
       content_for = options.key?(:content_for) ? options.delete(:content_for) : Chartkick.content_for
 
+      nonce = options.fetch(:nonce, true)
+      options.delete(:nonce)
       if nonce == true
         # Secure Headers also defines content_security_policy_nonce but it takes an argument
         # Rails 5.2 overrides this method, but earlier versions do not
