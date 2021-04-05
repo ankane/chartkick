@@ -23,7 +23,7 @@ gem "chartkick"
 For Rails 6 / Webpacker, run:
 
 ```sh
-yarn add chartkick
+yarn add chartkick chart.js
 ```
 
 And in `app/javascript/packs/application.js`, add:
@@ -426,7 +426,7 @@ In the instructions below, `application.js` must be included **before** the char
 For Rails 6 / Webpacker, run:
 
 ```sh
-yarn add chartkick
+yarn add chartkick chart.js
 ```
 
 And in `app/javascript/packs/application.js`, add:
@@ -624,7 +624,13 @@ If you use Webpacker, run:
 yarn upgrade chartkick --latest
 ```
 
-If you use Chart.js with Webpacker, in `app/javascript/packs/application.js`, change:
+If you use Chart.js with Webpacker, also run:
+
+```sh
+yarn upgrade chart.js --latest
+```
+
+And in `app/javascript/packs/application.js`, change:
 
 ```js
 require("chartkick")
