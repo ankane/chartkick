@@ -150,7 +150,9 @@ class ChartkickTest < Minitest::Test
   end
 
   def test_defer
-    assert_match "window.addEventListener", line_chart(@data, defer: true)
+    assert_output(nil, /defer option is no longer needed/) do
+      line_chart(@data, defer: true)
+    end
   end
 
   def test_content_for

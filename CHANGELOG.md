@@ -1,6 +1,7 @@
 ## 4.0.0 (unreleased)
 
 - Added support for Chart.js 3
+- Made charts deferrable by default
 - Added `loading` option
 - Set `nonce` automatically when present
 - Prefer `empty` over `messages: {empty: ...}`
