@@ -30,12 +30,6 @@ class ChartsController < ApplicationController
 end
 ```
 
-And create an initializer with:
-
-```rb
-Chartkick.options[:nonce] = true
-```
-
 ## Secure Headers
 
 Configure CSP in `config/initializers/secure_headers.rb` with:
@@ -62,10 +56,4 @@ class ChartsController < ApplicationController
     use_content_security_policy_named_append(:charts)
   end
 end
-```
-
-And create an initializer with:
-
-```rb
-Chartkick.options[:nonce] = true
 ```
