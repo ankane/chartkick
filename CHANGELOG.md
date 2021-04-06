@@ -1,3 +1,7 @@
+## 4.0.1 (unreleased)
+
+- Fixed error with Uglifier
+
 ## 4.0.0 (2021-04-04)
 
 - Added support for Chart.js 3
