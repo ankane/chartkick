@@ -1,6 +1,7 @@
 ## 4.0.1 (unreleased)
 
 - Fixed error with Uglifier
+- Updated Chartkick.js to 4.0.1
 
 ## 4.0.0 (2021-04-04)
 
@@ -10,6 +11,7 @@
 - Set `nonce` automatically when present
 - Prefer `empty` over `messages: {empty: ...}`
 - Removed support for Ruby < 2.6 and Rails < 5.2
+- Updated Chartkick.js to 4.0.0
 
 Breaking changes
 
