@@ -1,4 +1,4 @@
-## 4.0.1 (unreleased)
+## 4.0.1 (2021-04-06)
 
 - Fixed error with Uglifier
 - Updated Chartkick.js to 4.0.1
