@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v4.0.1
+ * v4.0.2
  * MIT License
  */
 
@@ -92,8 +92,8 @@
           // try our best to get the str into iso8601
           // TODO be smarter about this
           var str = n.replace(/ /, "T").replace(" ", "").replace("UTC", "Z");
-          // use Date.parse for str since it returns NaN instead of invalid date
-          n = Date.parse(str) || new Date(n);
+          // Date.parse returns milliseconds if valid and NaN if invalid
+          n = new Date(Date.parse(str) || n);
         }
       }
     }
