@@ -2,11 +2,11 @@ import babel from "@rollup/plugin-babel";
 import resolve from "@rollup/plugin-node-resolve";
 
 // use same banner as projects
-// 1. https://unpkg.com/chart.js@3.0.2
+// 1. https://unpkg.com/chart.js@3.1.0
 // 2. https://unpkg.com/chartjs-adapter-date-fns@2.0.0
 // 3. https://unpkg.com/date-fns@2.0.19 (no banner)
 const banner = `/*!
- * Chart.js v3.0.2
+ * Chart.js v3.1.0
  * https://www.chartjs.org
  * (c) 2021 Chart.js Contributors
  * Released under the MIT License

@@ -1,5 +1,5 @@
 /*!
- * Chart.js v3.0.2
+ * Chart.js v3.1.0
  * https://www.chartjs.org
  * (c) 2021 Chart.js Contributors
  * Released under the MIT License
