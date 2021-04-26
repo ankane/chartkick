@@ -1881,6 +1881,14 @@
     }
   }
 
+  function removeEvent(elem, event, fn) {
+    if (elem.removeEventListener) {
+      elem.removeEventListener(event, fn, false);
+    } else {
+      elem.detachEvent("on" + event, fn);
+    }
+  }
+
   // https://gist.github.com/shawnbot/4166283
   function childOf(p, c) {
     if (p === c) { return false; }
