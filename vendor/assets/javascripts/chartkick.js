@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v4.0.3
+ * v4.0.4
  * MIT License
  */
 
@@ -816,11 +816,15 @@
         }
 
         if (step && timeDiff > 0) {
-          var unitStepSize = Math.ceil(timeDiff / step / (chart.element.offsetWidth / 100.0));
-          if (week && step === 1) {
-            unitStepSize = Math.ceil(unitStepSize / 7.0) * 7;
+          // width not available for hidden elements
+          var width = chart.element.offsetWidth;
+          if (width > 0) {
+            var unitStepSize = Math.ceil(timeDiff / step / (width / 100.0));
+            if (week && step === 1) {
+              unitStepSize = Math.ceil(unitStepSize / 7.0) * 7;
+            }
+            options.scales.x.time.stepSize = unitStepSize;
           }
-          options.scales.x.time.stepSize = unitStepSize;
         }
       }
 
@@ -1721,6 +1725,7 @@
 
     return r;
   }
+
   function detectXType(series, noDatetime, options) {
     if (dataEmpty(series)) {
       if ((options.xmin || options.xmax) && (!options.xmin || isDate(options.xmin)) && (!options.xmax || isDate(options.xmax))) {
@@ -1878,6 +1883,14 @@
       };
       elem.attachEvent("on" + event, fn2);
       return fn2;
+    }
+  }
+
+  function removeEvent(elem, event, fn) {
+    if (elem.removeEventListener) {
+      elem.removeEventListener(event, fn, false);
+    } else {
+      elem.detachEvent("on" + event, fn);
     }
   }
 

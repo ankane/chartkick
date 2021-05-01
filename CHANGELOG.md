@@ -1,3 +1,7 @@
+## 4.0.4 (unreleased)
+
+- Updated Chartkick.js to 4.0.4
+
 ## 4.0.3 (2021-04-10)
 
 - Updated Chartkick.js to 4.0.3
