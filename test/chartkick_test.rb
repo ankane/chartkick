@@ -16,6 +16,10 @@ class ChartkickTest < Minitest::Test
     assert_chart pie_chart(@data)
   end
 
+  def test_donut_chart
+    assert_chart donut_chart(@data)
+  end
+
   def test_column_chart
     assert_chart column_chart(@data)
   end

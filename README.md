@@ -215,6 +215,11 @@ Donut chart
 <%= pie_chart data, donut: true %>
 ```
 
+or use the shorthand
+```erb
+<%= donut_chart data %>
+```
+
 Prefix, useful for currency - *Chart.js, Highcharts*
 
 ```erb

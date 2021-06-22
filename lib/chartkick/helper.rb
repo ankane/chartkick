@@ -11,6 +11,10 @@ module Chartkick
       chartkick_chart "PieChart", data_source, **options
     end
 
+    def donut_chart(data_source, **options)
+      chartkick_chart "PieChart", data_source, **options.merge({donut: true})
+    end
+
     def column_chart(data_source, **options)
       chartkick_chart "ColumnChart", data_source, **options
     end
