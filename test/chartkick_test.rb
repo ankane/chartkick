@@ -44,6 +44,14 @@ class ChartkickTest < Minitest::Test
     assert_chart timeline(@data)
   end
 
+  def test_unpoly_line_chart
+    assert_unpoly_chart line_chart(@data, unpoly: true)
+  end
+
+  def test_unpoly_with_custom_class
+    assert_unpoly_chart line_chart(@data, unpoly: 'custom-class'), 'custom-class'
+  end
+
   def test_escape_data
     bad_data = "</script><script>alert('xss')</script>"
     assert_includes column_chart(bad_data), "\\u003cscript\\u003e"
@@ -186,6 +194,10 @@ class ChartkickTest < Minitest::Test
 
   def assert_chart(chart)
     assert_match "new Chartkick", chart
+  end
+
+  def assert_unpoly_chart(chart, css_class='chartkick-chart')
+    assert_match '<div class="' + css_class + '"', chart
   end
 
   def content_for(value)

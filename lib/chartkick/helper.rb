@@ -45,6 +45,8 @@ module Chartkick
     def chartkick_chart(klass, data_source, **options)
       options = chartkick_deep_merge(Chartkick.options, options)
 
+      unpoly = options.key?(:unpoly) ? options.delete(:unpoly) : false
+
       @chartkick_chart_id ||= 0
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
 
@@ -57,20 +59,6 @@ module Chartkick
 
       nonce = options.fetch(:nonce, true)
       options.delete(:nonce)
-      if nonce == true
-        # Secure Headers also defines content_security_policy_nonce but it takes an argument
-        # Rails 5.2 overrides this method, but earlier versions do not
-        if respond_to?(:content_security_policy_nonce) && (content_security_policy_nonce rescue nil)
-          # Rails 5.2
-          nonce = content_security_policy_nonce
-        elsif respond_to?(:content_security_policy_script_nonce)
-          # Secure Headers
-          nonce = content_security_policy_script_nonce
-        else
-          nonce = nil
-        end
-      end
-      nonce_html = nonce ? " nonce=\"#{ERB::Util.html_escape(nonce)}\"" : nil
 
       # html vars
       html_vars = {
@@ -107,9 +95,43 @@ module Chartkick
       js_vars.each_key do |k|
         js_vars[k] = chartkick_json_escape(js_vars[k])
       end
-      createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % js_vars
 
       warn "[chartkick] The defer option is no longer needed and can be removed" if defer
+
+      if unpoly != false
+        # use an unpoly compiler
+        content = unpoly_element(unpoly, js_vars)
+      else
+        # use inline javascript
+        content = inline_js(nonce, js_vars)
+      end
+
+      if content_for
+        content_for(content_for) { content.respond_to?(:html_safe) ? content.html_safe : content }
+      else
+        html += "\n#{content}"
+      end
+
+      html.respond_to?(:html_safe) ? html.html_safe : html
+    end
+
+    def inline_js(nonce, vars_hash)
+      if nonce == true
+        # Secure Headers also defines content_security_policy_nonce but it takes an argument
+        # Rails 5.2 overrides this method, but earlier versions do not
+        if respond_to?(:content_security_policy_nonce) && (content_security_policy_nonce rescue nil)
+          # Rails 5.2
+          nonce = content_security_policy_nonce
+        elsif respond_to?(:content_security_policy_script_nonce)
+          # Secure Headers
+          nonce = content_security_policy_script_nonce
+        else
+          nonce = nil
+        end
+      end
+      nonce_html = nonce ? " nonce=\"#{ERB::Util.html_escape(nonce)}\"" : nil
+
+      createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % vars_hash
 
       # Turbolinks preview restores the DOM except for painted <canvas>
       # since it uses cloneNode(true) - https://developer.mozilla.org/en-US/docs/Web/API/Node/
@@ -132,13 +154,7 @@ module Chartkick
         </script>
       JS
 
-      if content_for
-        content_for(content_for) { js.respond_to?(:html_safe) ? js.html_safe : js }
-      else
-        html += "\n#{js}"
-      end
-
-      html.respond_to?(:html_safe) ? html.html_safe : html
+      js
     end
 
     # https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/hash/deep_merge.rb
@@ -149,6 +165,14 @@ module Chartkick
         hash_a[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? chartkick_deep_merge(tv, v) : v
       end
       hash_a
+    end
+
+    def unpoly_element(up_class, vars_hash)
+      vars_hash[:up_class] = up_class == true ? 'chartkick-chart' : up_class
+
+      element = %(<div class="%{up_class}" style="display: none" chartkick-type=%{type}, chartkick-id=%{id}, chartkick-data=%{data}, chartkick-options=%{options}></div>) % vars_hash
+
+      element
     end
 
     # from https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/string/output_safety.rb

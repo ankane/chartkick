@@ -10,6 +10,8 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
 
+:fountain: Now with [Unpoly](https://unpoly.com/) support
+
 [![Build Status](https://github.com/ankane/chartkick/workflows/build/badge.svg?branch=master)](https://github.com/ankane/chartkick/actions)
 
 ## Quick Start
@@ -335,6 +337,75 @@ For Padrino, use `yield_content` instead of `yield`.
 
 This is great for including all of your JavaScript at the bottom of the page.
 
+#### No inline scripts with unpoly
+
+If you apply a strict CSP, then you do not want any inline scripts. So you can use [Unpoly](https://unpoly.com/).
+
+Chartkick renders the chartdata and chartoptions to a div's attibutes and unpoly picks up the chartdata and pass it to chartkick.js for you.
+In combination with loading the data from a separate path as json, this can be very useful. 
+
+To install unpoly follow this instructions:
+[Install Unpoly](https://unpoly.com/install/ruby)
+
+
+After installation create a `compiler/chartkick_compiler.js` file in your asset or webpack directory and include the following unpoly compiler code:
+
+```js
+up.compiler('.chartkick-chart', (element) =>{
+    // Turbolinks preview restores the DOM except for painted <canvas>
+    // since it uses cloneNode(true) - https://developer.mozilla.org/en-US/docs/Web/API/Node/
+    //
+    // don't rerun JS on preview to prevent
+    // 1. animation
+    // 2. loading data from URL
+    if (document.documentElement.hasAttribute("data-turbolinks-preview")) return;
+
+    type = element.getAttribute('chartkick-type');
+    id = element.getAttribute('chartkick-id');
+
+    data = element.getAttribute('chartkick-data');
+    try { data = JSON.parse(data);}
+    catch(err){  }
+
+    options = element.getAttribute('chartkick-options');
+    try { options = JSON.parse(options);}
+    catch(err){ }
+
+    var createChart = function() { new Chartkick[type](id, data, options); };
+
+    if ("Chartkick" in window) {
+        createChart();
+    } else {
+        window.addEventListener("chartkick:load", createChart, true);
+    }
+});
+```
+
+The compiler looks for any div element with the specified CSS selector (default: `.chartkick-chart`) and creates the chart on its appearance in DOM.
+
+By default unpoly behaviour is disabled.
+Activate the unpoly behaviour inside global options:
+```ruby
+Chartkick.options[:unpoly] = true
+```
+
+
+or apply unpoly only for a single chart:
+```erb
+<%= line_chart data, unpoly: true %>
+```
+
+To change the CSS class which unpoly looks for, change the selector in the compiler:
+```js
+up.compiler('.my-custom-class', (element) =>{ ... });
+```
+
+and specify the class name inside the options
+```ruby
+Chartkick.options[:unpoly] = 'my-custom-class'
+```
+
+
 ### Data
 
 Pass data as a hash or array
@@ -603,6 +674,8 @@ Chartkick.eachChart( function(chart) {
 ## Content Security Policy (CSP)
 
 Check out [how to configure CSP](https://github.com/ankane/chartkick/blob/master/guides/Content-Security-Policy.md)
+
+or use [Unpoly](#no-inline-scripts-with-unpoly)
 
 ## No Ruby? No Problem
 
