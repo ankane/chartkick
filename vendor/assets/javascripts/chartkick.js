@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v4.0.4
+ * v4.0.5
  * MIT License
  */
 
@@ -865,8 +865,8 @@
     var data = createDataTable(chart, options, chartType || "line");
 
     if (chart.xtype === "number") {
-      options.scales.x.type = "linear";
-      options.scales.x.position = "bottom";
+      options.scales.x.type = options.scales.x.type || "linear";
+      options.scales.x.position = options.scales.x.position ||"bottom";
     } else {
       options.scales.x.type = chart.xtype === "string" ? "category" : "time";
     }
@@ -956,8 +956,8 @@
 
     var data = createDataTable(chart, options, chartType);
 
-    options.scales.x.type = "linear";
-    options.scales.x.position = "bottom";
+    options.scales.x.type = options.scales.x.type || "linear";
+    options.scales.x.position = options.scales.x.position || "bottom";
 
     // prevent grouping hover and tooltips
     if (!("mode" in options.interaction)) {
@@ -1107,7 +1107,7 @@
       };
     }
 
-    if (!options.tooltip.pointFormatter) {
+    if (!options.tooltip.pointFormatter && !options.tooltip.pointFormat) {
       options.tooltip.pointFormatter = function () {
         return '<span style="color:' + this.color + '">\u25CF</span> ' + formatValue(this.series.name + ': <b>', this.y, formatOptions) + '</b><br/>';
       };
@@ -1149,7 +1149,11 @@
     }
 
     var options = jsOptions$1(chart, chart.options, chartOptions), data, i, j;
-    options.xAxis.type = chart.xtype === "string" ? "category" : (chart.xtype === "number" ? "linear" : "datetime");
+    if (chart.xtype === "number") {
+      options.xAxis.type = options.xAxis.type || "linear";
+    } else {
+      options.xAxis.type = chart.xtype === "string" ? "category" : "datetime";
+    }
     if (!options.chart.type) {
       options.chart.type = chartType;
     }
