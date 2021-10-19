@@ -39,6 +39,13 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require Chart.bundle
 ```
 
+For Rails 7 / Importmap (unreleased, experimental), in `app/javascript/application.js`, add:
+
+```js
+import "chartkick"
+import "Chart.bundle"
+```
+
 This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries, see [detailed instructions](#installation).
 
 ## Charts
