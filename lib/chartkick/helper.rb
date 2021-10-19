@@ -117,6 +117,7 @@ module Chartkick
         <script#{nonce_html}>
           (function() {
             if (document.documentElement.hasAttribute("data-turbolinks-preview")) return;
+            if (document.documentElement.hasAttribute("data-turbo-preview")) return;
 
             var createChart = function() { #{createjs} };
             if ("Chartkick" in window) {
