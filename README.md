@@ -120,7 +120,7 @@ Pass data as a hash or array
 or
 
 ```erb
-<%= line_chart([["2021-01-01", 2], ["2021-01-02", 3]]) %>
+<%= line_chart [["2021-01-01", 2], ["2021-01-02", 3]] %>
 ```
 
 For multiple series, use the format
