@@ -1,6 +1,7 @@
 ## 4.1.0 (unreleased)
 
 - Added support for Turbo
+- Added experimental support for `importmap-rails`
 
 ## 4.0.5 (2021-07-07)
 
