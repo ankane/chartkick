@@ -109,6 +109,29 @@ or
 <%= line_chart Feat.group(:goal_id).group_by_week(:created_at).count %>
 ```
 
+## Data
+
+Pass data as a hash or array
+
+```erb
+<%= line_chart({"2021-01-01" => 2, "2021-01-02" => 3}) %>
+```
+
+or
+
+```erb
+<%= line_chart([["2021-01-01", 2], ["2021-01-02", 3]]) %>
+```
+
+For multiple series, use the format
+
+```erb
+<%= line_chart [
+  {name: "Series A", data: data_a},
+  {name: "Series B", data: data_b}
+] %>
+```
+
 ### Say Goodbye To Timeouts
 
 Make your pages load super fast and stop worrying about timeouts. Give each chart its own endpoint.
@@ -133,7 +156,7 @@ For multiple series, add `chart_json` at the end.
 render json: Task.group(:goal_id).group_by_day(:completed_at).count.chart_json
 ```
 
-### Options
+## Options
 
 Id, width, and height
 
@@ -329,30 +352,6 @@ Then, in your layout, use:
 For Padrino, use `yield_content` instead of `yield`.
 
 This is great for including all of your JavaScript at the bottom of the page.
-
-### Data
-
-Pass data as a hash or array
-
-```erb
-<%= pie_chart({"Football" => 10, "Basketball" => 5}) %>
-<%= pie_chart [["Football", 10], ["Basketball", 5]] %>
-```
-
-For multiple series, use the format
-
-```erb
-<%= line_chart [
-  {name: "Series A", data: series_a},
-  {name: "Series B", data: series_b}
-] %>
-```
-
-Times can be a time or a string (strings are parsed)
-
-```erb
-<%= line_chart({20.day.ago => 5, "2021-05-07 00:00:00 UTC" => 7}) %>
-```
 
 ### Multiple Series
 
