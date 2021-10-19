@@ -1,3 +1,7 @@
+## 4.1.0 (unreleased)
+
+- Added support for Turbo
+
 ## 4.0.5 (2021-07-07)
 
 - Updated Chartkick.js to 4.0.5
