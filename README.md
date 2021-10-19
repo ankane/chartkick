@@ -98,9 +98,10 @@ Timeline - *Google Charts*
 Multiple series
 
 ```erb
-<%= line_chart @goals.map { |goal|
-    {name: goal.name, data: goal.feats.group_by_week(:created_at).count}
-} %>
+<%= line_chart [
+  {name: "Workout", data: {"2021-01-01" => 3, "2021-01-02" => 4}},
+  {name: "Call parents", data: {"2021-01-01" => 5, "2021-01-02" => 3}}
+] %>
 ```
 
 or
@@ -111,28 +112,21 @@ or
 
 ## Data
 
-Pass data as a hash or array
+Data can be a hash, array, or URL.
+
+#### Hash
 
 ```erb
 <%= line_chart({"2021-01-01" => 2, "2021-01-02" => 3}) %>
 ```
 
-or
+#### Array
 
 ```erb
 <%= line_chart [["2021-01-01", 2], ["2021-01-02", 3]] %>
 ```
 
-For multiple series, use the format
-
-```erb
-<%= line_chart [
-  {name: "Series A", data: data_a},
-  {name: "Series B", data: data_b}
-] %>
-```
-
-### Say Goodbye To Timeouts
+#### URL
 
 Make your pages load super fast and stop worrying about timeouts. Give each chart its own endpoint.
 
