@@ -21,7 +21,7 @@ class ChartkickTest < Minitest::Test
   end
 
   def test_bar_chart
-    assert_chart column_chart(@data)
+    assert_chart bar_chart(@data)
   end
 
   def test_area_chart
