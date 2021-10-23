@@ -2,6 +2,7 @@
 
 - Added support for Turbo
 - Added experimental support for `importmap-rails`
+- Updated Chartkick.js to 4.1.0
 
 ## 4.0.5 (2021-07-07)
 
