@@ -39,7 +39,7 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require Chart.bundle
 ```
 
-For Rails 7 / Importmap (unreleased, experimental), in `app/javascript/application.js`, add:
+For Rails 7 / Importmap (experimental), in `app/javascript/application.js`, add:
 
 ```js
 import "chartkick"
@@ -440,7 +440,7 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require Chart.bundle
 ```
 
-For Rails 7 / Importmap (unreleased, experimental), in `app/javascript/application.js`, add:
+For Rails 7 / Importmap (experimental), in `app/javascript/application.js`, add:
 
 ```js
 import "chartkick"
@@ -473,7 +473,7 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require chartkick
 ```
 
-For Rails 7 / Importmap (unreleased, experimental), in `app/javascript/application.js`, add:
+For Rails 7 / Importmap (experimental), in `app/javascript/application.js`, add:
 
 ```js
 import "chartkick"
@@ -508,7 +508,7 @@ For Rails 5 / Sprockets, download [highcharts.js](https://code.highcharts.com/hi
 //= require highcharts
 ```
 
-For Rails 7 / Importmap (unreleased, experimental), run:
+For Rails 7 / Importmap (experimental), run:
 
 ```sh
 bin/importmap pin highcharts --download
