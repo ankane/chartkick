@@ -1,3 +1,7 @@
+## 4.1.1 (unreleased)
+
+- Updated Chart.js to 3.6.0
+
 ## 4.1.0 (2021-10-23)
 
 - Added support for Turbo

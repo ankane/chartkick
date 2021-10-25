@@ -1,5 +1,5 @@
 /*!
- * Chart.js v3.4.1
+ * Chart.js v3.6.0
  * https://www.chartjs.org
  * (c) 2021 Chart.js Contributors
  * Released under the MIT License
@@ -9,7 +9,7 @@
  * (c) 2021 chartjs-adapter-date-fns Contributors
  * Released under the MIT license
  *
- * date-fns v2.21.1
+ * date-fns v2.25.0
  * https://date-fns.org
  * (c) 2020 Sasha Koss and Lesha Koss
  * Released under the MIT License
@@ -383,11 +383,15 @@
   function debounce(fn, delay) {
     var timeout;
     return function () {
+      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
       if (delay) {
         clearTimeout(timeout);
-        timeout = setTimeout(fn, delay);
+        timeout = setTimeout(fn, delay, args);
       } else {
-        fn();
+        fn.apply(this, args);
       }
 
       return delay;
@@ -2011,7 +2015,7 @@
 
   function _isPointInArea(point, area, margin) {
     margin = margin || 0.5;
-    return point && point.x > area.left - margin && point.x < area.right + margin && point.y > area.top - margin && point.y < area.bottom + margin;
+    return !area || point && point.x > area.left - margin && point.x < area.right + margin && point.y > area.top - margin && point.y < area.bottom + margin;
   }
 
   function clipArea(ctx, area) {
@@ -2274,13 +2278,23 @@
     }
   }
 
-  function _addGrace(minmax, grace) {
+  function _addGrace(minmax, grace, beginAtZero) {
     var min = minmax.min,
         max = minmax.max;
-    return {
-      min: min - Math.abs(toDimension(grace, min)),
-      max: max + toDimension(grace, max)
+    var change = toDimension(grace, (max - min) / 2);
+
+    var keepZero = function keepZero(value, add) {
+      return beginAtZero && value === 0 ? 0 : value + add;
     };
+
+    return {
+      min: keepZero(min, -Math.abs(change)),
+      max: keepZero(max, change)
+    };
+  }
+
+  function createContext(parentContext, context) {
+    return Object.assign(Object.create(parentContext), context);
   }
 
   function _lookup(table, value, cmp) {
@@ -2359,8 +2373,8 @@
         configurable: true,
         enumerable: false,
         value: function value() {
-          for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            args[_key2] = arguments[_key2];
+          for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            args[_key3] = arguments[_key3];
           }
 
           var res = base.apply(this, args);
@@ -2551,18 +2565,12 @@
   };
 
   function _cached(target, prop, resolve) {
-    var value = target[prop];
-
-    if (defined(value)) {
-      return value;
+    if (Object.prototype.hasOwnProperty.call(target, prop)) {
+      return target[prop];
     }
 
-    value = resolve();
-
-    if (defined(value)) {
-      target[prop] = value;
-    }
-
+    var value = resolve();
+    target[prop] = value;
     return value;
   }
 
@@ -3014,6 +3022,10 @@
     if (options.capBezierPoints) {
       capBezierPoints(points, area);
     }
+  }
+
+  function _isDomSupported() {
+    return typeof window !== 'undefined' && typeof document !== 'undefined';
   }
 
   function _getParentNode(domNode) {
@@ -3630,7 +3642,7 @@
         end = _findStartAndEnd.end;
 
     if (spanGaps === true) {
-      return splitByStyles([{
+      return splitByStyles(line, [{
         start: start,
         end: end,
         loop: loop
@@ -3639,22 +3651,57 @@
 
     var max = end < start ? end + count : end;
     var completeLoop = !!line._fullLoop && start === 0 && end === count - 1;
-    return splitByStyles(solidSegments(points, start, max, completeLoop), points, segmentOptions);
+    return splitByStyles(line, solidSegments(points, start, max, completeLoop), points, segmentOptions);
   }
 
-  function splitByStyles(segments, points, segmentOptions) {
+  function splitByStyles(line, segments, points, segmentOptions) {
     if (!segmentOptions || !segmentOptions.setContext || !points) {
       return segments;
     }
 
-    return doSplitByStyles(segments, points, segmentOptions);
+    return doSplitByStyles(line, segments, points, segmentOptions);
   }
 
-  function doSplitByStyles(segments, points, segmentOptions) {
+  function doSplitByStyles(line, segments, points, segmentOptions) {
+    var chartContext = line._chart.getContext();
+
+    var baseStyle = readStyle(line.options);
+    var datasetIndex = line._datasetIndex,
+        spanGaps = line.options.spanGaps;
     var count = points.length;
     var result = [];
+    var prevStyle = baseStyle;
     var start = segments[0].start;
     var i = start;
+
+    function addStyle(s, e, l, st) {
+      var dir = spanGaps ? -1 : 1;
+
+      if (s === e) {
+        return;
+      }
+
+      s += count;
+
+      while (points[s % count].skip) {
+        s -= dir;
+      }
+
+      while (points[e % count].skip) {
+        e += dir;
+      }
+
+      if (s % count !== e % count) {
+        result.push({
+          start: s % count,
+          end: e % count,
+          loop: l,
+          style: st
+        });
+        prevStyle = st;
+        start = e % count;
+      }
+    }
 
     var _iterator9 = _createForOfIteratorHelper(segments),
         _step9;
@@ -3662,27 +3709,23 @@
     try {
       for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
         var segment = _step9.value;
-        var prevStyle = void 0,
-            style = void 0;
+        start = spanGaps ? start : segment.start;
         var prev = points[start % count];
+        var style = void 0;
 
         for (i = start + 1; i <= segment.end; i++) {
           var pt = points[i % count];
-          style = readStyle(segmentOptions.setContext({
+          style = readStyle(segmentOptions.setContext(createContext(chartContext, {
             type: 'segment',
             p0: prev,
-            p1: pt
-          }));
+            p1: pt,
+            p0DataIndex: (i - 1) % count,
+            p1DataIndex: i % count,
+            datasetIndex: datasetIndex
+          })));
 
           if (styleChanged(style, prevStyle)) {
-            result.push({
-              start: start,
-              end: i - 1,
-              loop: segment.loop,
-              style: prevStyle
-            });
-            prevStyle = style;
-            start = i - 1;
+            addStyle(start, i - 1, segment.loop, prevStyle);
           }
 
           prev = pt;
@@ -3690,13 +3733,7 @@
         }
 
         if (start < i - 1) {
-          result.push({
-            start: start,
-            end: i - 1,
-            loop: segment.loop,
-            style: style
-          });
-          start = i - 1;
+          addStyle(start, i - 1, segment.loop, prevStyle);
         }
       }
     } catch (err) {
@@ -3751,31 +3788,32 @@
     }, {
       key: "_refresh",
       value: function _refresh() {
-        var me = this;
+        var _this = this;
 
-        if (me._request) {
+        if (this._request) {
           return;
         }
 
-        me._running = true;
-        me._request = requestAnimFrame.call(window, function () {
-          me._update();
+        this._running = true;
+        this._request = requestAnimFrame.call(window, function () {
+          _this._update();
 
-          me._request = null;
+          _this._request = null;
 
-          if (me._running) {
-            me._refresh();
+          if (_this._running) {
+            _this._refresh();
           }
         });
       }
     }, {
       key: "_update",
       value: function _update() {
+        var _this2 = this;
+
         var date = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Date.now();
-        var me = this;
         var remaining = 0;
 
-        me._charts.forEach(function (anims, chart) {
+        this._charts.forEach(function (anims, chart) {
           if (!anims.running || !anims.items.length) {
             return;
           }
@@ -3804,13 +3842,13 @@
           if (draw) {
             chart.draw();
 
-            me._notify(chart, anims, date, 'progress');
+            _this2._notify(chart, anims, date, 'progress');
           }
 
           if (!items.length) {
             anims.running = false;
 
-            me._notify(chart, anims, date, 'complete');
+            _this2._notify(chart, anims, date, 'complete');
 
             anims.initial = false;
           }
@@ -3818,10 +3856,10 @@
           remaining += items.length;
         });
 
-        me._lastDate = date;
+        this._lastDate = date;
 
         if (remaining === 0) {
-          me._running = false;
+          this._running = false;
         }
       }
     }, {
@@ -3974,64 +4012,59 @@
     }, {
       key: "update",
       value: function update(cfg, to, date) {
-        var me = this;
+        if (this._active) {
+          this._notify(false);
 
-        if (me._active) {
-          me._notify(false);
-
-          var currentValue = me._target[me._prop];
-          var elapsed = date - me._start;
-          var remain = me._duration - elapsed;
-          me._start = date;
-          me._duration = Math.floor(Math.max(remain, cfg.duration));
-          me._total += elapsed;
-          me._loop = !!cfg.loop;
-          me._to = resolve([cfg.to, to, currentValue, cfg.from]);
-          me._from = resolve([cfg.from, currentValue, to]);
+          var currentValue = this._target[this._prop];
+          var elapsed = date - this._start;
+          var remain = this._duration - elapsed;
+          this._start = date;
+          this._duration = Math.floor(Math.max(remain, cfg.duration));
+          this._total += elapsed;
+          this._loop = !!cfg.loop;
+          this._to = resolve([cfg.to, to, currentValue, cfg.from]);
+          this._from = resolve([cfg.from, currentValue, to]);
         }
       }
     }, {
       key: "cancel",
       value: function cancel() {
-        var me = this;
+        if (this._active) {
+          this.tick(Date.now());
+          this._active = false;
 
-        if (me._active) {
-          me.tick(Date.now());
-          me._active = false;
-
-          me._notify(false);
+          this._notify(false);
         }
       }
     }, {
       key: "tick",
       value: function tick(date) {
-        var me = this;
-        var elapsed = date - me._start;
-        var duration = me._duration;
-        var prop = me._prop;
-        var from = me._from;
-        var loop = me._loop;
-        var to = me._to;
+        var elapsed = date - this._start;
+        var duration = this._duration;
+        var prop = this._prop;
+        var from = this._from;
+        var loop = this._loop;
+        var to = this._to;
         var factor;
-        me._active = from !== to && (loop || elapsed < duration);
+        this._active = from !== to && (loop || elapsed < duration);
 
-        if (!me._active) {
-          me._target[prop] = to;
+        if (!this._active) {
+          this._target[prop] = to;
 
-          me._notify(true);
+          this._notify(true);
 
           return;
         }
 
         if (elapsed < 0) {
-          me._target[prop] = from;
+          this._target[prop] = from;
           return;
         }
 
         factor = elapsed / duration % 2;
         factor = loop && factor > 1 ? 2 - factor : factor;
-        factor = me._easing(Math.min(1, Math.max(0, factor)));
-        me._target[prop] = me._fn(from, to, factor);
+        factor = this._easing(Math.min(1, Math.max(0, factor)));
+        this._target[prop] = this._fn(from, to, factor);
       }
     }, {
       key: "wait",
@@ -4361,7 +4394,8 @@
     return keys;
   }
 
-  function _applyStack(stack, value, dsIndex, options) {
+  function _applyStack(stack, value, dsIndex) {
+    var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
     var keys = stack.keys;
     var singleMode = options.mode === 'single';
     var i, ilen, datasetIndex, otherValue;
@@ -4434,8 +4468,8 @@
     return subStack[indexValue] || (subStack[indexValue] = {});
   }
 
-  function getLastIndexInStack(stack, vScale, positive) {
-    var _iterator2 = _createForOfIteratorHelper(vScale.getMatchingVisibleMetas('bar').reverse()),
+  function getLastIndexInStack(stack, vScale, positive, type) {
+    var _iterator2 = _createForOfIteratorHelper(vScale.getMatchingVisibleMetas(type).reverse()),
         _step2;
 
     try {
@@ -4476,8 +4510,8 @@
       var itemStacks = item._stacks || (item._stacks = {});
       stack = itemStacks[vAxis] = getOrCreateStack(stacks, key, index);
       stack[datasetIndex] = value;
-      stack._top = getLastIndexInStack(stack, vScale, true);
-      stack._bottom = getLastIndexInStack(stack, vScale, false);
+      stack._top = getLastIndexInStack(stack, vScale, true, meta.type);
+      stack._bottom = getLastIndexInStack(stack, vScale, false, meta.type);
     }
   }
 
@@ -4489,7 +4523,7 @@
   }
 
   function createDatasetContext(parent, index) {
-    return Object.assign(Object.create(parent), {
+    return createContext(parent, {
       active: false,
       dataset: undefined,
       datasetIndex: index,
@@ -4500,7 +4534,7 @@
   }
 
   function createDataContext(parent, index, element) {
-    return Object.assign(Object.create(parent), {
+    return createContext(parent, {
       active: false,
       dataIndex: index,
       parsed: undefined,
@@ -4513,6 +4547,7 @@
   }
 
   function clearStacks(meta, items) {
+    var datasetIndex = meta.controller.index;
     var axis = meta.vScale && meta.vScale.axis;
 
     if (!axis) {
@@ -4529,11 +4564,11 @@
         var parsed = _step3.value;
         var stacks = parsed._stacks;
 
-        if (!stacks || stacks[axis] === undefined || stacks[axis][meta.index] === undefined) {
+        if (!stacks || stacks[axis] === undefined || stacks[axis][datasetIndex] === undefined) {
           return;
         }
 
-        delete stacks[axis][meta.index];
+        delete stacks[axis][datasetIndex];
       }
     } catch (err) {
       _iterator3.e(err);
@@ -4548,6 +4583,13 @@
 
   var cloneIfNotShared = function cloneIfNotShared(cached, shared) {
     return shared ? cached : Object.assign({}, cached);
+  };
+
+  var createStack = function createStack(canStack, meta, chart) {
+    return canStack && !meta.hidden && meta._stacked && {
+      keys: getSortedDatasetIndices(chart, true),
+      values: null
+    };
   };
 
   var DatasetController = /*#__PURE__*/function () {
@@ -4576,12 +4618,11 @@
     _createClass(DatasetController, [{
       key: "initialize",
       value: function initialize() {
-        var me = this;
-        var meta = me._cachedMeta;
-        me.configure();
-        me.linkScales();
+        var meta = this._cachedMeta;
+        this.configure();
+        this.linkScales();
         meta._stacked = isStacked(meta.vScale, meta);
-        me.addElements();
+        this.addElements();
       }
     }, {
       key: "updateIndex",
@@ -4595,10 +4636,9 @@
     }, {
       key: "linkScales",
       value: function linkScales() {
-        var me = this;
-        var chart = me.chart;
-        var meta = me._cachedMeta;
-        var dataset = me.getDataset();
+        var chart = this.chart;
+        var meta = this._cachedMeta;
+        var dataset = this.getDataset();
 
         var chooseId = function chooseId(axis, x, y, r) {
           return axis === 'x' ? x : axis === 'r' ? r : y;
@@ -4610,11 +4650,11 @@
         var indexAxis = meta.indexAxis;
         var iid = meta.iAxisID = chooseId(indexAxis, xid, yid, rid);
         var vid = meta.vAxisID = chooseId(indexAxis, yid, xid, rid);
-        meta.xScale = me.getScaleForId(xid);
-        meta.yScale = me.getScaleForId(yid);
-        meta.rScale = me.getScaleForId(rid);
-        meta.iScale = me.getScaleForId(iid);
-        meta.vScale = me.getScaleForId(vid);
+        meta.xScale = this.getScaleForId(xid);
+        meta.yScale = this.getScaleForId(yid);
+        meta.rScale = this.getScaleForId(rid);
+        meta.iScale = this.getScaleForId(iid);
+        meta.vScale = this.getScaleForId(vid);
       }
     }, {
       key: "getDataset",
@@ -4658,50 +4698,47 @@
     }, {
       key: "_dataCheck",
       value: function _dataCheck() {
-        var me = this;
-        var dataset = me.getDataset();
+        var dataset = this.getDataset();
         var data = dataset.data || (dataset.data = []);
-        var _data = me._data;
+        var _data = this._data;
 
         if (isObject(data)) {
-          me._data = convertObjectDataToArray(data);
+          this._data = convertObjectDataToArray(data);
         } else if (_data !== data) {
           if (_data) {
-            unlistenArrayEvents(_data, me);
-            var meta = me._cachedMeta;
+            unlistenArrayEvents(_data, this);
+            var meta = this._cachedMeta;
             clearStacks(meta);
             meta._parsed = [];
           }
 
           if (data && Object.isExtensible(data)) {
-            listenArrayEvents(data, me);
+            listenArrayEvents(data, this);
           }
 
-          me._syncList = [];
-          me._data = data;
+          this._syncList = [];
+          this._data = data;
         }
       }
     }, {
       key: "addElements",
       value: function addElements() {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
 
-        me._dataCheck();
+        this._dataCheck();
 
-        if (me.datasetElementType) {
-          meta.dataset = new me.datasetElementType();
+        if (this.datasetElementType) {
+          meta.dataset = new this.datasetElementType();
         }
       }
     }, {
       key: "buildOrUpdateElements",
       value: function buildOrUpdateElements(resetNewElements) {
-        var me = this;
-        var meta = me._cachedMeta;
-        var dataset = me.getDataset();
+        var meta = this._cachedMeta;
+        var dataset = this.getDataset();
         var stackChanged = false;
 
-        me._dataCheck();
+        this._dataCheck();
 
         var oldStacked = meta._stacked;
         meta._stacked = isStacked(meta.vScale, meta);
@@ -4712,28 +4749,26 @@
           meta.stack = dataset.stack;
         }
 
-        me._resyncElements(resetNewElements);
+        this._resyncElements(resetNewElements);
 
         if (stackChanged || oldStacked !== meta._stacked) {
-          updateStacks(me, meta._parsed);
+          updateStacks(this, meta._parsed);
         }
       }
     }, {
       key: "configure",
       value: function configure() {
-        var me = this;
-        var config = me.chart.config;
-        var scopeKeys = config.datasetScopeKeys(me._type);
-        var scopes = config.getOptionScopes(me.getDataset(), scopeKeys, true);
-        me.options = config.createResolver(scopes, me.getContext());
-        me._parsing = me.options.parsing;
+        var config = this.chart.config;
+        var scopeKeys = config.datasetScopeKeys(this._type);
+        var scopes = config.getOptionScopes(this.getDataset(), scopeKeys, true);
+        this.options = config.createResolver(scopes, this.getContext());
+        this._parsing = this.options.parsing;
       }
     }, {
       key: "parse",
       value: function parse(start, count) {
-        var me = this;
-        var meta = me._cachedMeta,
-            data = me._data;
+        var meta = this._cachedMeta,
+            data = this._data;
         var iScale = meta.iScale,
             _stacked = meta._stacked;
         var iAxis = iScale.axis;
@@ -4741,17 +4776,17 @@
         var prev = start > 0 && meta._parsed[start - 1];
         var i, cur, parsed;
 
-        if (me._parsing === false) {
+        if (this._parsing === false) {
           meta._parsed = data;
           meta._sorted = true;
           parsed = data;
         } else {
           if (isArray(data[start])) {
-            parsed = me.parseArrayData(meta, data, start, count);
+            parsed = this.parseArrayData(meta, data, start, count);
           } else if (isObject(data[start])) {
-            parsed = me.parseObjectData(meta, data, start, count);
+            parsed = this.parseObjectData(meta, data, start, count);
           } else {
-            parsed = me.parsePrimitiveData(meta, data, start, count);
+            parsed = this.parsePrimitiveData(meta, data, start, count);
           }
 
           var isNotInOrderComparedToPrev = function isNotInOrderComparedToPrev() {
@@ -4774,7 +4809,7 @@
         }
 
         if (_stacked) {
-          updateStacks(me, parsed);
+          updateStacks(this, parsed);
         }
       }
     }, {
@@ -4874,11 +4909,7 @@
 
         if (stack && values) {
           stack.values = values;
-          range.min = Math.min(range.min, value);
-          range.max = Math.max(range.max, value);
-          value = _applyStack(stack, parsedValue, this._cachedMeta.index, {
-            all: true
-          });
+          value = _applyStack(stack, parsedValue, this._cachedMeta.index);
         }
 
         range.min = Math.min(range.min, value);
@@ -4887,18 +4918,14 @@
     }, {
       key: "getMinMax",
       value: function getMinMax(scale, canStack) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var _parsed = meta._parsed;
         var sorted = meta._sorted && scale === meta.iScale;
         var ilen = _parsed.length;
 
-        var otherScale = me._getOtherScale(scale);
+        var otherScale = this._getOtherScale(scale);
 
-        var stack = canStack && meta._stacked && {
-          keys: getSortedDatasetIndices(me.chart, true),
-          values: null
-        };
+        var stack = createStack(canStack, meta, this.chart);
         var range = {
           min: Number.POSITIVE_INFINITY,
           max: Number.NEGATIVE_INFINITY
@@ -4908,13 +4935,12 @@
             otherMin = _getUserBounds.min,
             otherMax = _getUserBounds.max;
 
-        var i, value, parsed, otherValue;
+        var i, parsed;
 
         function _skip() {
           parsed = _parsed[i];
-          value = parsed[scale.axis];
-          otherValue = parsed[otherScale.axis];
-          return !isNumberFinite(value) || otherMin > otherValue || otherMax < otherValue;
+          var otherValue = parsed[otherScale.axis];
+          return !isNumberFinite(parsed[scale.axis]) || otherMin > otherValue || otherMax < otherValue;
         }
 
         for (i = 0; i < ilen; ++i) {
@@ -4922,7 +4948,7 @@
             continue;
           }
 
-          me.updateRangeFromParsed(range, scale, parsed, stack);
+          this.updateRangeFromParsed(range, scale, parsed, stack);
 
           if (sorted) {
             break;
@@ -4935,7 +4961,7 @@
               continue;
             }
 
-            me.updateRangeFromParsed(range, scale, parsed, stack);
+            this.updateRangeFromParsed(range, scale, parsed, stack);
             break;
           }
         }
@@ -4967,11 +4993,10 @@
     }, {
       key: "getLabelAndValue",
       value: function getLabelAndValue(index) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var iScale = meta.iScale;
         var vScale = meta.vScale;
-        var parsed = me.getParsed(index);
+        var parsed = this.getParsed(index);
         return {
           label: iScale ? '' + iScale.getLabelForValue(parsed[iScale.axis]) : '',
           value: vScale ? '' + vScale.getLabelForValue(parsed[vScale.axis]) : ''
@@ -4980,12 +5005,11 @@
     }, {
       key: "_update",
       value: function _update(mode) {
-        var me = this;
-        var meta = me._cachedMeta;
-        me.configure();
-        me._cachedDataOpts = {};
-        me.update(mode || 'default');
-        meta._clip = toClip(valueOrDefault(me.options.clip, defaultClip(meta.xScale, meta.yScale, me.getMaxOverflow())));
+        var meta = this._cachedMeta;
+        this.configure();
+        this._cachedDataOpts = {};
+        this.update(mode || 'default');
+        meta._clip = toClip(valueOrDefault(this.options.clip, defaultClip(meta.xScale, meta.yScale, this.getMaxOverflow())));
       }
     }, {
       key: "update",
@@ -4993,15 +5017,14 @@
     }, {
       key: "draw",
       value: function draw() {
-        var me = this;
-        var ctx = me._ctx;
-        var chart = me.chart;
-        var meta = me._cachedMeta;
+        var ctx = this._ctx;
+        var chart = this.chart;
+        var meta = this._cachedMeta;
         var elements = meta.data || [];
         var area = chart.chartArea;
         var active = [];
-        var start = me._drawStart || 0;
-        var count = me._drawCount || elements.length - start;
+        var start = this._drawStart || 0;
+        var count = this._drawCount || elements.length - start;
         var i;
 
         if (meta.dataset) {
@@ -5010,6 +5033,10 @@
 
         for (i = start; i < start + count; ++i) {
           var element = elements[i];
+
+          if (element.hidden) {
+            continue;
+          }
 
           if (element.active) {
             active.push(element);
@@ -5031,20 +5058,19 @@
     }, {
       key: "getContext",
       value: function getContext(index, active, mode) {
-        var me = this;
-        var dataset = me.getDataset();
+        var dataset = this.getDataset();
         var context;
 
-        if (index >= 0 && index < me._cachedMeta.data.length) {
-          var element = me._cachedMeta.data[index];
-          context = element.$context || (element.$context = createDataContext(me.getContext(), index, element));
-          context.parsed = me.getParsed(index);
+        if (index >= 0 && index < this._cachedMeta.data.length) {
+          var element = this._cachedMeta.data[index];
+          context = element.$context || (element.$context = createDataContext(this.getContext(), index, element));
+          context.parsed = this.getParsed(index);
           context.raw = dataset.data[index];
           context.index = context.dataIndex = index;
         } else {
-          context = me.$context || (me.$context = createDatasetContext(me.chart.getContext(), me.index));
+          context = this.$context || (this.$context = createDatasetContext(this.chart.getContext(), this.index));
           context.dataset = dataset;
-          context.index = context.datasetIndex = me.index;
+          context.index = context.datasetIndex = this.index;
         }
 
         context.active = !!active;
@@ -5064,27 +5090,28 @@
     }, {
       key: "_resolveElementOptions",
       value: function _resolveElementOptions(elementType) {
+        var _this3 = this;
+
         var mode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'default';
         var index = arguments.length > 2 ? arguments[2] : undefined;
-        var me = this;
         var active = mode === 'active';
-        var cache = me._cachedDataOpts;
+        var cache = this._cachedDataOpts;
         var cacheKey = elementType + '-' + mode;
         var cached = cache[cacheKey];
-        var sharing = me.enableOptionSharing && defined(index);
+        var sharing = this.enableOptionSharing && defined(index);
 
         if (cached) {
           return cloneIfNotShared(cached, sharing);
         }
 
-        var config = me.chart.config;
-        var scopeKeys = config.datasetElementScopeKeys(me._type, elementType);
+        var config = this.chart.config;
+        var scopeKeys = config.datasetElementScopeKeys(this._type, elementType);
         var prefixes = active ? ["".concat(elementType, "Hover"), 'hover', elementType, ''] : [elementType, ''];
-        var scopes = config.getOptionScopes(me.getDataset(), scopeKeys);
+        var scopes = config.getOptionScopes(this.getDataset(), scopeKeys);
         var names = Object.keys(defaults.elements[elementType]);
 
         var context = function context() {
-          return me.getContext(index, active);
+          return _this3.getContext(index, active);
         };
 
         var values = config.resolveNamedOptions(scopes, names, context, prefixes);
@@ -5099,9 +5126,8 @@
     }, {
       key: "_resolveAnimations",
       value: function _resolveAnimations(index, transition, active) {
-        var me = this;
-        var chart = me.chart;
-        var cache = me._cachedDataOpts;
+        var chart = this.chart;
+        var cache = this._cachedDataOpts;
         var cacheKey = "animation-".concat(transition);
         var cached = cache[cacheKey];
 
@@ -5112,10 +5138,10 @@
         var options;
 
         if (chart.options.animation !== false) {
-          var config = me.chart.config;
-          var scopeKeys = config.datasetAnimationScopeKeys(me._type, transition);
-          var scopes = config.getOptionScopes(me.getDataset(), scopeKeys);
-          options = config.createResolver(scopes, me.getContext(index, active, transition));
+          var config = this.chart.config;
+          var scopeKeys = config.datasetAnimationScopeKeys(this._type, transition);
+          var scopes = config.getOptionScopes(this.getDataset(), scopeKeys);
+          options = config.createResolver(scopes, this.getContext(index, active, transition));
         }
 
         var animations = new Animations(chart, options && options.animations);
@@ -5197,11 +5223,10 @@
     }, {
       key: "_resyncElements",
       value: function _resyncElements(resetNewElements) {
-        var me = this;
-        var data = me._data;
-        var elements = me._cachedMeta.data;
+        var data = this._data;
+        var elements = this._cachedMeta.data;
 
-        var _iterator4 = _createForOfIteratorHelper(me._syncList),
+        var _iterator4 = _createForOfIteratorHelper(this._syncList),
             _step4;
 
         try {
@@ -5211,7 +5236,7 @@
                 arg1 = _step4$value[1],
                 arg2 = _step4$value[2];
 
-            me[method](arg1, arg2);
+            this[method](arg1, arg2);
           }
         } catch (err) {
           _iterator4.e(err);
@@ -5219,27 +5244,26 @@
           _iterator4.f();
         }
 
-        me._syncList = [];
+        this._syncList = [];
         var numMeta = elements.length;
         var numData = data.length;
         var count = Math.min(numData, numMeta);
 
         if (count) {
-          me.parse(0, count);
+          this.parse(0, count);
         }
 
         if (numData > numMeta) {
-          me._insertElements(numMeta, numData - numMeta, resetNewElements);
+          this._insertElements(numMeta, numData - numMeta, resetNewElements);
         } else if (numData < numMeta) {
-          me._removeElements(numData, numMeta - numData);
+          this._removeElements(numData, numMeta - numData);
         }
       }
     }, {
       key: "_insertElements",
       value: function _insertElements(start, count) {
         var resetNewElements = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var data = meta.data;
         var end = start + count;
         var i;
@@ -5255,17 +5279,17 @@
         move(data);
 
         for (i = start; i < end; ++i) {
-          data[i] = new me.dataElementType();
+          data[i] = new this.dataElementType();
         }
 
-        if (me._parsing) {
+        if (this._parsing) {
           move(meta._parsed);
         }
 
-        me.parse(start, count);
+        this.parse(start, count);
 
         if (resetNewElements) {
-          me.updateElements(data, start, count, 'reset');
+          this.updateElements(data, start, count, 'reset');
         }
       }
     }, {
@@ -5274,10 +5298,9 @@
     }, {
       key: "_removeElements",
       value: function _removeElements(start, count) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
 
-        if (me._parsing) {
+        if (this._parsing) {
           var removed = meta._parsed.splice(start, count);
 
           if (meta._stacked) {
@@ -5288,33 +5311,47 @@
         meta.data.splice(start, count);
       }
     }, {
+      key: "_sync",
+      value: function _sync(args) {
+        if (this._parsing) {
+          this._syncList.push(args);
+        } else {
+          var _args2 = _slicedToArray(args, 3),
+              method = _args2[0],
+              arg1 = _args2[1],
+              arg2 = _args2[2];
+
+          this[method](arg1, arg2);
+        }
+      }
+    }, {
       key: "_onDataPush",
       value: function _onDataPush() {
         var count = arguments.length;
 
-        this._syncList.push(['_insertElements', this.getDataset().data.length - count, count]);
+        this._sync(['_insertElements', this.getDataset().data.length - count, count]);
       }
     }, {
       key: "_onDataPop",
       value: function _onDataPop() {
-        this._syncList.push(['_removeElements', this._cachedMeta.data.length - 1, 1]);
+        this._sync(['_removeElements', this._cachedMeta.data.length - 1, 1]);
       }
     }, {
       key: "_onDataShift",
       value: function _onDataShift() {
-        this._syncList.push(['_removeElements', 0, 1]);
+        this._sync(['_removeElements', 0, 1]);
       }
     }, {
       key: "_onDataSplice",
       value: function _onDataSplice(start, count) {
-        this._syncList.push(['_removeElements', start, count]);
+        this._sync(['_removeElements', start, count]);
 
-        this._syncList.push(['_insertElements', start, arguments.length - 2]);
+        this._sync(['_insertElements', start, arguments.length - 2]);
       }
     }, {
       key: "_onDataUnshift",
       value: function _onDataUnshift() {
-        this._syncList.push(['_insertElements', 0, arguments.length]);
+        this._sync(['_insertElements', 0, arguments.length]);
       }
     }]);
 
@@ -5325,13 +5362,13 @@
   DatasetController.prototype.datasetElementType = null;
   DatasetController.prototype.dataElementType = null;
 
-  function getAllScaleValues(scale) {
+  function getAllScaleValues(scale, type) {
     if (!scale._cache.$bar) {
-      var metas = scale.getMatchingVisibleMetas('bar');
+      var visibleMetas = scale.getMatchingVisibleMetas(type);
       var values = [];
 
-      for (var i = 0, ilen = metas.length; i < ilen; i++) {
-        values = values.concat(metas[i].controller.getAllParsedValues(scale));
+      for (var i = 0, ilen = visibleMetas.length; i < ilen; i++) {
+        values = values.concat(visibleMetas[i].controller.getAllParsedValues(scale));
       }
 
       scale._cache.$bar = _arrayUnique(values.sort(function (a, b) {
@@ -5342,8 +5379,9 @@
     return scale._cache.$bar;
   }
 
-  function computeMinSampleSize(scale) {
-    var values = getAllScaleValues(scale);
+  function computeMinSampleSize(meta) {
+    var scale = meta.iScale;
+    var values = getAllScaleValues(scale, meta.type);
     var min = scale._length;
     var i, ilen, curr, prev;
 
@@ -5473,6 +5511,101 @@
     return custom && custom.barStart !== undefined && custom.barEnd !== undefined;
   }
 
+  function barSign(size, vScale, actualBase) {
+    if (size !== 0) {
+      return sign(size);
+    }
+
+    return (vScale.isHorizontal() ? 1 : -1) * (vScale.min >= actualBase ? 1 : -1);
+  }
+
+  function borderProps(properties) {
+    var reverse, start, end, top, bottom;
+
+    if (properties.horizontal) {
+      reverse = properties.base > properties.x;
+      start = 'left';
+      end = 'right';
+    } else {
+      reverse = properties.base < properties.y;
+      start = 'bottom';
+      end = 'top';
+    }
+
+    if (reverse) {
+      top = 'end';
+      bottom = 'start';
+    } else {
+      top = 'start';
+      bottom = 'end';
+    }
+
+    return {
+      start: start,
+      end: end,
+      reverse: reverse,
+      top: top,
+      bottom: bottom
+    };
+  }
+
+  function setBorderSkipped(properties, options, stack, index) {
+    var edge = options.borderSkipped;
+    var res = {};
+
+    if (!edge) {
+      properties.borderSkipped = res;
+      return;
+    }
+
+    var _borderProps = borderProps(properties),
+        start = _borderProps.start,
+        end = _borderProps.end,
+        reverse = _borderProps.reverse,
+        top = _borderProps.top,
+        bottom = _borderProps.bottom;
+
+    if (edge === 'middle' && stack) {
+      properties.enableBorderRadius = true;
+
+      if ((stack._top || 0) === index) {
+        edge = top;
+      } else if ((stack._bottom || 0) === index) {
+        edge = bottom;
+      } else {
+        res[parseEdge(bottom, start, end, reverse)] = true;
+        edge = top;
+      }
+    }
+
+    res[parseEdge(edge, start, end, reverse)] = true;
+    properties.borderSkipped = res;
+  }
+
+  function parseEdge(edge, a, b, reverse) {
+    if (reverse) {
+      edge = swap(edge, a, b);
+      edge = startEnd(edge, b, a);
+    } else {
+      edge = startEnd(edge, a, b);
+    }
+
+    return edge;
+  }
+
+  function swap(orig, v1, v2) {
+    return orig === v1 ? v2 : orig === v2 ? v1 : orig;
+  }
+
+  function startEnd(v, start, end) {
+    return v === 'start' ? start : v === 'end' ? end : v;
+  }
+
+  function setInflateAmount(properties, _ref, ratio) {
+    var inflateAmount = _ref.inflateAmount;
+    properties.inflateAmount = inflateAmount === 'auto' ? ratio === 1 ? 0.33 : 0 : inflateAmount;
+  }
+
   var BarController = /*#__PURE__*/function (_DatasetController) {
     _inherits(BarController, _DatasetController);
 
@@ -5538,11 +5671,10 @@
     }, {
       key: "getLabelAndValue",
       value: function getLabelAndValue(index) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var iScale = meta.iScale,
             vScale = meta.vScale;
-        var parsed = me.getParsed(index);
+        var parsed = this.getParsed(index);
         var custom = parsed._custom;
         var value = isFloatBar(custom) ? '[' + custom.start + ', ' + custom.end + ']' : '' + vScale.getLabelForValue(parsed[vScale.axis]);
         return {
@@ -5553,51 +5685,49 @@
     }, {
       key: "initialize",
       value: function initialize() {
-        var me = this;
-        me.enableOptionSharing = true;
+        this.enableOptionSharing = true;
 
         _get(_getPrototypeOf(BarController.prototype), "initialize", this).call(this);
 
-        var meta = me._cachedMeta;
-        meta.stack = me.getDataset().stack;
+        var meta = this._cachedMeta;
+        meta.stack = this.getDataset().stack;
       }
     }, {
       key: "update",
       value: function update(mode) {
-        var me = this;
-        var meta = me._cachedMeta;
-        me.updateElements(meta.data, 0, meta.data.length, mode);
+        var meta = this._cachedMeta;
+        this.updateElements(meta.data, 0, meta.data.length, mode);
       }
     }, {
       key: "updateElements",
       value: function updateElements(bars, start, count, mode) {
-        var me = this;
         var reset = mode === 'reset';
-        var vScale = me._cachedMeta.vScale;
+        var index = this.index,
+            vScale = this._cachedMeta.vScale;
         var base = vScale.getBasePixel();
         var horizontal = vScale.isHorizontal();
 
-        var ruler = me._getRuler();
+        var ruler = this._getRuler();
 
-        var firstOpts = me.resolveDataElementOptions(start, mode);
-        var sharedOptions = me.getSharedOptions(firstOpts);
-        var includeOptions = me.includeOptions(mode, sharedOptions);
-        me.updateSharedOptions(sharedOptions, mode, firstOpts);
+        var firstOpts = this.resolveDataElementOptions(start, mode);
+        var sharedOptions = this.getSharedOptions(firstOpts);
+        var includeOptions = this.includeOptions(mode, sharedOptions);
+        this.updateSharedOptions(sharedOptions, mode, firstOpts);
 
         for (var i = start; i < start + count; i++) {
-          var parsed = me.getParsed(i);
+          var parsed = this.getParsed(i);
           var vpixels = reset || isNullOrUndef(parsed[vScale.axis]) ? {
             base: base,
             head: base
-          } : me._calculateBarValuePixels(i);
+          } : this._calculateBarValuePixels(i);
 
-          var ipixels = me._calculateBarIndexPixels(i, ruler);
+          var ipixels = this._calculateBarIndexPixels(i, ruler);
 
           var stack = (parsed._stacks || {})[vScale.axis];
           var properties = {
             horizontal: horizontal,
             base: vpixels.base,
-            enableBorderRadius: !stack || isFloatBar(parsed._custom) || me.index === stack._top || me.index === stack._bottom,
+            enableBorderRadius: !stack || isFloatBar(parsed._custom) || index === stack._top || index === stack._bottom,
             x: horizontal ? vpixels.head : ipixels.center,
             y: horizontal ? ipixels.center : vpixels.head,
             height: horizontal ? ipixels.size : Math.abs(vpixels.size),
@@ -5605,19 +5735,21 @@
           };
 
           if (includeOptions) {
-            properties.options = sharedOptions || me.resolveDataElementOptions(i, bars[i].active ? 'active' : mode);
+            properties.options = sharedOptions || this.resolveDataElementOptions(i, bars[i].active ? 'active' : mode);
           }
 
-          me.updateElement(bars[i], i, properties, mode);
+          var options = properties.options || bars[i].options;
+          setBorderSkipped(properties, options, stack, index);
+          setInflateAmount(properties, options, ruler.ratio);
+          this.updateElement(bars[i], i, properties, mode);
         }
       }
     }, {
       key: "_getStacks",
       value: function _getStacks(last, dataIndex) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var iScale = meta.iScale;
-        var metasets = iScale.getMatchingVisibleMetas(me._type);
+        var metasets = iScale.getMatchingVisibleMetas(this._type);
         var stacked = iScale.options.stacked;
         var ilen = metasets.length;
         var stacks = [];
@@ -5669,25 +5801,24 @@
     }, {
       key: "_getRuler",
       value: function _getRuler() {
-        var me = this;
-        var opts = me.options;
-        var meta = me._cachedMeta;
+        var opts = this.options;
+        var meta = this._cachedMeta;
         var iScale = meta.iScale;
         var pixels = [];
         var i, ilen;
 
         for (i = 0, ilen = meta.data.length; i < ilen; ++i) {
-          pixels.push(iScale.getPixelForValue(me.getParsed(i)[iScale.axis], i));
+          pixels.push(iScale.getPixelForValue(this.getParsed(i)[iScale.axis], i));
         }
 
         var barThickness = opts.barThickness;
-        var min = barThickness || computeMinSampleSize(iScale);
+        var min = barThickness || computeMinSampleSize(meta);
         return {
           min: min,
           pixels: pixels,
           start: iScale._startPixel,
           end: iScale._endPixel,
-          stackCount: me._getStackCount(),
+          stackCount: this._getStackCount(),
           scale: iScale,
           grouped: opts.grouped,
           ratio: barThickness ? 1 : opts.categoryPercentage * opts.barPercentage
@@ -5696,19 +5827,19 @@
     }, {
       key: "_calculateBarValuePixels",
       value: function _calculateBarValuePixels(index) {
-        var me = this;
-        var _me$_cachedMeta = me._cachedMeta,
-            vScale = _me$_cachedMeta.vScale,
-            _stacked = _me$_cachedMeta._stacked;
-        var _me$options = me.options,
-            baseValue = _me$options.base,
-            minBarLength = _me$options.minBarLength;
-        var parsed = me.getParsed(index);
+        var _this$_cachedMeta = this._cachedMeta,
+            vScale = _this$_cachedMeta.vScale,
+            _stacked = _this$_cachedMeta._stacked,
+            _this$options = this.options,
+            baseValue = _this$options.base,
+            minBarLength = _this$options.minBarLength;
+        var actualBase = baseValue || 0;
+        var parsed = this.getParsed(index);
         var custom = parsed._custom;
         var floating = isFloatBar(custom);
         var value = parsed[vScale.axis];
         var start = 0;
-        var length = _stacked ? me.applyStack(vScale, parsed, _stacked) : value;
+        var length = _stacked ? this.applyStack(vScale, parsed, _stacked) : value;
         var head, size;
 
         if (length !== value) {
@@ -5738,28 +5869,20 @@
 
         size = head - base;
 
-        if (minBarLength !== undefined && Math.abs(size) < minBarLength) {
-          size = size < 0 ? -minBarLength : minBarLength;
+        if (Math.abs(size) < minBarLength) {
+          size = barSign(size, vScale, actualBase) * minBarLength;
 
-          if (value === 0) {
+          if (value === actualBase) {
             base -= size / 2;
           }
 
           head = base + size;
         }
 
-        var actualBase = baseValue || 0;
-
         if (base === vScale.getPixelForValue(actualBase)) {
-          var halfGrid = vScale.getLineWidthForValue(actualBase) / 2;
-
-          if (size > 0) {
-            base += halfGrid;
-            size -= halfGrid;
-          } else if (size < 0) {
-            base -= halfGrid;
-            size += halfGrid;
-          }
+          var halfGrid = sign(size) * vScale.getLineWidthForValue(actualBase) / 2;
+          base += halfGrid;
+          size -= halfGrid;
         }
 
         return {
@@ -5772,23 +5895,22 @@
     }, {
       key: "_calculateBarIndexPixels",
       value: function _calculateBarIndexPixels(index, ruler) {
-        var me = this;
         var scale = ruler.scale;
-        var options = me.options;
+        var options = this.options;
         var skipNull = options.skipNull;
         var maxBarThickness = valueOrDefault(options.maxBarThickness, Infinity);
         var center, size;
 
         if (ruler.grouped) {
-          var stackCount = skipNull ? me._getStackCount(index) : ruler.stackCount;
+          var stackCount = skipNull ? this._getStackCount(index) : ruler.stackCount;
           var range = options.barThickness === 'flex' ? computeFlexCategoryTraits(index, ruler, options, stackCount) : computeFitCategoryTraits(index, ruler, options, stackCount);
 
-          var stackIndex = me._getStackIndex(me.index, me._cachedMeta.stack, skipNull ? index : undefined);
+          var stackIndex = this._getStackIndex(this.index, this._cachedMeta.stack, skipNull ? index : undefined);
 
           center = range.start + range.chunk * stackIndex + range.chunk / 2;
           size = Math.min(maxBarThickness, range.chunk * range.ratio);
         } else {
-          center = scale.getPixelForValue(me.getParsed(index)[scale.axis], index);
+          center = scale.getPixelForValue(this.getParsed(index)[scale.axis], index);
           size = Math.min(maxBarThickness, ruler.min * ruler.ratio);
         }
 
@@ -5802,16 +5924,15 @@
     }, {
       key: "draw",
       value: function draw() {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var vScale = meta.vScale;
         var rects = meta.data;
         var ilen = rects.length;
         var i = 0;
 
         for (; i < ilen; ++i) {
-          if (me.getParsed(i)[vScale.axis] !== null) {
-            rects[i].draw(me._ctx);
+          if (this.getParsed(i)[vScale.axis] !== null) {
+            rects[i].draw(this._ctx);
           }
         }
       }
@@ -5835,9 +5956,6 @@
     }
   };
   BarController.overrides = {
-    interaction: {
-      mode: 'index'
-    },
     scales: {
       _index_: {
         type: 'category',
@@ -5872,25 +5990,36 @@
         _get(_getPrototypeOf(BubbleController.prototype), "initialize", this).call(this);
       }
     }, {
+      key: "parsePrimitiveData",
+      value: function parsePrimitiveData(meta, data, start, count) {
+        var parsed = _get(_getPrototypeOf(BubbleController.prototype), "parsePrimitiveData", this).call(this, meta, data, start, count);
+
+        for (var i = 0; i < parsed.length; i++) {
+          parsed[i]._custom = this.resolveDataElementOptions(i + start).radius;
+        }
+
+        return parsed;
+      }
+    }, {
+      key: "parseArrayData",
+      value: function parseArrayData(meta, data, start, count) {
+        var parsed = _get(_getPrototypeOf(BubbleController.prototype), "parseArrayData", this).call(this, meta, data, start, count);
+
+        for (var i = 0; i < parsed.length; i++) {
+          var item = data[start + i];
+          parsed[i]._custom = valueOrDefault(item[2], this.resolveDataElementOptions(i + start).radius);
+        }
+
+        return parsed;
+      }
+    }, {
       key: "parseObjectData",
       value: function parseObjectData(meta, data, start, count) {
-        var xScale = meta.xScale,
-            yScale = meta.yScale;
-        var _this$_parsing3 = this._parsing,
-            _this$_parsing3$xAxis = _this$_parsing3.xAxisKey,
-            xAxisKey = _this$_parsing3$xAxis === void 0 ? 'x' : _this$_parsing3$xAxis,
-            _this$_parsing3$yAxis = _this$_parsing3.yAxisKey,
-            yAxisKey = _this$_parsing3$yAxis === void 0 ? 'y' : _this$_parsing3$yAxis;
-        var parsed = [];
-        var i, ilen, item;
+        var parsed = _get(_getPrototypeOf(BubbleController.prototype), "parseObjectData", this).call(this, meta, data, start, count);
 
-        for (i = start, ilen = start + count; i < ilen; ++i) {
-          item = data[i];
-          parsed.push({
-            x: xScale.parse(resolveObjectKey(item, xAxisKey), i),
-            y: yScale.parse(resolveObjectKey(item, yAxisKey), i),
-            _custom: item && item.r && +item.r
-          });
+        for (var i = 0; i < parsed.length; i++) {
+          var item = data[start + i];
+          parsed[i]._custom = valueOrDefault(item && item.r && +item.r, this.resolveDataElementOptions(i + start).radius);
         }
 
         return parsed;
@@ -5898,13 +6027,11 @@
     }, {
       key: "getMaxOverflow",
       value: function getMaxOverflow() {
-        var _this$_cachedMeta = this._cachedMeta,
-            data = _this$_cachedMeta.data,
-            _parsed = _this$_cachedMeta._parsed;
+        var data = this._cachedMeta.data;
         var max = 0;
 
         for (var i = data.length - 1; i >= 0; --i) {
-          max = Math.max(max, data[i].size() / 2, _parsed[i]._custom);
+          max = Math.max(max, data[i].size(this.resolveDataElementOptions(i)) / 2);
         }
 
         return max > 0 && max;
@@ -5912,11 +6039,10 @@
     }, {
       key: "getLabelAndValue",
       value: function getLabelAndValue(index) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var xScale = meta.xScale,
             yScale = meta.yScale;
-        var parsed = me.getParsed(index);
+        var parsed = this.getParsed(index);
         var x = xScale.getLabelForValue(parsed.x);
         var y = yScale.getLabelForValue(parsed.y);
         var r = parsed._custom;
@@ -5928,44 +6054,42 @@
     }, {
       key: "update",
       value: function update(mode) {
-        var me = this;
-        var points = me._cachedMeta.data;
-        me.updateElements(points, 0, points.length, mode);
+        var points = this._cachedMeta.data;
+        this.updateElements(points, 0, points.length, mode);
       }
     }, {
       key: "updateElements",
       value: function updateElements(points, start, count, mode) {
-        var me = this;
         var reset = mode === 'reset';
-        var _me$_cachedMeta2 = me._cachedMeta,
-            iScale = _me$_cachedMeta2.iScale,
-            vScale = _me$_cachedMeta2.vScale;
-        var firstOpts = me.resolveDataElementOptions(start, mode);
-        var sharedOptions = me.getSharedOptions(firstOpts);
-        var includeOptions = me.includeOptions(mode, sharedOptions);
+        var _this$_cachedMeta2 = this._cachedMeta,
+            iScale = _this$_cachedMeta2.iScale,
+            vScale = _this$_cachedMeta2.vScale;
+        var firstOpts = this.resolveDataElementOptions(start, mode);
+        var sharedOptions = this.getSharedOptions(firstOpts);
+        var includeOptions = this.includeOptions(mode, sharedOptions);
         var iAxis = iScale.axis;
         var vAxis = vScale.axis;
 
         for (var i = start; i < start + count; i++) {
           var point = points[i];
-          var parsed = !reset && me.getParsed(i);
+          var parsed = !reset && this.getParsed(i);
           var properties = {};
           var iPixel = properties[iAxis] = reset ? iScale.getPixelForDecimal(0.5) : iScale.getPixelForValue(parsed[iAxis]);
           var vPixel = properties[vAxis] = reset ? vScale.getBasePixel() : vScale.getPixelForValue(parsed[vAxis]);
           properties.skip = isNaN(iPixel) || isNaN(vPixel);
 
           if (includeOptions) {
-            properties.options = me.resolveDataElementOptions(i, point.active ? 'active' : mode);
+            properties.options = this.resolveDataElementOptions(i, point.active ? 'active' : mode);
 
             if (reset) {
               properties.options.radius = 0;
             }
           }
 
-          me.updateElement(point, i, properties, mode);
+          this.updateElement(point, i, properties, mode);
         }
 
-        me.updateSharedOptions(sharedOptions, mode, firstOpts);
+        this.updateSharedOptions(sharedOptions, mode, firstOpts);
       }
     }, {
       key: "resolveDataElementOptions",
@@ -6071,17 +6195,17 @@
     var _super3 = _createSuper(DoughnutController);
 
     function DoughnutController(chart, datasetIndex) {
-      var _this;
+      var _this4;
 
       _classCallCheck(this, DoughnutController);
 
-      _this = _super3.call(this, chart, datasetIndex);
-      _this.enableOptionSharing = true;
-      _this.innerRadius = undefined;
-      _this.outerRadius = undefined;
-      _this.offsetX = undefined;
-      _this.offsetY = undefined;
-      return _this;
+      _this4 = _super3.call(this, chart, datasetIndex);
+      _this4.enableOptionSharing = true;
+      _this4.innerRadius = undefined;
+      _this4.outerRadius = undefined;
+      _this4.offsetX = undefined;
+      _this4.offsetY = undefined;
+      return _this4;
     }
 
     _createClass(DoughnutController, [{
@@ -6092,10 +6216,28 @@
       value: function parse(start, count) {
         var data = this.getDataset().data;
         var meta = this._cachedMeta;
-        var i, ilen;
 
-        for (i = start, ilen = start + count; i < ilen; ++i) {
-          meta._parsed[i] = +data[i];
+        if (this._parsing === false) {
+          meta._parsed = data;
+        } else {
+          var getter = function getter(i) {
+            return +data[i];
+          };
+
+          if (isObject(data[start])) {
+            var _this$_parsing$key = this._parsing.key,
+                key = _this$_parsing$key === void 0 ? 'value' : _this$_parsing$key;
+
+            getter = function getter(i) {
+              return +resolveObjectKey(data[i], key);
+            };
+          }
+
+          var i, ilen;
+
+          for (i = start, ilen = start + count; i < ilen; ++i) {
+            meta._parsed[i] = getter(i);
+          }
         }
       }
     }, {
@@ -6113,11 +6255,10 @@
       value: function _getRotationExtents() {
         var min = TAU;
         var max = -TAU;
-        var me = this;
 
-        for (var i = 0; i < me.chart.data.datasets.length; ++i) {
-          if (me.chart.isDatasetVisible(i)) {
-            var controller = me.chart.getDatasetMeta(i).controller;
+        for (var i = 0; i < this.chart.data.datasets.length; ++i) {
+          if (this.chart.isDatasetVisible(i)) {
+            var controller = this.chart.getDatasetMeta(i).controller;
 
             var rotation = controller._getRotation();
 
@@ -6136,20 +6277,19 @@
     }, {
       key: "update",
       value: function update(mode) {
-        var me = this;
-        var chart = me.chart;
+        var chart = this.chart;
         var chartArea = chart.chartArea;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var arcs = meta.data;
-        var spacing = me.getMaxBorderWidth() + me.getMaxOffset(arcs) + me.options.spacing;
+        var spacing = this.getMaxBorderWidth() + this.getMaxOffset(arcs) + this.options.spacing;
         var maxSize = Math.max((Math.min(chartArea.width, chartArea.height) - spacing) / 2, 0);
-        var cutout = Math.min(toPercentage(me.options.cutout, maxSize), 1);
+        var cutout = Math.min(toPercentage(this.options.cutout, maxSize), 1);
 
-        var chartWeight = me._getRingWeight(me.index);
+        var chartWeight = this._getRingWeight(this.index);
 
-        var _me$_getRotationExten = me._getRotationExtents(),
-            circumference = _me$_getRotationExten.circumference,
-            rotation = _me$_getRotationExten.rotation;
+        var _this$_getRotationExt = this._getRotationExtents(),
+            circumference = _this$_getRotationExt.circumference,
+            rotation = _this$_getRotationExt.rotation;
 
         var _getRatioAndOffset = getRatioAndOffset(rotation, circumference, cutout),
             ratioX = _getRatioAndOffset.ratioX,
@@ -6160,66 +6300,64 @@
         var maxWidth = (chartArea.width - spacing) / ratioX;
         var maxHeight = (chartArea.height - spacing) / ratioY;
         var maxRadius = Math.max(Math.min(maxWidth, maxHeight) / 2, 0);
-        var outerRadius = toDimension(me.options.radius, maxRadius);
+        var outerRadius = toDimension(this.options.radius, maxRadius);
         var innerRadius = Math.max(outerRadius * cutout, 0);
 
-        var radiusLength = (outerRadius - innerRadius) / me._getVisibleDatasetWeightTotal();
+        var radiusLength = (outerRadius - innerRadius) / this._getVisibleDatasetWeightTotal();
 
-        me.offsetX = offsetX * outerRadius;
-        me.offsetY = offsetY * outerRadius;
-        meta.total = me.calculateTotal();
-        me.outerRadius = outerRadius - radiusLength * me._getRingWeightOffset(me.index);
-        me.innerRadius = Math.max(me.outerRadius - radiusLength * chartWeight, 0);
-        me.updateElements(arcs, 0, arcs.length, mode);
+        this.offsetX = offsetX * outerRadius;
+        this.offsetY = offsetY * outerRadius;
+        meta.total = this.calculateTotal();
+        this.outerRadius = outerRadius - radiusLength * this._getRingWeightOffset(this.index);
+        this.innerRadius = Math.max(this.outerRadius - radiusLength * chartWeight, 0);
+        this.updateElements(arcs, 0, arcs.length, mode);
       }
     }, {
       key: "_circumference",
       value: function _circumference(i, reset) {
-        var me = this;
-        var opts = me.options;
-        var meta = me._cachedMeta;
+        var opts = this.options;
+        var meta = this._cachedMeta;
 
-        var circumference = me._getCircumference();
+        var circumference = this._getCircumference();
 
-        if (reset && opts.animation.animateRotate || !this.chart.getDataVisibility(i) || meta._parsed[i] === null) {
+        if (reset && opts.animation.animateRotate || !this.chart.getDataVisibility(i) || meta._parsed[i] === null || meta.data[i].hidden) {
           return 0;
         }
 
-        return me.calculateCircumference(meta._parsed[i] * circumference / TAU);
+        return this.calculateCircumference(meta._parsed[i] * circumference / TAU);
       }
     }, {
       key: "updateElements",
       value: function updateElements(arcs, start, count, mode) {
-        var me = this;
         var reset = mode === 'reset';
-        var chart = me.chart;
+        var chart = this.chart;
         var chartArea = chart.chartArea;
         var opts = chart.options;
         var animationOpts = opts.animation;
         var centerX = (chartArea.left + chartArea.right) / 2;
         var centerY = (chartArea.top + chartArea.bottom) / 2;
         var animateScale = reset && animationOpts.animateScale;
-        var innerRadius = animateScale ? 0 : me.innerRadius;
-        var outerRadius = animateScale ? 0 : me.outerRadius;
-        var firstOpts = me.resolveDataElementOptions(start, mode);
-        var sharedOptions = me.getSharedOptions(firstOpts);
-        var includeOptions = me.includeOptions(mode, sharedOptions);
+        var innerRadius = animateScale ? 0 : this.innerRadius;
+        var outerRadius = animateScale ? 0 : this.outerRadius;
+        var firstOpts = this.resolveDataElementOptions(start, mode);
+        var sharedOptions = this.getSharedOptions(firstOpts);
+        var includeOptions = this.includeOptions(mode, sharedOptions);
 
-        var startAngle = me._getRotation();
+        var startAngle = this._getRotation();
 
         var i;
 
         for (i = 0; i < start; ++i) {
-          startAngle += me._circumference(i, reset);
+          startAngle += this._circumference(i, reset);
         }
 
         for (i = start; i < start + count; ++i) {
-          var circumference = me._circumference(i, reset);
+          var circumference = this._circumference(i, reset);
 
           var arc = arcs[i];
           var properties = {
-            x: centerX + me.offsetX,
-            y: centerY + me.offsetY,
+            x: centerX + this.offsetX,
+            y: centerY + this.offsetY,
             startAngle: startAngle,
             endAngle: startAngle + circumference,
             circumference: circumference,
@@ -6228,14 +6366,14 @@
           };
 
           if (includeOptions) {
-            properties.options = sharedOptions || me.resolveDataElementOptions(i, arc.active ? 'active' : mode);
+            properties.options = sharedOptions || this.resolveDataElementOptions(i, arc.active ? 'active' : mode);
           }
 
           startAngle += circumference;
-          me.updateElement(arc, i, properties, mode);
+          this.updateElement(arc, i, properties, mode);
         }
 
-        me.updateSharedOptions(sharedOptions, mode, firstOpts);
+        this.updateSharedOptions(sharedOptions, mode, firstOpts);
       }
     }, {
       key: "calculateTotal",
@@ -6248,7 +6386,7 @@
         for (i = 0; i < metaData.length; i++) {
           var value = meta._parsed[i];
 
-          if (value !== null && !isNaN(value) && this.chart.getDataVisibility(i)) {
+          if (value !== null && !isNaN(value) && this.chart.getDataVisibility(i) && !metaData[i].hidden) {
             total += Math.abs(value);
           }
         }
@@ -6269,9 +6407,8 @@
     }, {
       key: "getLabelAndValue",
       value: function getLabelAndValue(index) {
-        var me = this;
-        var meta = me._cachedMeta;
-        var chart = me.chart;
+        var meta = this._cachedMeta;
+        var chart = this.chart;
         var labels = chart.data.labels || [];
         var value = formatNumber(meta._parsed[index], chart.options.locale);
         return {
@@ -6282,9 +6419,8 @@
     }, {
       key: "getMaxBorderWidth",
       value: function getMaxBorderWidth(arcs) {
-        var me = this;
         var max = 0;
-        var chart = me.chart;
+        var chart = this.chart;
         var i, ilen, meta, controller, options;
 
         if (!arcs) {
@@ -6294,7 +6430,7 @@
               arcs = meta.data;
               controller = meta.controller;
 
-              if (controller !== me) {
+              if (controller !== this) {
                 controller.configure();
               }
 
@@ -6463,89 +6599,95 @@
     }, {
       key: "update",
       value: function update(mode) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var line = meta.dataset,
             _meta$data = meta.data,
             points = _meta$data === void 0 ? [] : _meta$data,
             _dataset = meta._dataset;
-        var animationsDisabled = me.chart._animationsDisabled;
+        var animationsDisabled = this.chart._animationsDisabled;
 
         var _getStartAndCountOfVi = getStartAndCountOfVisiblePoints(meta, points, animationsDisabled),
             start = _getStartAndCountOfVi.start,
             count = _getStartAndCountOfVi.count;
 
-        me._drawStart = start;
-        me._drawCount = count;
+        this._drawStart = start;
+        this._drawCount = count;
 
         if (scaleRangesChanged(meta)) {
           start = 0;
           count = points.length;
         }
 
+        line._chart = this.chart;
+        line._datasetIndex = this.index;
         line._decimated = !!_dataset._decimated;
         line.points = points;
-        var options = me.resolveDatasetElementOptions(mode);
+        var options = this.resolveDatasetElementOptions(mode);
 
-        if (!me.options.showLine) {
+        if (!this.options.showLine) {
           options.borderWidth = 0;
         }
 
-        options.segment = me.options.segment;
-        me.updateElement(line, undefined, {
+        options.segment = this.options.segment;
+        this.updateElement(line, undefined, {
           animated: !animationsDisabled,
           options: options
         }, mode);
-        me.updateElements(points, start, count, mode);
+        this.updateElements(points, start, count, mode);
       }
     }, {
       key: "updateElements",
       value: function updateElements(points, start, count, mode) {
-        var me = this;
         var reset = mode === 'reset';
-        var _me$_cachedMeta3 = me._cachedMeta,
-            iScale = _me$_cachedMeta3.iScale,
-            vScale = _me$_cachedMeta3.vScale,
-            _stacked = _me$_cachedMeta3._stacked;
-        var firstOpts = me.resolveDataElementOptions(start, mode);
-        var sharedOptions = me.getSharedOptions(firstOpts);
-        var includeOptions = me.includeOptions(mode, sharedOptions);
+        var _this$_cachedMeta3 = this._cachedMeta,
+            iScale = _this$_cachedMeta3.iScale,
+            vScale = _this$_cachedMeta3.vScale,
+            _stacked = _this$_cachedMeta3._stacked,
+            _dataset = _this$_cachedMeta3._dataset;
+        var firstOpts = this.resolveDataElementOptions(start, mode);
+        var sharedOptions = this.getSharedOptions(firstOpts);
+        var includeOptions = this.includeOptions(mode, sharedOptions);
         var iAxis = iScale.axis;
         var vAxis = vScale.axis;
-        var spanGaps = me.options.spanGaps;
+        var _this$options2 = this.options,
+            spanGaps = _this$options2.spanGaps,
+            segment = _this$options2.segment;
         var maxGapLength = isNumber(spanGaps) ? spanGaps : Number.POSITIVE_INFINITY;
-        var directUpdate = me.chart._animationsDisabled || reset || mode === 'none';
-        var prevParsed = start > 0 && me.getParsed(start - 1);
+        var directUpdate = this.chart._animationsDisabled || reset || mode === 'none';
+        var prevParsed = start > 0 && this.getParsed(start - 1);
 
         for (var i = start; i < start + count; ++i) {
           var point = points[i];
-          var parsed = me.getParsed(i);
+          var parsed = this.getParsed(i);
           var properties = directUpdate ? point : {};
           var nullData = isNullOrUndef(parsed[vAxis]);
           var iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i);
-          var vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? me.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i);
+          var vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i);
           properties.skip = isNaN(iPixel) || isNaN(vPixel) || nullData;
           properties.stop = i > 0 && parsed[iAxis] - prevParsed[iAxis] > maxGapLength;
-          properties.parsed = parsed;
+
+          if (segment) {
+            properties.parsed = parsed;
+            properties.raw = _dataset.data[i];
+          }
 
           if (includeOptions) {
-            properties.options = sharedOptions || me.resolveDataElementOptions(i, point.active ? 'active' : mode);
+            properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? 'active' : mode);
           }
 
           if (!directUpdate) {
-            me.updateElement(point, i, properties, mode);
+            this.updateElement(point, i, properties, mode);
           }
 
           prevParsed = parsed;
         }
 
-        me.updateSharedOptions(sharedOptions, mode, firstOpts);
+        this.updateSharedOptions(sharedOptions, mode, firstOpts);
       }
     }, {
       key: "getMaxOverflow",
       value: function getMaxOverflow() {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var dataset = meta.dataset;
         var border = dataset.options && dataset.options.borderWidth || 0;
         var data = meta.data || [];
@@ -6554,8 +6696,8 @@
           return border;
         }
 
-        var firstPoint = data[0].size(me.resolveDataElementOptions(0));
-        var lastPoint = data[data.length - 1].size(me.resolveDataElementOptions(data.length - 1));
+        var firstPoint = data[0].size(this.resolveDataElementOptions(0));
+        var lastPoint = data[data.length - 1].size(this.resolveDataElementOptions(data.length - 1));
         return Math.max(border, firstPoint, lastPoint) / 2;
       }
     }, {
@@ -6649,22 +6791,21 @@
     var _super5 = _createSuper(PolarAreaController);
 
     function PolarAreaController(chart, datasetIndex) {
-      var _this2;
+      var _this5;
 
       _classCallCheck(this, PolarAreaController);
 
-      _this2 = _super5.call(this, chart, datasetIndex);
-      _this2.innerRadius = undefined;
-      _this2.outerRadius = undefined;
-      return _this2;
+      _this5 = _super5.call(this, chart, datasetIndex);
+      _this5.innerRadius = undefined;
+      _this5.outerRadius = undefined;
+      return _this5;
     }
 
     _createClass(PolarAreaController, [{
       key: "getLabelAndValue",
       value: function getLabelAndValue(index) {
-        var me = this;
-        var meta = me._cachedMeta;
-        var chart = me.chart;
+        var meta = this._cachedMeta;
+        var chart = this.chart;
         var labels = chart.data.labels || [];
         var value = formatNumber(meta._parsed[index].r, chart.options.locale);
         return {
@@ -6684,43 +6825,41 @@
     }, {
       key: "_updateRadius",
       value: function _updateRadius() {
-        var me = this;
-        var chart = me.chart;
+        var chart = this.chart;
         var chartArea = chart.chartArea;
         var opts = chart.options;
         var minSize = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
         var outerRadius = Math.max(minSize / 2, 0);
         var innerRadius = Math.max(opts.cutoutPercentage ? outerRadius / 100 * opts.cutoutPercentage : 1, 0);
         var radiusLength = (outerRadius - innerRadius) / chart.getVisibleDatasetCount();
-        me.outerRadius = outerRadius - radiusLength * me.index;
-        me.innerRadius = me.outerRadius - radiusLength;
+        this.outerRadius = outerRadius - radiusLength * this.index;
+        this.innerRadius = this.outerRadius - radiusLength;
       }
     }, {
       key: "updateElements",
       value: function updateElements(arcs, start, count, mode) {
-        var me = this;
         var reset = mode === 'reset';
-        var chart = me.chart;
-        var dataset = me.getDataset();
+        var chart = this.chart;
+        var dataset = this.getDataset();
         var opts = chart.options;
         var animationOpts = opts.animation;
-        var scale = me._cachedMeta.rScale;
+        var scale = this._cachedMeta.rScale;
         var centerX = scale.xCenter;
         var centerY = scale.yCenter;
         var datasetStartAngle = scale.getIndexAngle(0) - 0.5 * PI;
         var angle = datasetStartAngle;
         var i;
-        var defaultAngle = 360 / me.countVisibleElements();
+        var defaultAngle = 360 / this.countVisibleElements();
 
         for (i = 0; i < start; ++i) {
-          angle += me._computeAngle(i, mode, defaultAngle);
+          angle += this._computeAngle(i, mode, defaultAngle);
         }
 
         for (i = start; i < start + count; i++) {
           var arc = arcs[i];
           var startAngle = angle;
 
-          var endAngle = angle + me._computeAngle(i, mode, defaultAngle);
+          var endAngle = angle + this._computeAngle(i, mode, defaultAngle);
 
           var outerRadius = chart.getDataVisibility(i) ? scale.getDistanceFromCenterForValue(dataset.data[i]) : 0;
           angle = endAngle;
@@ -6742,21 +6881,21 @@
             outerRadius: outerRadius,
             startAngle: startAngle,
             endAngle: endAngle,
-            options: me.resolveDataElementOptions(i, arc.active ? 'active' : mode)
+            options: this.resolveDataElementOptions(i, arc.active ? 'active' : mode)
           };
-          me.updateElement(arc, i, properties, mode);
+          this.updateElement(arc, i, properties, mode);
         }
       }
     }, {
       key: "countVisibleElements",
       value: function countVisibleElements() {
-        var _this3 = this;
+        var _this6 = this;
 
         var dataset = this.getDataset();
         var meta = this._cachedMeta;
         var count = 0;
         meta.data.forEach(function (element, index) {
-          if (!isNaN(dataset.data[index]) && _this3.chart.getDataVisibility(index)) {
+          if (!isNaN(dataset.data[index]) && _this6.chart.getDataVisibility(index)) {
             count++;
           }
         });
@@ -6886,9 +7025,8 @@
     _createClass(RadarController, [{
       key: "getLabelAndValue",
       value: function getLabelAndValue(index) {
-        var me = this;
-        var vScale = me._cachedMeta.vScale;
-        var parsed = me.getParsed(index);
+        var vScale = this._cachedMeta.vScale;
+        var parsed = this.getParsed(index);
         return {
           label: vScale.getLabels()[index],
           value: '' + vScale.getLabelForValue(parsed[vScale.axis])
@@ -6897,17 +7035,16 @@
     }, {
       key: "update",
       value: function update(mode) {
-        var me = this;
-        var meta = me._cachedMeta;
+        var meta = this._cachedMeta;
         var line = meta.dataset;
         var points = meta.data || [];
         var labels = meta.iScale.getLabels();
         line.points = points;
 
         if (mode !== 'resize') {
-          var options = me.resolveDatasetElementOptions(mode);
+          var options = this.resolveDatasetElementOptions(mode);
 
-          if (!me.options.showLine) {
+          if (!this.options.showLine) {
             options.borderWidth = 0;
           }
 
@@ -6916,22 +7053,21 @@
             _fullLoop: labels.length === points.length,
             options: options
           };
-          me.updateElement(line, undefined, properties, mode);
+          this.updateElement(line, undefined, properties, mode);
         }
 
-        me.updateElements(points, 0, points.length, mode);
+        this.updateElements(points, 0, points.length, mode);
       }
     }, {
       key: "updateElements",
       value: function updateElements(points, start, count, mode) {
-        var me = this;
-        var dataset = me.getDataset();
-        var scale = me._cachedMeta.rScale;
+        var dataset = this.getDataset();
+        var scale = this._cachedMeta.rScale;
         var reset = mode === 'reset';
 
         for (var i = start; i < start + count; i++) {
           var point = points[i];
-          var options = me.resolveDataElementOptions(i, point.active ? 'active' : mode);
+          var options = this.resolveDataElementOptions(i, point.active ? 'active' : mode);
           var pointPosition = scale.getPointPositionForValue(i, dataset.data[i]);
           var x = reset ? scale.xCenter : pointPosition.x;
           var y = reset ? scale.yCenter : pointPosition.y;
@@ -6942,7 +7078,7 @@
             skip: isNaN(x) || isNaN(y),
             options: options
           };
-          me.updateElement(point, i, properties, mode);
+          this.updateElement(point, i, properties, mode);
         }
       }
     }]);
@@ -7218,7 +7354,7 @@
 
       var center = element.getCenterPoint(useFinalPosition);
 
-      if (!_isPointInArea(center, chart.chartArea, chart._minPadding)) {
+      if (!_isPointInArea(center, chart.chartArea, chart._minPadding) && !element.inRange(position.x, position.y, useFinalPosition)) {
         return;
       }
 
@@ -7362,36 +7498,88 @@
 
   function wrapBoxes(boxes) {
     var layoutBoxes = [];
-    var i, ilen, box;
+    var i, ilen, box, pos, stack, stackWeight;
 
     for (i = 0, ilen = (boxes || []).length; i < ilen; ++i) {
       box = boxes[i];
+      var _box = box;
+      pos = _box.position;
+      var _box$options = _box.options;
+      stack = _box$options.stack;
+      var _box$options$stackWei = _box$options.stackWeight;
+      stackWeight = _box$options$stackWei === void 0 ? 1 : _box$options$stackWei;
       layoutBoxes.push({
         index: i,
         box: box,
-        pos: box.position,
+        pos: pos,
         horizontal: box.isHorizontal(),
-        weight: box.weight
+        weight: box.weight,
+        stack: stack && pos + stack,
+        stackWeight: stackWeight
       });
     }
 
     return layoutBoxes;
   }
 
+  function buildStacks(layouts) {
+    var stacks = {};
+
+    var _iterator5 = _createForOfIteratorHelper(layouts),
+        _step5;
+
+    try {
+      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+        var wrap = _step5.value;
+        var stack = wrap.stack,
+            pos = wrap.pos,
+            stackWeight = wrap.stackWeight;
+
+        if (!stack || !STATIC_POSITIONS.includes(pos)) {
+          continue;
+        }
+
+        var _stack = stacks[stack] || (stacks[stack] = {
+          count: 0,
+          placed: 0,
+          weight: 0,
+          size: 0
+        });
+
+        _stack.count++;
+        _stack.weight += stackWeight;
+      }
+    } catch (err) {
+      _iterator5.e(err);
+    } finally {
+      _iterator5.f();
+    }
+
+    return stacks;
+  }
+
   function setLayoutDims(layouts, params) {
+    var stacks = buildStacks(layouts);
+    var vBoxMaxWidth = params.vBoxMaxWidth,
+        hBoxMaxHeight = params.hBoxMaxHeight;
     var i, ilen, layout;
 
     for (i = 0, ilen = layouts.length; i < ilen; ++i) {
       layout = layouts[i];
+      var fullSize = layout.box.fullSize;
+      var stack = stacks[layout.stack];
+      var factor = stack && layout.stackWeight / stack.weight;
 
       if (layout.horizontal) {
-        layout.width = layout.box.fullSize && params.availableWidth;
-        layout.height = params.hBoxMaxHeight;
+        layout.width = factor ? factor * vBoxMaxWidth : fullSize && params.availableWidth;
+        layout.height = hBoxMaxHeight;
       } else {
-        layout.width = params.vBoxMaxWidth;
-        layout.height = layout.box.fullSize && params.availableHeight;
+        layout.width = vBoxMaxWidth;
+        layout.height = factor ? factor * hBoxMaxHeight : fullSize && params.availableHeight;
       }
     }
+
+    return stacks;
   }
 
   function buildLayoutBoxes(boxes) {
@@ -7426,17 +7614,23 @@
     maxPadding.right = Math.max(maxPadding.right, boxPadding.right);
   }
 
-  function updateDims(chartArea, params, layout) {
-    var box = layout.box;
+  function updateDims(chartArea, params, layout, stacks) {
+    var pos = layout.pos,
+        box = layout.box;
     var maxPadding = chartArea.maxPadding;
 
-    if (!isObject(layout.pos)) {
+    if (!isObject(pos)) {
       if (layout.size) {
-        chartArea[layout.pos] -= layout.size;
+        chartArea[pos] -= layout.size;
       }
 
-      layout.size = layout.horizontal ? box.height : box.width;
-      chartArea[layout.pos] += layout.size;
+      var stack = stacks[layout.stack] || {
+        size: 0,
+        count: 1
+      };
+      stack.size = Math.max(stack.size, layout.horizontal ? box.height : box.width);
+      layout.size = stack.size / stack.count;
+      chartArea[pos] += layout.size;
     }
 
     if (box.getPadding) {
@@ -7492,7 +7686,7 @@
     return horizontal ? marginForPositions(['left', 'right']) : marginForPositions(['top', 'bottom']);
   }
 
-  function fitBoxes(boxes, chartArea, params) {
+  function fitBoxes(boxes, chartArea, params, stacks) {
     var refitBoxes = [];
     var i, ilen, layout, box, refit, changed;
 
@@ -7501,7 +7695,7 @@
       box = layout.box;
       box.update(layout.width || chartArea.w, layout.height || chartArea.h, getMargins(layout.horizontal, chartArea));
 
-      var _updateDims = updateDims(chartArea, params, layout),
+      var _updateDims = updateDims(chartArea, params, layout, stacks),
           same = _updateDims.same,
           other = _updateDims.other;
 
@@ -7513,34 +7707,78 @@
       }
     }
 
-    return refit && fitBoxes(refitBoxes, chartArea, params) || changed;
+    return refit && fitBoxes(refitBoxes, chartArea, params, stacks) || changed;
   }
 
-  function placeBoxes(boxes, chartArea, params) {
+  function setBoxDims(box, left, top, width, height) {
+    box.top = top;
+    box.left = left;
+    box.right = left + width;
+    box.bottom = top + height;
+    box.width = width;
+    box.height = height;
+  }
+
+  function placeBoxes(boxes, chartArea, params, stacks) {
     var userPadding = params.padding;
-    var x = chartArea.x;
-    var y = chartArea.y;
-    var i, ilen, layout, box;
+    var x = chartArea.x,
+        y = chartArea.y;
 
-    for (i = 0, ilen = boxes.length; i < ilen; ++i) {
-      layout = boxes[i];
-      box = layout.box;
+    var _iterator6 = _createForOfIteratorHelper(boxes),
+        _step6;
 
-      if (layout.horizontal) {
-        box.left = box.fullSize ? userPadding.left : chartArea.left;
-        box.right = box.fullSize ? params.outerWidth - userPadding.right : chartArea.left + chartArea.w;
-        box.top = y;
-        box.bottom = y + box.height;
-        box.width = box.right - box.left;
-        y = box.bottom;
-      } else {
-        box.left = x;
-        box.right = x + box.width;
-        box.top = box.fullSize ? userPadding.top : chartArea.top;
-        box.bottom = box.fullSize ? params.outerHeight - userPadding.bottom : chartArea.top + chartArea.h;
-        box.height = box.bottom - box.top;
-        x = box.right;
+    try {
+      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+        var layout = _step6.value;
+        var box = layout.box;
+        var stack = stacks[layout.stack] || {
+          count: 1,
+          placed: 0,
+          weight: 1
+        };
+        var weight = layout.stackWeight / stack.weight || 1;
+
+        if (layout.horizontal) {
+          var width = chartArea.w * weight;
+          var height = stack.size || box.height;
+
+          if (defined(stack.start)) {
+            y = stack.start;
+          }
+
+          if (box.fullSize) {
+            setBoxDims(box, userPadding.left, y, params.outerWidth - userPadding.right - userPadding.left, height);
+          } else {
+            setBoxDims(box, chartArea.left + stack.placed, y, width, height);
+          }
+
+          stack.start = y;
+          stack.placed += width;
+          y = box.bottom;
+        } else {
+          var _height = chartArea.h * weight;
+
+          var _width = stack.size || box.width;
+
+          if (defined(stack.start)) {
+            x = stack.start;
+          }
+
+          if (box.fullSize) {
+            setBoxDims(box, x, userPadding.top, _width, params.outerHeight - userPadding.bottom - userPadding.top);
+          } else {
+            setBoxDims(box, x, chartArea.top + stack.placed, _width, _height);
+          }
+
+          stack.start = x;
+          stack.placed += _height;
+          x = box.right;
+        }
       }
+    } catch (err) {
+      _iterator6.e(err);
+    } finally {
+      _iterator6.f();
     }
 
     chartArea.x = x;
@@ -7548,6 +7786,7 @@
   }
 
   defaults.set('layout', {
+    autoPadding: true,
     padding: {
       top: 0,
       right: 0,
@@ -7625,19 +7864,19 @@
         x: padding.left,
         y: padding.top
       }, padding);
-      setLayoutDims(verticalBoxes.concat(horizontalBoxes), params);
-      fitBoxes(boxes.fullSize, chartArea, params);
-      fitBoxes(verticalBoxes, chartArea, params);
+      var stacks = setLayoutDims(verticalBoxes.concat(horizontalBoxes), params);
+      fitBoxes(boxes.fullSize, chartArea, params, stacks);
+      fitBoxes(verticalBoxes, chartArea, params, stacks);
 
-      if (fitBoxes(horizontalBoxes, chartArea, params)) {
-        fitBoxes(verticalBoxes, chartArea, params);
+      if (fitBoxes(horizontalBoxes, chartArea, params, stacks)) {
+        fitBoxes(verticalBoxes, chartArea, params, stacks);
       }
 
       handleMaxPadding(chartArea);
-      placeBoxes(boxes.leftAndTop, chartArea, params);
+      placeBoxes(boxes.leftAndTop, chartArea, params, stacks);
       chartArea.x += chartArea.w;
       chartArea.y += chartArea.h;
-      placeBoxes(boxes.rightAndBottom, chartArea, params);
+      placeBoxes(boxes.rightAndBottom, chartArea, params, stacks);
       chart.chartArea = {
         left: chartArea.left,
         top: chartArea.top,
@@ -7693,6 +7932,9 @@
       value: function isAttached(canvas) {
         return true;
       }
+    }, {
+      key: "updateConfig",
+      value: function updateConfig(config) {}
     }]);
 
     return BasePlatform;
@@ -7713,6 +7955,11 @@
       key: "acquireContext",
       value: function acquireContext(item) {
         return item && item.getContext && item.getContext('2d') || null;
+      }
+    }, {
+      key: "updateConfig",
+      value: function updateConfig(config) {
+        config.options.animation = false;
       }
     }]);
 
@@ -7807,22 +8054,36 @@
 
   function createAttachObserver(chart, type, listener) {
     var canvas = chart.canvas;
-
-    var container = canvas && _getParentNode(canvas);
-
-    var element = container || canvas;
     var observer = new MutationObserver(function (entries) {
-      var parent = _getParentNode(element);
+      var _iterator7 = _createForOfIteratorHelper(entries),
+          _step7;
 
-      entries.forEach(function (entry) {
-        for (var i = 0; i < entry.addedNodes.length; i++) {
-          var added = entry.addedNodes[i];
+      try {
+        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+          var entry = _step7.value;
 
-          if (added === element || added === parent) {
-            listener(entry.target);
+          var _iterator8 = _createForOfIteratorHelper(entry.addedNodes),
+              _step8;
+
+          try {
+            for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+              var node = _step8.value;
+
+              if (node === canvas || node.contains(canvas)) {
+                return listener();
+              }
+            }
+          } catch (err) {
+            _iterator8.e(err);
+          } finally {
+            _iterator8.f();
           }
         }
-      });
+      } catch (err) {
+        _iterator7.e(err);
+      } finally {
+        _iterator7.f();
+      }
     });
     observer.observe(document, {
       childList: true,
@@ -7833,25 +8094,40 @@
 
   function createDetachObserver(chart, type, listener) {
     var canvas = chart.canvas;
-
-    var container = canvas && _getParentNode(canvas);
-
-    if (!container) {
-      return;
-    }
-
     var observer = new MutationObserver(function (entries) {
-      entries.forEach(function (entry) {
-        for (var i = 0; i < entry.removedNodes.length; i++) {
-          if (entry.removedNodes[i] === canvas) {
-            listener();
-            break;
+      var _iterator9 = _createForOfIteratorHelper(entries),
+          _step9;
+
+      try {
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var entry = _step9.value;
+
+          var _iterator10 = _createForOfIteratorHelper(entry.removedNodes),
+              _step10;
+
+          try {
+            for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+              var node = _step10.value;
+
+              if (node === canvas || node.contains(canvas)) {
+                return listener();
+              }
+            }
+          } catch (err) {
+            _iterator10.e(err);
+          } finally {
+            _iterator10.f();
           }
         }
-      });
+      } catch (err) {
+        _iterator9.e(err);
+      } finally {
+        _iterator9.f();
+      }
     });
-    observer.observe(container, {
-      childList: true
+    observer.observe(document, {
+      childList: true,
+      subtree: true
     });
     return observer;
   }
@@ -8044,12 +8320,20 @@
       value: function isAttached(canvas) {
         var container = _getParentNode(canvas);
 
-        return !!(container && _getParentNode(container));
+        return !!(container && container.isConnected);
       }
     }]);
 
     return DomPlatform;
   }(BasePlatform);
+
+  function _detectPlatform(canvas) {
+    if (!_isDomSupported() || typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas) {
+      return BasicPlatform;
+    }
+
+    return DomPlatform;
+  }
 
   var Element = /*#__PURE__*/function () {
     function Element() {
@@ -8082,16 +8366,17 @@
     }, {
       key: "getProps",
       value: function getProps(props, final) {
-        var me = this;
+        var _this7 = this;
+
         var anims = this.$animations;
 
         if (!final || !anims) {
-          return me;
+          return this;
         }
 
         var ret = {};
         props.forEach(function (prop) {
-          ret[prop] = anims[prop] && anims[prop].active() ? anims[prop]._to : me[prop];
+          ret[prop] = anims[prop] && anims[prop].active() ? anims[prop]._to : _this7[prop];
         });
         return ret;
       }
@@ -8460,14 +8745,14 @@
   }
 
   function createScaleContext(parent, scale) {
-    return Object.assign(Object.create(parent), {
+    return createContext(parent, {
       scale: scale,
       type: 'scale'
     });
   }
 
   function createTickContext(parent, index, tick) {
-    return Object.assign(Object.create(parent), {
+    return createContext(parent, {
       tick: tick,
       index: index,
       type: 'tick'
@@ -8488,16 +8773,40 @@
     var top = scale.top,
         left = scale.left,
         bottom = scale.bottom,
-        right = scale.right;
+        right = scale.right,
+        chart = scale.chart;
+    var chartArea = chart.chartArea,
+        scales = chart.scales;
     var rotation = 0;
     var maxWidth, titleX, titleY;
+    var height = bottom - top;
+    var width = right - left;
 
     if (scale.isHorizontal()) {
       titleX = _alignStartEnd(align, left, right);
-      titleY = offsetFromEdge(scale, position, offset);
+
+      if (isObject(position)) {
+        var positionAxisID = Object.keys(position)[0];
+        var value = position[positionAxisID];
+        titleY = scales[positionAxisID].getPixelForValue(value) + height - offset;
+      } else if (position === 'center') {
+        titleY = (chartArea.bottom + chartArea.top) / 2 + height - offset;
+      } else {
+        titleY = offsetFromEdge(scale, position, offset);
+      }
+
       maxWidth = right - left;
     } else {
-      titleX = offsetFromEdge(scale, position, offset);
+      if (isObject(position)) {
+        var _positionAxisID = Object.keys(position)[0];
+        var _value = position[_positionAxisID];
+        titleX = scales[_positionAxisID].getPixelForValue(_value) - width + offset;
+      } else if (position === 'center') {
+        titleX = (chartArea.left + chartArea.right) / 2 - width + offset;
+      } else {
+        titleX = offsetFromEdge(scale, position, offset);
+      }
+
       titleY = _alignStartEnd(align, bottom, top);
       rotation = position === 'left' ? -HALF_PI : HALF_PI;
     }
@@ -8516,71 +8825,70 @@
     var _super11 = _createSuper(Scale);
 
     function Scale(cfg) {
-      var _this4;
+      var _this8;
 
       _classCallCheck(this, Scale);
 
-      _this4 = _super11.call(this);
-      _this4.id = cfg.id;
-      _this4.type = cfg.type;
-      _this4.options = undefined;
-      _this4.ctx = cfg.ctx;
-      _this4.chart = cfg.chart;
-      _this4.top = undefined;
-      _this4.bottom = undefined;
-      _this4.left = undefined;
-      _this4.right = undefined;
-      _this4.width = undefined;
-      _this4.height = undefined;
-      _this4._margins = {
+      _this8 = _super11.call(this);
+      _this8.id = cfg.id;
+      _this8.type = cfg.type;
+      _this8.options = undefined;
+      _this8.ctx = cfg.ctx;
+      _this8.chart = cfg.chart;
+      _this8.top = undefined;
+      _this8.bottom = undefined;
+      _this8.left = undefined;
+      _this8.right = undefined;
+      _this8.width = undefined;
+      _this8.height = undefined;
+      _this8._margins = {
         left: 0,
         right: 0,
         top: 0,
         bottom: 0
       };
-      _this4.maxWidth = undefined;
-      _this4.maxHeight = undefined;
-      _this4.paddingTop = undefined;
-      _this4.paddingBottom = undefined;
-      _this4.paddingLeft = undefined;
-      _this4.paddingRight = undefined;
-      _this4.axis = undefined;
-      _this4.labelRotation = undefined;
-      _this4.min = undefined;
-      _this4.max = undefined;
-      _this4._range = undefined;
-      _this4.ticks = [];
-      _this4._gridLineItems = null;
-      _this4._labelItems = null;
-      _this4._labelSizes = null;
-      _this4._length = 0;
-      _this4._maxLength = 0;
-      _this4._longestTextCache = {};
-      _this4._startPixel = undefined;
-      _this4._endPixel = undefined;
-      _this4._reversePixels = false;
-      _this4._userMax = undefined;
-      _this4._userMin = undefined;
-      _this4._suggestedMax = undefined;
-      _this4._suggestedMin = undefined;
-      _this4._ticksLength = 0;
-      _this4._borderValue = 0;
-      _this4._cache = {};
-      _this4._dataLimitsCached = false;
-      _this4.$context = undefined;
-      return _this4;
+      _this8.maxWidth = undefined;
+      _this8.maxHeight = undefined;
+      _this8.paddingTop = undefined;
+      _this8.paddingBottom = undefined;
+      _this8.paddingLeft = undefined;
+      _this8.paddingRight = undefined;
+      _this8.axis = undefined;
+      _this8.labelRotation = undefined;
+      _this8.min = undefined;
+      _this8.max = undefined;
+      _this8._range = undefined;
+      _this8.ticks = [];
+      _this8._gridLineItems = null;
+      _this8._labelItems = null;
+      _this8._labelSizes = null;
+      _this8._length = 0;
+      _this8._maxLength = 0;
+      _this8._longestTextCache = {};
+      _this8._startPixel = undefined;
+      _this8._endPixel = undefined;
+      _this8._reversePixels = false;
+      _this8._userMax = undefined;
+      _this8._userMin = undefined;
+      _this8._suggestedMax = undefined;
+      _this8._suggestedMin = undefined;
+      _this8._ticksLength = 0;
+      _this8._borderValue = 0;
+      _this8._cache = {};
+      _this8._dataLimitsCached = false;
+      _this8.$context = undefined;
+      return _this8;
     }
 
     _createClass(Scale, [{
       key: "init",
       value: function init(options) {
-        var me = this;
-        me.options = options.setContext(me.getContext());
-        me.axis = options.axis;
-        me._userMin = me.parse(options.min);
-        me._userMax = me.parse(options.max);
-        me._suggestedMin = me.parse(options.suggestedMin);
-        me._suggestedMax = me.parse(options.suggestedMax);
+        this.options = options.setContext(this.getContext());
+        this.axis = options.axis;
+        this._userMin = this.parse(options.min);
+        this._userMax = this.parse(options.max);
+        this._suggestedMin = this.parse(options.suggestedMin);
+        this._suggestedMax = this.parse(options.suggestedMax);
       }
     }, {
       key: "parse",
@@ -8608,13 +8916,11 @@
     }, {
       key: "getMinMax",
       value: function getMinMax(canStack) {
-        var me = this;
-
-        var _me$getUserBounds = me.getUserBounds(),
-            min = _me$getUserBounds.min,
-            max = _me$getUserBounds.max,
-            minDefined = _me$getUserBounds.minDefined,
-            maxDefined = _me$getUserBounds.maxDefined;
+        var _this$getUserBounds = this.getUserBounds(),
+            min = _this$getUserBounds.min,
+            max = _this$getUserBounds.max,
+            minDefined = _this$getUserBounds.minDefined,
+            maxDefined = _this$getUserBounds.maxDefined;
 
         var range;
 
@@ -8625,10 +8931,10 @@
           };
         }
 
-        var metas = me.getMatchingVisibleMetas();
+        var metas = this.getMatchingVisibleMetas();
 
         for (var i = 0, ilen = metas.length; i < ilen; ++i) {
-          range = metas[i].controller.getMinMax(me, canStack);
+          range = metas[i].controller.getMinMax(this, canStack);
 
           if (!minDefined) {
             min = Math.min(min, range.min);
@@ -8639,6 +8945,8 @@
           }
         }
 
+        min = maxDefined && min > max ? max : min;
+        max = minDefined && min > max ? min : max;
         return {
           min: finiteOrDefault(min, finiteOrDefault(max, min)),
           max: finiteOrDefault(max, finiteOrDefault(min, max))
@@ -8647,12 +8955,11 @@
     }, {
       key: "getPadding",
       value: function getPadding() {
-        var me = this;
         return {
-          left: me.paddingLeft || 0,
-          top: me.paddingTop || 0,
-          right: me.paddingRight || 0,
-          bottom: me.paddingBottom || 0
+          left: this.paddingLeft || 0,
+          top: this.paddingTop || 0,
+          right: this.paddingRight || 0,
+          bottom: this.paddingBottom || 0
         };
       }
     }, {
@@ -8680,82 +8987,83 @@
     }, {
       key: "update",
       value: function update(maxWidth, maxHeight, margins) {
-        var me = this;
-        var tickOpts = me.options.ticks;
+        var _this$options3 = this.options,
+            beginAtZero = _this$options3.beginAtZero,
+            grace = _this$options3.grace,
+            tickOpts = _this$options3.ticks;
         var sampleSize = tickOpts.sampleSize;
-        me.beforeUpdate();
-        me.maxWidth = maxWidth;
-        me.maxHeight = maxHeight;
-        me._margins = margins = Object.assign({
+        this.beforeUpdate();
+        this.maxWidth = maxWidth;
+        this.maxHeight = maxHeight;
+        this._margins = margins = Object.assign({
           left: 0,
           right: 0,
           top: 0,
           bottom: 0
         }, margins);
-        me.ticks = null;
-        me._labelSizes = null;
-        me._gridLineItems = null;
-        me._labelItems = null;
-        me.beforeSetDimensions();
-        me.setDimensions();
-        me.afterSetDimensions();
-        me._maxLength = me.isHorizontal() ? me.width + margins.left + margins.right : me.height + margins.top + margins.bottom;
+        this.ticks = null;
+        this._labelSizes = null;
+        this._gridLineItems = null;
+        this._labelItems = null;
+        this.beforeSetDimensions();
+        this.setDimensions();
+        this.afterSetDimensions();
+        this._maxLength = this.isHorizontal() ? this.width + margins.left + margins.right : this.height + margins.top + margins.bottom;
 
-        if (!me._dataLimitsCached) {
-          me.beforeDataLimits();
-          me.determineDataLimits();
-          me.afterDataLimits();
-          me._range = _addGrace(me, me.options.grace);
-          me._dataLimitsCached = true;
+        if (!this._dataLimitsCached) {
+          this.beforeDataLimits();
+          this.determineDataLimits();
+          this.afterDataLimits();
+          this._range = _addGrace(this, grace, beginAtZero);
+          this._dataLimitsCached = true;
         }
 
-        me.beforeBuildTicks();
-        me.ticks = me.buildTicks() || [];
-        me.afterBuildTicks();
-        var samplingEnabled = sampleSize < me.ticks.length;
+        this.beforeBuildTicks();
+        this.ticks = this.buildTicks() || [];
+        this.afterBuildTicks();
+        var samplingEnabled = sampleSize < this.ticks.length;
 
-        me._convertTicksToLabels(samplingEnabled ? sample(me.ticks, sampleSize) : me.ticks);
+        this._convertTicksToLabels(samplingEnabled ? sample(this.ticks, sampleSize) : this.ticks);
 
-        me.configure();
-        me.beforeCalculateLabelRotation();
-        me.calculateLabelRotation();
-        me.afterCalculateLabelRotation();
+        this.configure();
+        this.beforeCalculateLabelRotation();
+        this.calculateLabelRotation();
+        this.afterCalculateLabelRotation();
 
         if (tickOpts.display && (tickOpts.autoSkip || tickOpts.source === 'auto')) {
-          me.ticks = autoSkip(me, me.ticks);
-          me._labelSizes = null;
+          this.ticks = autoSkip(this, this.ticks);
+          this._labelSizes = null;
         }
 
         if (samplingEnabled) {
-          me._convertTicksToLabels(me.ticks);
+          this._convertTicksToLabels(this.ticks);
         }
 
-        me.beforeFit();
-        me.fit();
-        me.afterFit();
-        me.afterUpdate();
+        this.beforeFit();
+        this.fit();
+        this.afterFit();
+        this.afterUpdate();
       }
     }, {
       key: "configure",
       value: function configure() {
-        var me = this;
-        var reversePixels = me.options.reverse;
+        var reversePixels = this.options.reverse;
         var startPixel, endPixel;
 
-        if (me.isHorizontal()) {
-          startPixel = me.left;
-          endPixel = me.right;
+        if (this.isHorizontal()) {
+          startPixel = this.left;
+          endPixel = this.right;
         } else {
-          startPixel = me.top;
-          endPixel = me.bottom;
+          startPixel = this.top;
+          endPixel = this.bottom;
           reversePixels = !reversePixels;
         }
 
-        me._startPixel = startPixel;
-        me._endPixel = endPixel;
-        me._reversePixels = reversePixels;
-        me._length = endPixel - startPixel;
-        me._alignToPixels = me.options.alignToPixels;
+        this._startPixel = startPixel;
+        this._endPixel = endPixel;
+        this._reversePixels = reversePixels;
+        this._length = endPixel - startPixel;
+        this._alignToPixels = this.options.alignToPixels;
       }
     }, {
       key: "afterUpdate",
@@ -8770,22 +9078,20 @@
     }, {
       key: "setDimensions",
       value: function setDimensions() {
-        var me = this;
-
-        if (me.isHorizontal()) {
-          me.width = me.maxWidth;
-          me.left = 0;
-          me.right = me.width;
+        if (this.isHorizontal()) {
+          this.width = this.maxWidth;
+          this.left = 0;
+          this.right = this.width;
         } else {
-          me.height = me.maxHeight;
-          me.top = 0;
-          me.bottom = me.height;
+          this.height = this.maxHeight;
+          this.top = 0;
+          this.bottom = this.height;
         }
 
-        me.paddingLeft = 0;
-        me.paddingTop = 0;
-        me.paddingRight = 0;
-        me.paddingBottom = 0;
+        this.paddingLeft = 0;
+        this.paddingTop = 0;
+        this.paddingRight = 0;
+        this.paddingBottom = 0;
       }
     }, {
       key: "afterSetDimensions",
@@ -8795,9 +9101,8 @@
     }, {
       key: "_callHooks",
       value: function _callHooks(name) {
-        var me = this;
-        me.chart.notifyPlugins(name, me.getContext());
-        callback(me.options[name], [me]);
+        this.chart.notifyPlugins(name, this.getContext());
+        callback(this.options[name], [this]);
       }
     }, {
       key: "beforeDataLimits",
@@ -8835,13 +9140,12 @@
     }, {
       key: "generateTickLabels",
       value: function generateTickLabels(ticks) {
-        var me = this;
-        var tickOpts = me.options.ticks;
+        var tickOpts = this.options.ticks;
         var i, ilen, tick;
 
         for (i = 0, ilen = ticks.length; i < ilen; i++) {
           tick = ticks[i];
-          tick.label = callback(tickOpts.callback, [tick.value, i, ticks], me);
+          tick.label = callback(tickOpts.callback, [tick.value, i, ticks], this);
         }
       }
     }, {
@@ -8857,38 +9161,37 @@
     }, {
       key: "calculateLabelRotation",
       value: function calculateLabelRotation() {
-        var me = this;
-        var options = me.options;
+        var options = this.options;
         var tickOpts = options.ticks;
-        var numTicks = me.ticks.length;
+        var numTicks = this.ticks.length;
         var minRotation = tickOpts.minRotation || 0;
         var maxRotation = tickOpts.maxRotation;
         var labelRotation = minRotation;
         var tickWidth, maxHeight, maxLabelDiagonal;
 
-        if (!me._isVisible() || !tickOpts.display || minRotation >= maxRotation || numTicks <= 1 || !me.isHorizontal()) {
-          me.labelRotation = minRotation;
+        if (!this._isVisible() || !tickOpts.display || minRotation >= maxRotation || numTicks <= 1 || !this.isHorizontal()) {
+          this.labelRotation = minRotation;
           return;
         }
 
-        var labelSizes = me._getLabelSizes();
+        var labelSizes = this._getLabelSizes();
 
         var maxLabelWidth = labelSizes.widest.width;
         var maxLabelHeight = labelSizes.highest.height;
 
-        var maxWidth = _limitValue(me.chart.width - maxLabelWidth, 0, me.maxWidth);
+        var maxWidth = _limitValue(this.chart.width - maxLabelWidth, 0, this.maxWidth);
 
-        tickWidth = options.offset ? me.maxWidth / numTicks : maxWidth / (numTicks - 1);
+        tickWidth = options.offset ? this.maxWidth / numTicks : maxWidth / (numTicks - 1);
 
         if (maxLabelWidth + 6 > tickWidth) {
           tickWidth = maxWidth / (numTicks - (options.offset ? 0.5 : 1));
-          maxHeight = me.maxHeight - getTickMarkLength(options.grid) - tickOpts.padding - getTitleHeight(options.title, me.chart.options.font);
+          maxHeight = this.maxHeight - getTickMarkLength(options.grid) - tickOpts.padding - getTitleHeight(options.title, this.chart.options.font);
           maxLabelDiagonal = Math.sqrt(maxLabelWidth * maxLabelWidth + maxLabelHeight * maxLabelHeight);
-          labelRotation = toDegrees(Math.min(Math.asin(Math.min((labelSizes.highest.height + 6) / tickWidth, 1)), Math.asin(Math.min(maxHeight / maxLabelDiagonal, 1)) - Math.asin(maxLabelHeight / maxLabelDiagonal)));
+          labelRotation = toDegrees(Math.min(Math.asin(_limitValue((labelSizes.highest.height + 6) / tickWidth, -1, 1)), Math.asin(_limitValue(maxHeight / maxLabelDiagonal, -1, 1)) - Math.asin(_limitValue(maxLabelHeight / maxLabelDiagonal, -1, 1))));
           labelRotation = Math.max(minRotation, Math.min(maxRotation, labelRotation));
         }
 
-        me.labelRotation = labelRotation;
+        this.labelRotation = labelRotation;
       }
     }, {
       key: "afterCalculateLabelRotation",
@@ -8903,81 +9206,79 @@
     }, {
       key: "fit",
       value: function fit() {
-        var me = this;
         var minSize = {
           width: 0,
           height: 0
         };
-        var chart = me.chart,
-            _me$options2 = me.options,
-            tickOpts = _me$options2.ticks,
-            titleOpts = _me$options2.title,
-            gridOpts = _me$options2.grid;
+        var chart = this.chart,
+            _this$options4 = this.options,
+            tickOpts = _this$options4.ticks,
+            titleOpts = _this$options4.title,
+            gridOpts = _this$options4.grid;
 
-        var display = me._isVisible();
+        var display = this._isVisible();
 
-        var isHorizontal = me.isHorizontal();
+        var isHorizontal = this.isHorizontal();
 
         if (display) {
           var titleHeight = getTitleHeight(titleOpts, chart.options.font);
 
           if (isHorizontal) {
-            minSize.width = me.maxWidth;
+            minSize.width = this.maxWidth;
             minSize.height = getTickMarkLength(gridOpts) + titleHeight;
           } else {
-            minSize.height = me.maxHeight;
+            minSize.height = this.maxHeight;
             minSize.width = getTickMarkLength(gridOpts) + titleHeight;
           }
 
-          if (tickOpts.display && me.ticks.length) {
-            var _me$_getLabelSizes = me._getLabelSizes(),
-                first = _me$_getLabelSizes.first,
-                last = _me$_getLabelSizes.last,
-                widest = _me$_getLabelSizes.widest,
-                highest = _me$_getLabelSizes.highest;
+          if (tickOpts.display && this.ticks.length) {
+            var _this$_getLabelSizes = this._getLabelSizes(),
+                first = _this$_getLabelSizes.first,
+                last = _this$_getLabelSizes.last,
+                widest = _this$_getLabelSizes.widest,
+                highest = _this$_getLabelSizes.highest;
 
             var tickPadding = tickOpts.padding * 2;
-            var angleRadians = toRadians(me.labelRotation);
+            var angleRadians = toRadians(this.labelRotation);
             var cos = Math.cos(angleRadians);
             var sin = Math.sin(angleRadians);
 
             if (isHorizontal) {
               var labelHeight = tickOpts.mirror ? 0 : sin * widest.width + cos * highest.height;
-              minSize.height = Math.min(me.maxHeight, minSize.height + labelHeight + tickPadding);
+              minSize.height = Math.min(this.maxHeight, minSize.height + labelHeight + tickPadding);
             } else {
               var labelWidth = tickOpts.mirror ? 0 : cos * widest.width + sin * highest.height;
-              minSize.width = Math.min(me.maxWidth, minSize.width + labelWidth + tickPadding);
+              minSize.width = Math.min(this.maxWidth, minSize.width + labelWidth + tickPadding);
             }
 
-            me._calculatePadding(first, last, sin, cos);
+            this._calculatePadding(first, last, sin, cos);
           }
         }
 
-        me._handleMargins();
+        this._handleMargins();
 
         if (isHorizontal) {
-          me.width = me._length = chart.width - me._margins.left - me._margins.right;
-          me.height = minSize.height;
+          this.width = this._length = chart.width - this._margins.left - this._margins.right;
+          this.height = minSize.height;
         } else {
-          me.width = minSize.width;
-          me.height = me._length = chart.height - me._margins.top - me._margins.bottom;
+          this.width = minSize.width;
+          this.height = this._length = chart.height - this._margins.top - this._margins.bottom;
         }
       }
     }, {
       key: "_calculatePadding",
       value: function _calculatePadding(first, last, sin, cos) {
-        var me = this;
-        var _me$options3 = me.options,
-            _me$options3$ticks = _me$options3.ticks,
-            align = _me$options3$ticks.align,
-            padding = _me$options3$ticks.padding,
-            position = _me$options3.position;
-        var isRotated = me.labelRotation !== 0;
-        var labelsBelowTicks = position !== 'top' && me.axis === 'x';
+        var _this$options5 = this.options,
+            _this$options5$ticks = _this$options5.ticks,
+            align = _this$options5$ticks.align,
+            padding = _this$options5$ticks.padding,
+            position = _this$options5.position;
+        var isRotated = this.labelRotation !== 0;
+        var labelsBelowTicks = position !== 'top' && this.axis === 'x';
 
-        if (me.isHorizontal()) {
-          var offsetLeft = me.getPixelForTick(0) - me.left;
-          var offsetRight = me.right - me.getPixelForTick(me.ticks.length - 1);
+        if (this.isHorizontal()) {
+          var offsetLeft = this.getPixelForTick(0) - this.left;
+          var offsetRight = this.right - this.getPixelForTick(this.ticks.length - 1);
           var paddingLeft = 0;
           var paddingRight = 0;
 
@@ -8998,8 +9299,8 @@
             paddingRight = last.width / 2;
           }
 
-          me.paddingLeft = Math.max((paddingLeft - offsetLeft + padding) * me.width / (me.width - offsetLeft), 0);
-          me.paddingRight = Math.max((paddingRight - offsetRight + padding) * me.width / (me.width - offsetRight), 0);
+          this.paddingLeft = Math.max((paddingLeft - offsetLeft + padding) * this.width / (this.width - offsetLeft), 0);
+          this.paddingRight = Math.max((paddingRight - offsetRight + padding) * this.width / (this.width - offsetRight), 0);
         } else {
           var paddingTop = last.height / 2;
           var paddingBottom = first.height / 2;
@@ -9012,20 +9313,18 @@
             paddingBottom = 0;
           }
 
-          me.paddingTop = paddingTop + padding;
-          me.paddingBottom = paddingBottom + padding;
+          this.paddingTop = paddingTop + padding;
+          this.paddingBottom = paddingBottom + padding;
         }
       }
     }, {
       key: "_handleMargins",
       value: function _handleMargins() {
-        var me = this;
-
-        if (me._margins) {
-          me._margins.left = Math.max(me.paddingLeft, me._margins.left);
-          me._margins.top = Math.max(me.paddingTop, me._margins.top);
-          me._margins.right = Math.max(me.paddingRight, me._margins.right);
-          me._margins.bottom = Math.max(me.paddingBottom, me._margins.bottom);
+        if (this._margins) {
+          this._margins.left = Math.max(this.paddingLeft, this._margins.left);
+          this._margins.top = Math.max(this.paddingTop, this._margins.top);
+          this._margins.right = Math.max(this.paddingRight, this._margins.right);
+          this._margins.bottom = Math.max(this.paddingBottom, this._margins.bottom);
         }
       }
     }, {
@@ -9036,9 +9335,9 @@
     }, {
       key: "isHorizontal",
       value: function isHorizontal() {
-        var _this$options = this.options,
-            axis = _this$options.axis,
-            position = _this$options.position;
+        var _this$options6 = this.options,
+            axis = _this$options6.axis,
+            position = _this$options6.position;
         return position === 'top' || position === 'bottom' || axis === 'x';
       }
     }, {
@@ -9049,9 +9348,8 @@
     }, {
       key: "_convertTicksToLabels",
       value: function _convertTicksToLabels(ticks) {
-        var me = this;
-        me.beforeTickToLabelConversion();
-        me.generateTickLabels(ticks);
+        this.beforeTickToLabelConversion();
+        this.generateTickLabels(ticks);
         var i, ilen;
 
         for (i = 0, ilen = ticks.length; i < ilen; i++) {
@@ -9062,23 +9360,22 @@
           }
         }
 
-        me.afterTickToLabelConversion();
+        this.afterTickToLabelConversion();
       }
     }, {
       key: "_getLabelSizes",
       value: function _getLabelSizes() {
-        var me = this;
-        var labelSizes = me._labelSizes;
+        var labelSizes = this._labelSizes;
 
         if (!labelSizes) {
-          var sampleSize = me.options.ticks.sampleSize;
-          var ticks = me.ticks;
+          var sampleSize = this.options.ticks.sampleSize;
+          var ticks = this.ticks;
 
           if (sampleSize < ticks.length) {
             ticks = sample(ticks, sampleSize);
           }
 
-          me._labelSizes = labelSizes = me._computeLabelSizes(ticks, ticks.length);
+          this._labelSizes = labelSizes = this._computeLabelSizes(ticks, ticks.length);
         }
 
         return labelSizes;
@@ -9172,14 +9469,12 @@
     }, {
       key: "getPixelForDecimal",
       value: function getPixelForDecimal(decimal) {
-        var me = this;
-
-        if (me._reversePixels) {
+        if (this._reversePixels) {
           decimal = 1 - decimal;
         }
 
-        var pixel = me._startPixel + decimal * me._length;
-        return _int16Range(me._alignToPixels ? _alignPixel(me.chart, pixel, 0) : pixel);
+        var pixel = this._startPixel + decimal * this._length;
+        return _int16Range(this._alignToPixels ? _alignPixel(this.chart, pixel, 0) : pixel);
       }
     }, {
       key: "getDecimalForPixel",
@@ -9202,31 +9497,29 @@
     }, {
       key: "getContext",
       value: function getContext(index) {
-        var me = this;
-        var ticks = me.ticks || [];
+        var ticks = this.ticks || [];
 
         if (index >= 0 && index < ticks.length) {
           var tick = ticks[index];
-          return tick.$context || (tick.$context = createTickContext(me.getContext(), index, tick));
+          return tick.$context || (tick.$context = createTickContext(this.getContext(), index, tick));
         }
 
-        return me.$context || (me.$context = createScaleContext(me.chart.getContext(), me));
+        return this.$context || (this.$context = createScaleContext(this.chart.getContext(), this));
       }
     }, {
       key: "_tickSize",
       value: function _tickSize() {
-        var me = this;
-        var optionTicks = me.options.ticks;
-        var rot = toRadians(me.labelRotation);
+        var optionTicks = this.options.ticks;
+        var rot = toRadians(this.labelRotation);
         var cos = Math.abs(Math.cos(rot));
         var sin = Math.abs(Math.sin(rot));
 
-        var labelSizes = me._getLabelSizes();
+        var labelSizes = this._getLabelSizes();
 
         var padding = optionTicks.autoSkipPadding || 0;
         var w = labelSizes ? labelSizes.widest.width + padding : 0;
         var h = labelSizes ? labelSizes.highest.height + padding : 0;
-        return me.isHorizontal() ? h * cos > w * sin ? w / cos : h / sin : h * sin < w * cos ? h / cos : w / sin;
+        return this.isHorizontal() ? h * cos > w * sin ? w / cos : h / sin : h * sin < w * cos ? h / cos : w / sin;
       }
     }, {
       key: "_isVisible",
@@ -9242,19 +9535,18 @@
     }, {
       key: "_computeGridLineItems",
       value: function _computeGridLineItems(chartArea) {
-        var me = this;
-        var axis = me.axis;
-        var chart = me.chart;
-        var options = me.options;
+        var axis = this.axis;
+        var chart = this.chart;
+        var options = this.options;
         var grid = options.grid,
             position = options.position;
         var offset = grid.offset;
-        var isHorizontal = me.isHorizontal();
-        var ticks = me.ticks;
+        var isHorizontal = this.isHorizontal();
+        var ticks = this.ticks;
         var ticksLength = ticks.length + (offset ? 1 : 0);
         var tl = getTickMarkLength(grid);
         var items = [];
-        var borderOpts = grid.setContext(me.getContext());
+        var borderOpts = grid.setContext(this.getContext());
         var axisWidth = borderOpts.drawBorder ? borderOpts.borderWidth : 0;
         var axisHalfWidth = axisWidth / 2;
 
@@ -9266,36 +9558,36 @@
         var tx1, ty1, tx2, ty2, x1, y1, x2, y2;
 
         if (position === 'top') {
-          borderValue = alignBorderValue(me.bottom);
-          ty1 = me.bottom - tl;
+          borderValue = alignBorderValue(this.bottom);
+          ty1 = this.bottom - tl;
           ty2 = borderValue - axisHalfWidth;
           y1 = alignBorderValue(chartArea.top) + axisHalfWidth;
           y2 = chartArea.bottom;
         } else if (position === 'bottom') {
-          borderValue = alignBorderValue(me.top);
+          borderValue = alignBorderValue(this.top);
           y1 = chartArea.top;
           y2 = alignBorderValue(chartArea.bottom) - axisHalfWidth;
           ty1 = borderValue + axisHalfWidth;
-          ty2 = me.top + tl;
+          ty2 = this.top + tl;
         } else if (position === 'left') {
-          borderValue = alignBorderValue(me.right);
-          tx1 = me.right - tl;
+          borderValue = alignBorderValue(this.right);
+          tx1 = this.right - tl;
           tx2 = borderValue - axisHalfWidth;
           x1 = alignBorderValue(chartArea.left) + axisHalfWidth;
           x2 = chartArea.right;
         } else if (position === 'right') {
-          borderValue = alignBorderValue(me.left);
+          borderValue = alignBorderValue(this.left);
           x1 = chartArea.left;
           x2 = alignBorderValue(chartArea.right) - axisHalfWidth;
           tx1 = borderValue + axisHalfWidth;
-          tx2 = me.left + tl;
+          tx2 = this.left + tl;
         } else if (axis === 'x') {
           if (position === 'center') {
             borderValue = alignBorderValue((chartArea.top + chartArea.bottom) / 2 + 0.5);
           } else if (isObject(position)) {
             var positionAxisID = Object.keys(position)[0];
             var value = position[positionAxisID];
-            borderValue = alignBorderValue(me.chart.scales[positionAxisID].getPixelForValue(value));
+            borderValue = alignBorderValue(this.chart.scales[positionAxisID].getPixelForValue(value));
           }
 
           y1 = chartArea.top;
@@ -9306,9 +9598,9 @@
           if (position === 'center') {
             borderValue = alignBorderValue((chartArea.left + chartArea.right) / 2);
           } else if (isObject(position)) {
-            var _positionAxisID = Object.keys(position)[0];
-            var _value = position[_positionAxisID];
-            borderValue = alignBorderValue(me.chart.scales[_positionAxisID].getPixelForValue(_value));
+            var _positionAxisID2 = Object.keys(position)[0];
+            var _value2 = position[_positionAxisID2];
+            borderValue = alignBorderValue(this.chart.scales[_positionAxisID2].getPixelForValue(_value2));
           }
 
           tx1 = borderValue - axisHalfWidth;
@@ -9321,7 +9613,7 @@
         var step = Math.max(1, Math.ceil(ticksLength / limit));
 
         for (i = 0; i < ticksLength; i += step) {
-          var optsAtIndex = grid.setContext(me.getContext(i));
+          var optsAtIndex = grid.setContext(this.getContext(i));
           var lineWidth = optsAtIndex.lineWidth;
           var lineColor = optsAtIndex.color;
           var borderDash = grid.borderDash || [];
@@ -9330,7 +9622,7 @@
           var tickColor = optsAtIndex.tickColor;
           var tickBorderDash = optsAtIndex.tickBorderDash || [];
           var tickBorderDashOffset = optsAtIndex.tickBorderDashOffset;
-          lineValue = getPixelForGridLine(me, i, offset);
+          lineValue = getPixelForGridLine(this, i, offset);
 
           if (lineValue === undefined) {
             continue;
@@ -9364,20 +9656,19 @@
           });
         }
 
-        me._ticksLength = ticksLength;
-        me._borderValue = borderValue;
+        this._ticksLength = ticksLength;
+        this._borderValue = borderValue;
         return items;
       }
     }, {
       key: "_computeLabelItems",
       value: function _computeLabelItems(chartArea) {
-        var me = this;
-        var axis = me.axis;
-        var options = me.options;
+        var axis = this.axis;
+        var options = this.options;
         var position = options.position,
             optionTicks = options.ticks;
-        var isHorizontal = me.isHorizontal();
-        var ticks = me.ticks;
+        var isHorizontal = this.isHorizontal();
+        var ticks = this.ticks;
         var align = optionTicks.align,
             crossAlign = optionTicks.crossAlign,
             padding = optionTicks.padding,
@@ -9385,24 +9676,24 @@
         var tl = getTickMarkLength(options.grid);
         var tickAndPadding = tl + padding;
         var hTickAndPadding = mirror ? -padding : tickAndPadding;
-        var rotation = -toRadians(me.labelRotation);
+        var rotation = -toRadians(this.labelRotation);
         var items = [];
         var i, ilen, tick, label, x, y, textAlign, pixel, font, lineHeight, lineCount, textOffset;
         var textBaseline = 'middle';
 
         if (position === 'top') {
-          y = me.bottom - hTickAndPadding;
-          textAlign = me._getXAxisLabelAlignment();
+          y = this.bottom - hTickAndPadding;
+          textAlign = this._getXAxisLabelAlignment();
         } else if (position === 'bottom') {
-          y = me.top + hTickAndPadding;
-          textAlign = me._getXAxisLabelAlignment();
+          y = this.top + hTickAndPadding;
+          textAlign = this._getXAxisLabelAlignment();
         } else if (position === 'left') {
-          var ret = me._getYAxisLabelAlignment(tl);
+          var ret = this._getYAxisLabelAlignment(tl);
 
           textAlign = ret.textAlign;
           x = ret.x;
         } else if (position === 'right') {
-          var _ret = me._getYAxisLabelAlignment(tl);
+          var _ret = this._getYAxisLabelAlignment(tl);
 
           textAlign = _ret.textAlign;
           x = _ret.x;
@@ -9412,20 +9703,20 @@
           } else if (isObject(position)) {
             var positionAxisID = Object.keys(position)[0];
             var value = position[positionAxisID];
-            y = me.chart.scales[positionAxisID].getPixelForValue(value) + tickAndPadding;
+            y = this.chart.scales[positionAxisID].getPixelForValue(value) + tickAndPadding;
           }
 
-          textAlign = me._getXAxisLabelAlignment();
+          textAlign = this._getXAxisLabelAlignment();
         } else if (axis === 'y') {
           if (position === 'center') {
             x = (chartArea.left + chartArea.right) / 2 - tickAndPadding;
           } else if (isObject(position)) {
-            var _positionAxisID2 = Object.keys(position)[0];
-            var _value2 = position[_positionAxisID2];
-            x = me.chart.scales[_positionAxisID2].getPixelForValue(_value2);
+            var _positionAxisID3 = Object.keys(position)[0];
+            var _value3 = position[_positionAxisID3];
+            x = this.chart.scales[_positionAxisID3].getPixelForValue(_value3);
           }
 
-          textAlign = me._getYAxisLabelAlignment(tl).textAlign;
+          textAlign = this._getYAxisLabelAlignment(tl).textAlign;
         }
 
         if (axis === 'y') {
@@ -9436,14 +9727,14 @@
           }
         }
 
-        var labelSizes = me._getLabelSizes();
+        var labelSizes = this._getLabelSizes();
 
         for (i = 0, ilen = ticks.length; i < ilen; ++i) {
           tick = ticks[i];
           label = tick.label;
-          var optsAtIndex = optionTicks.setContext(me.getContext(i));
-          pixel = me.getPixelForTick(i) + optionTicks.labelOffset;
-          font = me._resolveTickFontOptions(i);
+          var optsAtIndex = optionTicks.setContext(this.getContext(i));
+          pixel = this.getPixelForTick(i) + optionTicks.labelOffset;
+          font = this._resolveTickFontOptions(i);
           lineHeight = font.lineHeight;
           lineCount = isArray(label) ? label.length : 1;
           var halfCount = lineCount / 2;
@@ -9538,11 +9829,10 @@
     }, {
       key: "_getXAxisLabelAlignment",
       value: function _getXAxisLabelAlignment() {
-        var me = this;
-        var _me$options4 = me.options,
-            position = _me$options4.position,
-            ticks = _me$options4.ticks;
-        var rotation = -toRadians(me.labelRotation);
+        var _this$options7 = this.options,
+            position = _this$options7.position,
+            ticks = _this$options7.ticks;
+        var rotation = -toRadians(this.labelRotation);
 
         if (rotation) {
           return position === 'top' ? 'left' : 'right';
@@ -9561,15 +9851,14 @@
     }, {
       key: "_getYAxisLabelAlignment",
       value: function _getYAxisLabelAlignment(tl) {
-        var me = this;
-        var _me$options5 = me.options,
-            position = _me$options5.position,
-            _me$options5$ticks = _me$options5.ticks,
-            crossAlign = _me$options5$ticks.crossAlign,
-            mirror = _me$options5$ticks.mirror,
-            padding = _me$options5$ticks.padding;
+        var _this$options8 = this.options,
+            position = _this$options8.position,
+            _this$options8$ticks = _this$options8.ticks,
+            crossAlign = _this$options8$ticks.crossAlign,
+            mirror = _this$options8$ticks.mirror,
+            padding = _this$options8$ticks.padding;
 
-        var labelSizes = me._getLabelSizes();
+        var labelSizes = this._getLabelSizes();
 
         var tickAndPadding = tl + padding;
         var widest = labelSizes.widest.width;
@@ -9578,27 +9867,7 @@
 
         if (position === 'left') {
           if (mirror) {
-            textAlign = 'left';
-            x = me.right + padding;
-          } else {
-            x = me.right - tickAndPadding;
-
-            if (crossAlign === 'near') {
-              textAlign = 'right';
-            } else if (crossAlign === 'center') {
-              textAlign = 'center';
-              x -= widest / 2;
-            } else {
-              textAlign = 'left';
-              x = me.left;
-            }
-          }
-        } else if (position === 'right') {
-          if (mirror) {
-            textAlign = 'right';
-            x = me.left + padding;
-          } else {
-            x = me.left + tickAndPadding;
+            x = this.right + padding;
 
             if (crossAlign === 'near') {
               textAlign = 'left';
@@ -9607,7 +9876,45 @@
               x += widest / 2;
             } else {
               textAlign = 'right';
-              x = me.right;
+              x += widest;
+            }
+          } else {
+            x = this.right - tickAndPadding;
+
+            if (crossAlign === 'near') {
+              textAlign = 'right';
+            } else if (crossAlign === 'center') {
+              textAlign = 'center';
+              x -= widest / 2;
+            } else {
+              textAlign = 'left';
+              x = this.left;
+            }
+          }
+        } else if (position === 'right') {
+          if (mirror) {
+            x = this.left + padding;
+
+            if (crossAlign === 'near') {
+              textAlign = 'right';
+            } else if (crossAlign === 'center') {
+              textAlign = 'center';
+              x -= widest / 2;
+            } else {
+              textAlign = 'left';
+              x -= widest;
+            }
+          } else {
+            x = this.left + tickAndPadding;
+
+            if (crossAlign === 'near') {
+              textAlign = 'left';
+            } else if (crossAlign === 'center') {
+              textAlign = 'center';
+              x += widest / 2;
+            } else {
+              textAlign = 'right';
+              x = this.right;
             }
           }
         } else {
@@ -9622,29 +9929,27 @@
     }, {
       key: "_computeLabelArea",
       value: function _computeLabelArea() {
-        var me = this;
-
-        if (me.options.ticks.mirror) {
+        if (this.options.ticks.mirror) {
           return;
         }
 
-        var chart = me.chart;
-        var position = me.options.position;
+        var chart = this.chart;
+        var position = this.options.position;
 
         if (position === 'left' || position === 'right') {
           return {
             top: 0,
-            left: me.left,
+            left: this.left,
             bottom: chart.height,
-            right: me.right
+            right: this.right
           };
         }
 
         if (position === 'top' || position === 'bottom') {
           return {
-            top: me.top,
+            top: this.top,
             left: 0,
-            bottom: me.bottom,
+            bottom: this.bottom,
             right: chart.width
           };
         }
@@ -9669,20 +9974,19 @@
     }, {
       key: "getLineWidthForValue",
       value: function getLineWidthForValue(value) {
-        var me = this;
-        var grid = me.options.grid;
+        var grid = this.options.grid;
 
-        if (!me._isVisible() || !grid.display) {
+        if (!this._isVisible() || !grid.display) {
           return 0;
         }
 
-        var ticks = me.ticks;
+        var ticks = this.ticks;
         var index = ticks.findIndex(function (t) {
           return t.value === value;
         });
 
         if (index >= 0) {
-          var opts = grid.setContext(me.getContext(index));
+          var opts = grid.setContext(this.getContext(index));
           return opts.lineWidth;
         }
 
@@ -9691,11 +9995,10 @@
     }, {
       key: "drawGrid",
       value: function drawGrid(chartArea) {
-        var me = this;
-        var grid = me.options.grid;
-        var ctx = me.ctx;
+        var grid = this.options.grid;
+        var ctx = this.ctx;
 
-        var items = me._gridLineItems || (me._gridLineItems = me._computeGridLineItems(chartArea));
+        var items = this._gridLineItems || (this._gridLineItems = this._computeGridLineItems(chartArea));
 
         var i, ilen;
 
@@ -9750,28 +10053,27 @@
     }, {
       key: "drawBorder",
       value: function drawBorder() {
-        var me = this;
-        var chart = me.chart,
-            ctx = me.ctx,
-            grid = me.options.grid;
-        var borderOpts = grid.setContext(me.getContext());
+        var chart = this.chart,
+            ctx = this.ctx,
+            grid = this.options.grid;
+        var borderOpts = grid.setContext(this.getContext());
         var axisWidth = grid.drawBorder ? borderOpts.borderWidth : 0;
 
         if (!axisWidth) {
           return;
         }
 
-        var lastLineWidth = grid.setContext(me.getContext(0)).lineWidth;
-        var borderValue = me._borderValue;
+        var lastLineWidth = grid.setContext(this.getContext(0)).lineWidth;
+        var borderValue = this._borderValue;
         var x1, x2, y1, y2;
 
-        if (me.isHorizontal()) {
-          x1 = _alignPixel(chart, me.left, axisWidth) - axisWidth / 2;
-          x2 = _alignPixel(chart, me.right, lastLineWidth) + lastLineWidth / 2;
+        if (this.isHorizontal()) {
+          x1 = _alignPixel(chart, this.left, axisWidth) - axisWidth / 2;
+          x2 = _alignPixel(chart, this.right, lastLineWidth) + lastLineWidth / 2;
           y1 = y2 = borderValue;
         } else {
-          y1 = _alignPixel(chart, me.top, axisWidth) - axisWidth / 2;
-          y2 = _alignPixel(chart, me.bottom, lastLineWidth) + lastLineWidth / 2;
+          y1 = _alignPixel(chart, this.top, axisWidth) - axisWidth / 2;
+          y2 = _alignPixel(chart, this.bottom, lastLineWidth) + lastLineWidth / 2;
           x1 = x2 = borderValue;
         }
 
@@ -9787,22 +10089,21 @@
     }, {
       key: "drawLabels",
       value: function drawLabels(chartArea) {
-        var me = this;
-        var optionTicks = me.options.ticks;
+        var optionTicks = this.options.ticks;
 
         if (!optionTicks.display) {
           return;
         }
 
-        var ctx = me.ctx;
+        var ctx = this.ctx;
 
-        var area = me._computeLabelArea();
+        var area = this._computeLabelArea();
 
         if (area) {
           clipArea(ctx, area);
         }
 
-        var items = me._labelItems || (me._labelItems = me._computeLabelItems(chartArea));
+        var items = this._labelItems || (this._labelItems = this._computeLabelItems(chartArea));
 
         var i, ilen;
 
@@ -9828,10 +10129,10 @@
       key: "drawTitle",
       value: function drawTitle() {
         var ctx = this.ctx,
-            _this$options2 = this.options,
-            position = _this$options2.position,
-            title = _this$options2.title,
-            reverse = _this$options2.reverse;
+            _this$options9 = this.options,
+            position = _this$options9.position,
+            title = _this$options9.title,
+            reverse = _this$options9.reverse;
 
         if (!title.display) {
           return;
@@ -9842,7 +10143,7 @@
         var align = title.align;
         var offset = font.lineHeight / 2;
 
-        if (position === 'bottom') {
+        if (position === 'bottom' || position === 'center' || isObject(position)) {
           offset += padding.bottom;
 
           if (isArray(title.text)) {
@@ -9870,31 +10171,30 @@
     }, {
       key: "draw",
       value: function draw(chartArea) {
-        var me = this;
-
-        if (!me._isVisible()) {
+        if (!this._isVisible()) {
           return;
         }
 
-        me.drawBackground();
-        me.drawGrid(chartArea);
-        me.drawBorder();
-        me.drawTitle();
-        me.drawLabels(chartArea);
+        this.drawBackground();
+        this.drawGrid(chartArea);
+        this.drawBorder();
+        this.drawTitle();
+        this.drawLabels(chartArea);
       }
     }, {
       key: "_layers",
       value: function _layers() {
-        var me = this;
-        var opts = me.options;
-        var tz = opts.ticks && opts.ticks.z || 0;
-        var gz = opts.grid && opts.grid.z || 0;
+        var _this9 = this;
 
-        if (!me._isVisible() || me.draw !== Scale.prototype.draw) {
+        var opts = this.options;
+        var tz = opts.ticks && opts.ticks.z || 0;
+        var gz = valueOrDefault(opts.grid && opts.grid.z, -1);
+
+        if (!this._isVisible() || this.draw !== Scale.prototype.draw) {
           return [{
             z: tz,
             draw: function draw(chartArea) {
-              me.draw(chartArea);
+              _this9.draw(chartArea);
             }
           }];
         }
@@ -9902,35 +10202,36 @@
         return [{
           z: gz,
           draw: function draw(chartArea) {
-            me.drawBackground();
-            me.drawGrid(chartArea);
-            me.drawTitle();
+            _this9.drawBackground();
+
+            _this9.drawGrid(chartArea);
+
+            _this9.drawTitle();
           }
         }, {
           z: gz + 1,
           draw: function draw() {
-            me.drawBorder();
+            _this9.drawBorder();
           }
         }, {
           z: tz,
           draw: function draw(chartArea) {
-            me.drawLabels(chartArea);
+            _this9.drawLabels(chartArea);
           }
         }];
       }
     }, {
       key: "getMatchingVisibleMetas",
       value: function getMatchingVisibleMetas(type) {
-        var me = this;
-        var metas = me.chart.getSortedVisibleDatasetMetas();
-        var axisID = me.axis + 'AxisID';
+        var metas = this.chart.getSortedVisibleDatasetMetas();
+        var axisID = this.axis + 'AxisID';
         var result = [];
         var i, ilen;
 
         for (i = 0, ilen = metas.length; i < ilen; ++i) {
           var meta = metas[i];
 
-          if (meta[axisID] === me.id && (!type || meta.type === type)) {
+          if (meta[axisID] === this.id && (!type || meta.type === type)) {
             result.push(meta);
           }
         }
@@ -9946,11 +10247,9 @@
     }, {
       key: "_maxDigits",
       value: function _maxDigits() {
-        var me = this;
+        var fontSize = this._resolveTickFontOptions(0).lineHeight;
 
-        var fontSize = me._resolveTickFontOptions(0).lineHeight;
-
-        return (me.isHorizontal() ? me.width : me.height) / fontSize;
+        return (this.isHorizontal() ? this.width : this.height) / fontSize;
       }
     }]);
 
@@ -9975,17 +10274,16 @@
     }, {
       key: "register",
       value: function register(item) {
-        var me = this;
         var proto = Object.getPrototypeOf(item);
         var parentScope;
 
         if (isIChartComponent(proto)) {
-          parentScope = me.register(proto);
+          parentScope = this.register(proto);
         }
 
-        var items = me.items;
+        var items = this.items;
         var id = item.id;
-        var scope = me.scope + '.' + id;
+        var scope = this.scope + '.' + id;
 
         if (!id) {
           throw new Error('class does not have id: ' + item);
@@ -9998,7 +10296,7 @@
         items[id] = item;
         registerDefaults(item, scope, parentScope);
 
-        if (me.override) {
+        if (this.override) {
           defaults.override(item.id, item.overrides);
         }
 
@@ -10186,18 +10484,18 @@
     }, {
       key: "_each",
       value: function _each(method, args, typedRegistry) {
-        var me = this;
+        var _this10 = this;
 
         _toConsumableArray(args).forEach(function (arg) {
-          var reg = typedRegistry || me._getRegistryForType(arg);
+          var reg = typedRegistry || _this10._getRegistryForType(arg);
 
-          if (typedRegistry || reg.isForType(arg) || reg === me.plugins && arg.id) {
-            me._exec(method, reg, arg);
+          if (typedRegistry || reg.isForType(arg) || reg === _this10.plugins && arg.id) {
+            _this10._exec(method, reg, arg);
           } else {
             each(arg, function (item) {
-              var itemReg = typedRegistry || me._getRegistryForType(item);
+              var itemReg = typedRegistry || _this10._getRegistryForType(item);
 
-              me._exec(method, itemReg, item);
+              _this10._exec(method, itemReg, item);
             });
           }
         });
@@ -10252,22 +10550,20 @@
     _createClass(PluginService, [{
       key: "notify",
       value: function notify(chart, hook, args, filter) {
-        var me = this;
-
         if (hook === 'beforeInit') {
-          me._init = me._createDescriptors(chart, true);
+          this._init = this._createDescriptors(chart, true);
 
-          me._notify(me._init, chart, 'install');
+          this._notify(this._init, chart, 'install');
         }
 
-        var descriptors = filter ? me._descriptors(chart).filter(filter) : me._descriptors(chart);
+        var descriptors = filter ? this._descriptors(chart).filter(filter) : this._descriptors(chart);
 
-        var result = me._notify(descriptors, chart, hook, args);
+        var result = this._notify(descriptors, chart, hook, args);
 
         if (hook === 'destroy') {
-          me._notify(descriptors, chart, 'stop');
+          this._notify(descriptors, chart, 'stop');
 
-          me._notify(me._init, chart, 'uninstall');
+          this._notify(this._init, chart, 'uninstall');
         }
 
         return result;
@@ -10277,12 +10573,12 @@
       value: function _notify(descriptors, chart, hook, args) {
         args = args || {};
 
-        var _iterator5 = _createForOfIteratorHelper(descriptors),
-            _step5;
+        var _iterator11 = _createForOfIteratorHelper(descriptors),
+            _step11;
 
         try {
-          for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-            var descriptor = _step5.value;
+          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+            var descriptor = _step11.value;
             var plugin = descriptor.plugin;
             var method = plugin[hook];
             var params = [chart, args, descriptor.options];
@@ -10292,9 +10588,9 @@
             }
           }
         } catch (err) {
-          _iterator5.e(err);
+          _iterator11.e(err);
         } finally {
-          _iterator5.f();
+          _iterator11.f();
         }
 
         return true;
@@ -10466,6 +10762,15 @@
     var scales = Object.create(null);
     Object.keys(configScales).forEach(function (id) {
       var scaleConf = configScales[id];
+
+      if (!isObject(scaleConf)) {
+        return console.error("Invalid scale configuration for scale: ".concat(id));
+      }
+
+      if (scaleConf._proxy) {
+        return console.warn("Ignoring resolver passed as options for scale: ".concat(id));
+      }
+
       var axis = determineAxis(id, scaleConf);
       var defaultId = getDefaultScaleIDFromAxis(axis, chartIndexAxis);
       var defaultScaleOptions = chartDefaults.scales || {};
@@ -10548,6 +10853,11 @@
     }
 
     _createClass(Config, [{
+      key: "platform",
+      get: function get() {
+        return this._config.platform;
+      }
+    }, {
       key: "type",
       get: function get() {
         return this._config.type;
@@ -10673,6 +10983,10 @@
         });
         var array = Array.from(scopes);
 
+        if (array.length === 0) {
+          array.push(Object.create(null));
+        }
+
         if (keysCached.has(keyLists)) {
           cache.set(keyLists, array);
         }
@@ -10709,18 +11023,18 @@
           options = _attachContext(resolver, context, subResolver);
         }
 
-        var _iterator6 = _createForOfIteratorHelper(names),
-            _step6;
+        var _iterator12 = _createForOfIteratorHelper(names),
+            _step12;
 
         try {
-          for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-            var prop = _step6.value;
+          for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+            var prop = _step12.value;
             result[prop] = options[prop];
           }
         } catch (err) {
-          _iterator6.e(err);
+          _iterator12.e(err);
         } finally {
-          _iterator6.f();
+          _iterator12.f();
         }
 
         return result;
@@ -10767,32 +11081,41 @@
     return cached;
   }
 
+  var hasFunction = function hasFunction(value) {
+    return isObject(value) && Object.getOwnPropertyNames(value).reduce(function (acc, key) {
+      return acc || isFunction(value[key]);
+    }, false);
+  };
+
   function needContext(proxy, names) {
     var _descriptors2 = _descriptors(proxy),
         isScriptable = _descriptors2.isScriptable,
         isIndexable = _descriptors2.isIndexable;
 
-    var _iterator7 = _createForOfIteratorHelper(names),
-        _step7;
+    var _iterator13 = _createForOfIteratorHelper(names),
+        _step13;
 
     try {
-      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-        var prop = _step7.value;
+      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+        var prop = _step13.value;
+        var scriptable = isScriptable(prop);
+        var indexable = isIndexable(prop);
+        var value = (indexable || scriptable) && proxy[prop];
 
-        if (isScriptable(prop) && isFunction(proxy[prop]) || isIndexable(prop) && isArray(proxy[prop])) {
+        if (scriptable && (isFunction(value) || hasFunction(value)) || indexable && isArray(value)) {
           return true;
         }
       }
     } catch (err) {
-      _iterator7.e(err);
+      _iterator13.e(err);
     } finally {
-      _iterator7.f();
+      _iterator13.f();
     }
 
     return false;
   }
 
-  var version = "3.4.1";
+  var version = "3.6.0";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
 
   function positionIsHorizontal(position, axis) {
@@ -10818,12 +11141,8 @@
     callback(animationOptions && animationOptions.onProgress, [context], chart);
   }
 
-  function isDomSupported() {
-    return typeof window !== 'undefined' && typeof document !== 'undefined';
-  }
-
   function getCanvas(item) {
-    if (isDomSupported() && typeof item === 'string') {
+    if (_isDomSupported() && typeof item === 'string') {
       item = document.getElementById(item);
     } else if (item && item.length) {
       item = item[0];
@@ -10846,13 +11165,12 @@
   };
 
   var Chart = /*#__PURE__*/function () {
-    function Chart(item, config) {
-      var _this5 = this;
+    function Chart(item, userConfig) {
+      var _this11 = this;
 
       _classCallCheck(this, Chart);
 
-      var me = this;
-      this.config = config = new Config(config);
+      var config = this.config = new Config(userConfig);
       var initialCanvas = getCanvas(item);
       var existingChart = getChart(initialCanvas);
 
@@ -10860,9 +11178,10 @@
         throw new Error('Canvas is already in use. Chart with ID \'' + existingChart.id + '\'' + ' must be destroyed before the canvas can be reused.');
       }
 
-      var options = config.createResolver(config.chartOptionScopes(), me.getContext());
-      this.platform = me._initializePlatform(initialCanvas, config);
-      var context = me.platform.acquireContext(initialCanvas, options.aspectRatio);
+      var options = config.createResolver(config.chartOptionScopes(), this.getContext());
+      this.platform = new (config.platform || _detectPlatform(initialCanvas))();
+      this.platform.updateConfig(config);
+      var context = this.platform.acquireContext(initialCanvas, options.aspectRatio);
       var canvas = context && context.canvas;
       var height = canvas && canvas.height;
       var width = canvas && canvas.width;
@@ -10885,39 +11204,38 @@
       this._responsiveListeners = undefined;
       this._sortedMetasets = [];
       this.scales = {};
-      this.scale = undefined;
       this._plugins = new PluginService();
       this.$proxies = {};
       this._hiddenIndices = {};
       this.attached = false;
       this._animationsDisabled = undefined;
       this.$context = undefined;
-      this._doResize = debounce(function () {
-        return _this5.update('resize');
+      this._doResize = debounce(function (mode) {
+        return _this11.update(mode);
       }, options.resizeDelay || 0);
-      instances[me.id] = me;
+      instances[this.id] = this;
 
       if (!context || !canvas) {
         console.error("Failed to create chart: can't acquire context from the given item");
         return;
       }
 
-      animator.listen(me, 'complete', onAnimationsComplete);
-      animator.listen(me, 'progress', onAnimationProgress);
+      animator.listen(this, 'complete', onAnimationsComplete);
+      animator.listen(this, 'progress', onAnimationProgress);
 
-      me._initialize();
+      this._initialize();
 
-      if (me.attached) {
-        me.update();
+      if (this.attached) {
+        this.update();
       }
     }
 
     _createClass(Chart, [{
       key: "aspectRatio",
       get: function get() {
-        var _this$options3 = this.options,
-            aspectRatio = _this$options3.aspectRatio,
-            maintainAspectRatio = _this$options3.maintainAspectRatio,
+        var _this$options10 = this.options,
+            aspectRatio = _this$options10.aspectRatio,
+            maintainAspectRatio = _this$options10.maintainAspectRatio,
             width = this.width,
             height = this.height,
             _aspectRatio = this._aspectRatio;
@@ -10951,29 +11269,17 @@
     }, {
       key: "_initialize",
       value: function _initialize() {
-        var me = this;
-        me.notifyPlugins('beforeInit');
+        this.notifyPlugins('beforeInit');
 
-        if (me.options.responsive) {
-          me.resize();
+        if (this.options.responsive) {
+          this.resize();
         } else {
-          retinaScale(me, me.options.devicePixelRatio);
+          retinaScale(this, this.options.devicePixelRatio);
         }
 
-        me.bindEvents();
-        me.notifyPlugins('afterInit');
-        return me;
-      }
-    }, {
-      key: "_initializePlatform",
-      value: function _initializePlatform(canvas, config) {
-        if (config.platform) {
-          return new config.platform();
-        } else if (!isDomSupported() || typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas) {
-          return new BasicPlatform();
-        }
-
-        return new DomPlatform();
+        this.bindEvents();
+        this.notifyPlugins('afterInit');
+        return this;
       }
     }, {
       key: "clear",
@@ -11002,28 +11308,28 @@
     }, {
       key: "_resize",
       value: function _resize(width, height) {
-        var me = this;
-        var options = me.options;
-        var canvas = me.canvas;
-        var aspectRatio = options.maintainAspectRatio && me.aspectRatio;
-        var newSize = me.platform.getMaximumSize(canvas, width, height, aspectRatio);
-        var newRatio = options.devicePixelRatio || me.platform.getDevicePixelRatio();
-        me.width = newSize.width;
-        me.height = newSize.height;
-        me._aspectRatio = me.aspectRatio;
+        var options = this.options;
+        var canvas = this.canvas;
+        var aspectRatio = options.maintainAspectRatio && this.aspectRatio;
+        var newSize = this.platform.getMaximumSize(canvas, width, height, aspectRatio);
+        var newRatio = options.devicePixelRatio || this.platform.getDevicePixelRatio();
+        var mode = this.width ? 'resize' : 'attach';
+        this.width = newSize.width;
+        this.height = newSize.height;
+        this._aspectRatio = this.aspectRatio;
 
-        if (!retinaScale(me, newRatio, true)) {
+        if (!retinaScale(this, newRatio, true)) {
           return;
         }
 
-        me.notifyPlugins('resize', {
+        this.notifyPlugins('resize', {
           size: newSize
         });
-        callback(options.onResize, [me, newSize], me);
+        callback(options.onResize, [this, newSize], this);
 
-        if (me.attached) {
-          if (me._doResize()) {
-            me.render();
+        if (this.attached) {
+          if (this._doResize(mode)) {
+            this.render();
           }
         }
       }
@@ -11039,10 +11345,11 @@
     }, {
       key: "buildOrUpdateScales",
       value: function buildOrUpdateScales() {
-        var me = this;
-        var options = me.options;
+        var _this12 = this;
+
+        var options = this.options;
         var scaleOpts = options.scales;
-        var scales = me.scales;
+        var scales = this.scales;
         var updated = Object.keys(scales).reduce(function (obj, id) {
           obj[id] = false;
           return obj;
@@ -11083,8 +11390,8 @@
             scale = new scaleClass({
               id: id,
               type: scaleType,
-              ctx: me.ctx,
-              chart: me
+              ctx: _this12.ctx,
+              chart: _this12
             });
             scales[scale.id] = scale;
           }
@@ -11097,16 +11404,15 @@
           }
         });
         each(scales, function (scale) {
-          layouts.configure(me, scale, scale.options);
-          layouts.addBox(me, scale);
+          layouts.configure(_this12, scale, scale.options);
+          layouts.addBox(_this12, scale);
         });
       }
     }, {
       key: "_updateMetasets",
       value: function _updateMetasets() {
-        var me = this;
-        var metasets = me._metasets;
-        var numData = me.data.datasets.length;
+        var metasets = this._metasets;
+        var numData = this.data.datasets.length;
         var numMeta = metasets.length;
         metasets.sort(function (a, b) {
           return a.index - b.index;
@@ -11114,60 +11420,60 @@
 
         if (numMeta > numData) {
           for (var i = numData; i < numMeta; ++i) {
-            me._destroyDatasetMeta(i);
+            this._destroyDatasetMeta(i);
           }
 
           metasets.splice(numData, numMeta - numData);
         }
 
-        me._sortedMetasets = metasets.slice(0).sort(compare2Level('order', 'index'));
+        this._sortedMetasets = metasets.slice(0).sort(compare2Level('order', 'index'));
       }
     }, {
       key: "_removeUnreferencedMetasets",
       value: function _removeUnreferencedMetasets() {
-        var me = this;
-        var metasets = me._metasets,
-            datasets = me.data.datasets;
+        var _this13 = this;
+
+        var metasets = this._metasets,
+            datasets = this.data.datasets;
 
         if (metasets.length > datasets.length) {
-          delete me._stacks;
+          delete this._stacks;
         }
 
         metasets.forEach(function (meta, index) {
           if (datasets.filter(function (x) {
             return x === meta._dataset;
           }).length === 0) {
-            me._destroyDatasetMeta(index);
+            _this13._destroyDatasetMeta(index);
           }
         });
       }
     }, {
       key: "buildOrUpdateControllers",
       value: function buildOrUpdateControllers() {
-        var me = this;
         var newControllers = [];
-        var datasets = me.data.datasets;
+        var datasets = this.data.datasets;
         var i, ilen;
 
-        me._removeUnreferencedMetasets();
+        this._removeUnreferencedMetasets();
 
         for (i = 0, ilen = datasets.length; i < ilen; i++) {
           var dataset = datasets[i];
-          var meta = me.getDatasetMeta(i);
-          var type = dataset.type || me.config.type;
+          var meta = this.getDatasetMeta(i);
+          var type = dataset.type || this.config.type;
 
           if (meta.type && meta.type !== type) {
-            me._destroyDatasetMeta(i);
+            this._destroyDatasetMeta(i);
 
-            meta = me.getDatasetMeta(i);
+            meta = this.getDatasetMeta(i);
           }
 
           meta.type = type;
-          meta.indexAxis = dataset.indexAxis || getIndexAxis(type, me.options);
+          meta.indexAxis = dataset.indexAxis || getIndexAxis(type, this.options);
           meta.order = dataset.order || 0;
           meta.index = i;
           meta.label = '' + dataset.label;
-          meta.visible = me.isDatasetVisible(i);
+          meta.visible = this.isDatasetVisible(i);
 
           if (meta.controller) {
             meta.controller.updateIndex(i);
@@ -11181,22 +11487,23 @@
               dataElementType: registry.getElement(dataElementType),
               datasetElementType: datasetElementType && registry.getElement(datasetElementType)
             });
-            meta.controller = new ControllerClass(me, i);
+            meta.controller = new ControllerClass(this, i);
             newControllers.push(meta.controller);
           }
         }
 
-        me._updateMetasets();
+        this._updateMetasets();
 
         return newControllers;
       }
     }, {
       key: "_resetElements",
       value: function _resetElements() {
-        var me = this;
-        each(me.data.datasets, function (dataset, datasetIndex) {
-          me.getDatasetMeta(datasetIndex).controller.reset();
-        }, me);
+        var _this14 = this;
+
+        each(this.data.datasets, function (dataset, datasetIndex) {
+          _this14.getDatasetMeta(datasetIndex).controller.reset();
+        }, this);
       }
     }, {
       key: "reset",
@@ -11208,49 +11515,50 @@
     }, {
       key: "update",
       value: function update(mode) {
-        var me = this;
-        var config = me.config;
-        config.update();
-        me._options = config.createResolver(config.chartOptionScopes(), me.getContext());
-        each(me.scales, function (scale) {
-          layouts.removeBox(me, scale);
-        });
-        var animsDisabled = me._animationsDisabled = !me.options.animation;
-        me.ensureScalesHaveIDs();
-        me.buildOrUpdateScales();
-        var existingEvents = new Set(Object.keys(me._listeners));
-        var newEvents = new Set(me.options.events);
+        var _this15 = this;
 
-        if (!setsEqual(existingEvents, newEvents) || !!this._responsiveListeners !== me.options.responsive) {
-          me.unbindEvents();
-          me.bindEvents();
+        var config = this.config;
+        config.update();
+        var options = this._options = config.createResolver(config.chartOptionScopes(), this.getContext());
+        each(this.scales, function (scale) {
+          layouts.removeBox(_this15, scale);
+        });
+        var animsDisabled = this._animationsDisabled = !options.animation;
+        this.ensureScalesHaveIDs();
+        this.buildOrUpdateScales();
+        var existingEvents = new Set(Object.keys(this._listeners));
+        var newEvents = new Set(options.events);
+
+        if (!setsEqual(existingEvents, newEvents) || !!this._responsiveListeners !== options.responsive) {
+          this.unbindEvents();
+          this.bindEvents();
         }
 
-        me._plugins.invalidate();
+        this._plugins.invalidate();
 
-        if (me.notifyPlugins('beforeUpdate', {
+        if (this.notifyPlugins('beforeUpdate', {
           mode: mode,
           cancelable: true
         }) === false) {
           return;
         }
 
-        var newControllers = me.buildOrUpdateControllers();
-        me.notifyPlugins('beforeElementsUpdate');
+        var newControllers = this.buildOrUpdateControllers();
+        this.notifyPlugins('beforeElementsUpdate');
         var minPadding = 0;
 
-        for (var i = 0, ilen = me.data.datasets.length; i < ilen; i++) {
-          var _me$getDatasetMeta = me.getDatasetMeta(i),
-              controller = _me$getDatasetMeta.controller;
+        for (var i = 0, ilen = this.data.datasets.length; i < ilen; i++) {
+          var _this$getDatasetMeta = this.getDatasetMeta(i),
+              controller = _this$getDatasetMeta.controller;
 
           var reset = !animsDisabled && newControllers.indexOf(controller) === -1;
           controller.buildOrUpdateElements(reset);
           minPadding = Math.max(+controller.getMaxOverflow(), minPadding);
         }
 
-        me._minPadding = minPadding;
+        minPadding = this._minPadding = options.layout.autoPadding ? minPadding : 0;
 
-        me._updateLayout(minPadding);
+        this._updateLayout(minPadding);
 
         if (!animsDisabled) {
           each(newControllers, function (controller) {
@@ -11258,37 +11566,37 @@
           });
         }
 
-        me._updateDatasets(mode);
+        this._updateDatasets(mode);
 
-        me.notifyPlugins('afterUpdate', {
+        this.notifyPlugins('afterUpdate', {
           mode: mode
         });
 
-        me._layers.sort(compare2Level('z', '_idx'));
+        this._layers.sort(compare2Level('z', '_idx'));
 
-        if (me._lastEvent) {
-          me._eventHandler(me._lastEvent, true);
+        if (this._lastEvent) {
+          this._eventHandler(this._lastEvent, true);
         }
 
-        me.render();
+        this.render();
       }
     }, {
       key: "_updateLayout",
       value: function _updateLayout(minPadding) {
-        var me = this;
+        var _this16 = this;
 
-        if (me.notifyPlugins('beforeLayout', {
+        if (this.notifyPlugins('beforeLayout', {
           cancelable: true
         }) === false) {
           return;
         }
 
-        layouts.update(me, me.width, me.height, minPadding);
-        var area = me.chartArea;
+        layouts.update(this, this.width, this.height, minPadding);
+        var area = this.chartArea;
         var noArea = area.width <= 0 || area.height <= 0;
-        me._layers = [];
-        each(me.boxes, function (box) {
-          var _me$_layers;
+        this._layers = [];
+        each(this.boxes, function (box) {
+          var _this16$_layers;
 
           if (noArea && box.position === 'chartArea') {
             return;
@@ -11298,43 +11606,39 @@
             box.configure();
           }
 
-          (_me$_layers = me._layers).push.apply(_me$_layers, _toConsumableArray(box._layers()));
-        }, me);
+          (_this16$_layers = _this16._layers).push.apply(_this16$_layers, _toConsumableArray(box._layers()));
+        }, this);
 
-        me._layers.forEach(function (item, index) {
+        this._layers.forEach(function (item, index) {
           item._idx = index;
         });
 
-        me.notifyPlugins('afterLayout');
+        this.notifyPlugins('afterLayout');
       }
     }, {
       key: "_updateDatasets",
       value: function _updateDatasets(mode) {
-        var me = this;
-        var isFunction = typeof mode === 'function';
-
-        if (me.notifyPlugins('beforeDatasetsUpdate', {
+        if (this.notifyPlugins('beforeDatasetsUpdate', {
           mode: mode,
           cancelable: true
         }) === false) {
           return;
         }
 
-        for (var i = 0, ilen = me.data.datasets.length; i < ilen; ++i) {
-          me._updateDataset(i, isFunction ? mode({
+        for (var i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
+          this._updateDataset(i, isFunction(mode) ? mode({
             datasetIndex: i
           }) : mode);
         }
 
-        me.notifyPlugins('afterDatasetsUpdate', {
+        this.notifyPlugins('afterDatasetsUpdate', {
           mode: mode
         });
       }
     }, {
       key: "_updateDataset",
       value: function _updateDataset(index, mode) {
-        var me = this;
-        var meta = me.getDatasetMeta(index);
+        var meta = this.getDatasetMeta(index);
         var args = {
           meta: meta,
           index: index,
@@ -11342,84 +11646,80 @@
           cancelable: true
         };
 
-        if (me.notifyPlugins('beforeDatasetUpdate', args) === false) {
+        if (this.notifyPlugins('beforeDatasetUpdate', args) === false) {
           return;
         }
 
         meta.controller._update(mode);
 
         args.cancelable = false;
-        me.notifyPlugins('afterDatasetUpdate', args);
+        this.notifyPlugins('afterDatasetUpdate', args);
       }
     }, {
       key: "render",
       value: function render() {
-        var me = this;
-
-        if (me.notifyPlugins('beforeRender', {
+        if (this.notifyPlugins('beforeRender', {
           cancelable: true
         }) === false) {
           return;
         }
 
-        if (animator.has(me)) {
-          if (me.attached && !animator.running(me)) {
-            animator.start(me);
+        if (animator.has(this)) {
+          if (this.attached && !animator.running(this)) {
+            animator.start(this);
           }
         } else {
-          me.draw();
+          this.draw();
           onAnimationsComplete({
-            chart: me
+            chart: this
           });
         }
       }
     }, {
       key: "draw",
       value: function draw() {
-        var me = this;
         var i;
 
-        if (me._resizeBeforeDraw) {
-          var _me$_resizeBeforeDraw = me._resizeBeforeDraw,
-              width = _me$_resizeBeforeDraw.width,
-              height = _me$_resizeBeforeDraw.height;
+        if (this._resizeBeforeDraw) {
+          var _this$_resizeBeforeDr = this._resizeBeforeDraw,
+              width = _this$_resizeBeforeDr.width,
+              height = _this$_resizeBeforeDr.height;
 
-          me._resize(width, height);
+          this._resize(width, height);
 
-          me._resizeBeforeDraw = null;
+          this._resizeBeforeDraw = null;
         }
 
-        me.clear();
+        this.clear();
 
-        if (me.width <= 0 || me.height <= 0) {
+        if (this.width <= 0 || this.height <= 0) {
           return;
         }
 
-        if (me.notifyPlugins('beforeDraw', {
+        if (this.notifyPlugins('beforeDraw', {
           cancelable: true
         }) === false) {
           return;
         }
 
-        var layers = me._layers;
+        var layers = this._layers;
 
         for (i = 0; i < layers.length && layers[i].z <= 0; ++i) {
-          layers[i].draw(me.chartArea);
+          layers[i].draw(this.chartArea);
         }
 
-        me._drawDatasets();
+        this._drawDatasets();
 
         for (; i < layers.length; ++i) {
-          layers[i].draw(me.chartArea);
+          layers[i].draw(this.chartArea);
         }
 
-        me.notifyPlugins('afterDraw');
+        this.notifyPlugins('afterDraw');
       }
     }, {
       key: "_getSortedDatasetMetas",
       value: function _getSortedDatasetMetas(filterVisible) {
-        var me = this;
-        var metasets = me._sortedMetasets;
+        var metasets = this._sortedMetasets;
         var result = [];
         var i, ilen;
 
@@ -11441,46 +11741,43 @@
     }, {
       key: "_drawDatasets",
       value: function _drawDatasets() {
-        var me = this;
-
-        if (me.notifyPlugins('beforeDatasetsDraw', {
+        if (this.notifyPlugins('beforeDatasetsDraw', {
           cancelable: true
         }) === false) {
           return;
         }
 
-        var metasets = me.getSortedVisibleDatasetMetas();
+        var metasets = this.getSortedVisibleDatasetMetas();
 
         for (var i = metasets.length - 1; i >= 0; --i) {
-          me._drawDataset(metasets[i]);
+          this._drawDataset(metasets[i]);
         }
 
-        me.notifyPlugins('afterDatasetsDraw');
+        this.notifyPlugins('afterDatasetsDraw');
       }
     }, {
       key: "_drawDataset",
       value: function _drawDataset(meta) {
-        var me = this;
-        var ctx = me.ctx;
+        var ctx = this.ctx;
         var clip = meta._clip;
         var useClip = !clip.disabled;
-        var area = me.chartArea;
+        var area = this.chartArea;
         var args = {
           meta: meta,
           index: meta.index,
           cancelable: true
         };
 
-        if (me.notifyPlugins('beforeDatasetDraw', args) === false) {
+        if (this.notifyPlugins('beforeDatasetDraw', args) === false) {
           return;
         }
 
         if (useClip) {
           clipArea(ctx, {
             left: clip.left === false ? 0 : area.left - clip.left,
-            right: clip.right === false ? me.width : area.right + clip.right,
+            right: clip.right === false ? this.width : area.right + clip.right,
             top: clip.top === false ? 0 : area.top - clip.top,
-            bottom: clip.bottom === false ? me.height : area.bottom + clip.bottom
+            bottom: clip.bottom === false ? this.height : area.bottom + clip.bottom
           });
         }
 
@@ -11491,7 +11788,7 @@
         }
 
         args.cancelable = false;
-        me.notifyPlugins('afterDatasetDraw', args);
+        this.notifyPlugins('afterDatasetDraw', args);
       }
     }, {
       key: "getElementsAtEventForMode",
@@ -11507,9 +11804,8 @@
     }, {
       key: "getDatasetMeta",
       value: function getDatasetMeta(datasetIndex) {
-        var me = this;
-        var dataset = me.data.datasets[datasetIndex];
-        var metasets = me._metasets;
+        var dataset = this.data.datasets[datasetIndex];
+        var metasets = this._metasets;
         var meta = metasets.filter(function (x) {
           return x && x._dataset === dataset;
         }).pop();
@@ -11537,10 +11833,10 @@
     }, {
       key: "getContext",
       value: function getContext() {
-        return this.$context || (this.$context = {
+        return this.$context || (this.$context = createContext(null, {
           chart: this,
           type: 'chart'
-        });
+        }));
       }
     }, {
       key: "getVisibleDatasetCount",
@@ -11576,70 +11872,78 @@
         return !this._hiddenIndices[index];
       }
     }, {
-      key: "_updateDatasetVisibility",
-      value: function _updateDatasetVisibility(datasetIndex, visible) {
-        var me = this;
+      key: "_updateVisibility",
+      value: function _updateVisibility(datasetIndex, dataIndex, visible) {
         var mode = visible ? 'show' : 'hide';
-        var meta = me.getDatasetMeta(datasetIndex);
+        var meta = this.getDatasetMeta(datasetIndex);
 
         var anims = meta.controller._resolveAnimations(undefined, mode);
 
-        me.setDatasetVisibility(datasetIndex, visible);
-        anims.update(meta, {
-          visible: visible
-        });
-        me.update(function (ctx) {
-          return ctx.datasetIndex === datasetIndex ? mode : undefined;
-        });
+        if (defined(dataIndex)) {
+          meta.data[dataIndex].hidden = !visible;
+          this.update();
+        } else {
+          this.setDatasetVisibility(datasetIndex, visible);
+          anims.update(meta, {
+            visible: visible
+          });
+          this.update(function (ctx) {
+            return ctx.datasetIndex === datasetIndex ? mode : undefined;
+          });
+        }
       }
     }, {
       key: "hide",
-      value: function hide(datasetIndex) {
-        this._updateDatasetVisibility(datasetIndex, false);
+      value: function hide(datasetIndex, dataIndex) {
+        this._updateVisibility(datasetIndex, dataIndex, false);
       }
     }, {
       key: "show",
-      value: function show(datasetIndex) {
-        this._updateDatasetVisibility(datasetIndex, true);
+      value: function show(datasetIndex, dataIndex) {
+        this._updateVisibility(datasetIndex, dataIndex, true);
       }
     }, {
       key: "_destroyDatasetMeta",
       value: function _destroyDatasetMeta(datasetIndex) {
-        var me = this;
-        var meta = me._metasets && me._metasets[datasetIndex];
+        var meta = this._metasets[datasetIndex];
 
         if (meta && meta.controller) {
           meta.controller._destroy();
+        }
 
-          delete me._metasets[datasetIndex];
+        delete this._metasets[datasetIndex];
+      }
+    }, {
+      key: "_stop",
+      value: function _stop() {
+        var i, ilen;
+        this.stop();
+        animator.remove(this);
+
+        for (i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
+          this._destroyDatasetMeta(i);
         }
       }
     }, {
       key: "destroy",
       value: function destroy() {
-        var me = this;
-        var canvas = me.canvas,
-            ctx = me.ctx;
-        var i, ilen;
-        me.stop();
-        animator.remove(me);
+        var canvas = this.canvas,
+            ctx = this.ctx;
 
-        for (i = 0, ilen = me.data.datasets.length; i < ilen; ++i) {
-          me._destroyDatasetMeta(i);
-        }
+        this._stop();
 
-        me.config.clearCache();
+        this.config.clearCache();
 
         if (canvas) {
-          me.unbindEvents();
+          this.unbindEvents();
           clearCanvas(canvas, ctx);
-          me.platform.releaseContext(ctx);
-          me.canvas = null;
-          me.ctx = null;
+          this.platform.releaseContext(ctx);
+          this.canvas = null;
+          this.ctx = null;
         }
 
-        me.notifyPlugins('destroy');
-        delete instances[me.id];
+        this.notifyPlugins('destroy');
+        delete instances[this.id];
       }
     }, {
       key: "toBase64Image",
@@ -11662,12 +11966,13 @@
     }, {
       key: "bindUserEvents",
       value: function bindUserEvents() {
-        var me = this;
-        var listeners = me._listeners;
-        var platform = me.platform;
+        var _this17 = this;
+
+        var listeners = this._listeners;
+        var platform = this.platform;
 
         var _add = function _add(type, listener) {
-          platform.addEventListener(me, type, listener);
+          platform.addEventListener(_this17, type, listener);
           listeners[type] = listener;
         };
 
@@ -11675,40 +11980,40 @@
           e.offsetX = x;
           e.offsetY = y;
 
-          me._eventHandler(e);
+          _this17._eventHandler(e);
         };
 
-        each(me.options.events, function (type) {
+        each(this.options.events, function (type) {
           return _add(type, listener);
         });
       }
     }, {
       key: "bindResponsiveEvents",
       value: function bindResponsiveEvents() {
-        var me = this;
+        var _this18 = this;
 
-        if (!me._responsiveListeners) {
-          me._responsiveListeners = {};
+        if (!this._responsiveListeners) {
+          this._responsiveListeners = {};
         }
 
-        var listeners = me._responsiveListeners;
-        var platform = me.platform;
+        var listeners = this._responsiveListeners;
+        var platform = this.platform;
 
         var _add = function _add(type, listener) {
-          platform.addEventListener(me, type, listener);
+          platform.addEventListener(_this18, type, listener);
           listeners[type] = listener;
         };
 
         var _remove = function _remove(type, listener) {
           if (listeners[type]) {
-            platform.removeEventListener(me, type, listener);
+            platform.removeEventListener(_this18, type, listener);
             delete listeners[type];
           }
         };
 
         var listener = function listener(width, height) {
-          if (me.canvas) {
-            me.resize(width, height);
+          if (_this18.canvas) {
+            _this18.resize(width, height);
           }
         };
 
@@ -11717,8 +12022,9 @@
         var attached = function attached() {
           _remove('attach', attached);
 
-          me.attached = true;
-          me.resize();
+          _this18.attached = true;
+
+          _this18.resize();
 
           _add('resize', listener);
 
@@ -11726,14 +12032,18 @@
         };
 
         detached = function detached() {
-          me.attached = false;
+          _this18.attached = false;
 
           _remove('resize', listener);
+
+          _this18._stop();
+
+          _this18._resize(0, 0);
 
           _add('attach', attached);
         };
 
-        if (platform.isAttached(me.canvas)) {
+        if (platform.isAttached(this.canvas)) {
           attached();
         } else {
           detached();
@@ -11742,15 +12052,16 @@
     }, {
       key: "unbindEvents",
       value: function unbindEvents() {
-        var me = this;
-        each(me._listeners, function (listener, type) {
-          me.platform.removeEventListener(me, type, listener);
+        var _this19 = this;
+
+        each(this._listeners, function (listener, type) {
+          _this19.platform.removeEventListener(_this19, type, listener);
         });
-        me._listeners = {};
-        each(me._responsiveListeners, function (listener, type) {
-          me.platform.removeEventListener(me, type, listener);
+        this._listeners = {};
+        each(this._responsiveListeners, function (listener, type) {
+          _this19.platform.removeEventListener(_this19, type, listener);
         });
-        me._responsiveListeners = undefined;
+        this._responsiveListeners = undefined;
       }
     }, {
       key: "updateHoverStyle",
@@ -11780,12 +12091,14 @@
     }, {
       key: "setActiveElements",
       value: function setActiveElements(activeElements) {
-        var me = this;
-        var lastActive = me._active || [];
-        var active = activeElements.map(function (_ref) {
-          var datasetIndex = _ref.datasetIndex,
-              index = _ref.index;
-          var meta = me.getDatasetMeta(datasetIndex);
+        var _this20 = this;
+
+        var lastActive = this._active || [];
+        var active = activeElements.map(function (_ref2) {
+          var datasetIndex = _ref2.datasetIndex,
+              index = _ref2.index;
+
+          var meta = _this20.getDatasetMeta(datasetIndex);
 
           if (!meta) {
             throw new Error('No dataset found at index ' + datasetIndex);
@@ -11800,9 +12113,9 @@
         var changed = !_elementsEqual(active, lastActive);
 
         if (changed) {
-          me._active = active;
+          this._active = active;
 
-          me._updateHoverStyles(active, lastActive);
+          this._updateHoverStyles(active, lastActive);
         }
       }
     }, {
@@ -11813,8 +12126,7 @@
     }, {
       key: "_updateHoverStyles",
       value: function _updateHoverStyles(active, lastActive, replay) {
-        var me = this;
-        var hoverOptions = me.options.hover;
+        var hoverOptions = this.options.hover;
 
         var diff = function diff(a, b) {
           return a.filter(function (x) {
@@ -11828,19 +12140,18 @@
         var activated = replay ? active : diff(active, lastActive);
 
         if (deactivated.length) {
-          me.updateHoverStyle(deactivated, hoverOptions.mode, false);
+          this.updateHoverStyle(deactivated, hoverOptions.mode, false);
         }
 
         if (activated.length && hoverOptions.mode) {
-          me.updateHoverStyle(activated, hoverOptions.mode, true);
+          this.updateHoverStyle(activated, hoverOptions.mode, true);
         }
       }
     }, {
       key: "_eventHandler",
       value: function _eventHandler(e, replay) {
-        var _this6 = this;
+        var _this21 = this;
 
-        var me = this;
         var args = {
           event: e,
           replay: replay,
@@ -11848,31 +12159,30 @@
         };
 
         var eventFilter = function eventFilter(plugin) {
-          return (plugin.options.events || _this6.options.events).includes(e.type);
+          return (plugin.options.events || _this21.options.events).includes(e.native.type);
         };
 
-        if (me.notifyPlugins('beforeEvent', args, eventFilter) === false) {
+        if (this.notifyPlugins('beforeEvent', args, eventFilter) === false) {
           return;
         }
 
-        var changed = me._handleEvent(e, replay);
+        var changed = this._handleEvent(e, replay);
 
         args.cancelable = false;
-        me.notifyPlugins('afterEvent', args, eventFilter);
+        this.notifyPlugins('afterEvent', args, eventFilter);
 
         if (changed || args.changed) {
-          me.render();
+          this.render();
         }
 
-        return me;
+        return this;
       }
     }, {
       key: "_handleEvent",
       value: function _handleEvent(e, replay) {
-        var me = this;
-        var _me$_active = me._active,
-            lastActive = _me$_active === void 0 ? [] : _me$_active,
-            options = me.options;
+        var _this$_active = this._active,
+            lastActive = _this$_active === void 0 ? [] : _this$_active,
+            options = this.options;
         var hoverOptions = options.hover;
         var useFinalPosition = replay;
         var active = [];
@@ -11880,29 +12190,29 @@
         var lastEvent = null;
 
         if (e.type !== 'mouseout') {
-          active = me.getElementsAtEventForMode(e, hoverOptions.mode, hoverOptions, useFinalPosition);
-          lastEvent = e.type === 'click' ? me._lastEvent : e;
+          active = this.getElementsAtEventForMode(e, hoverOptions.mode, hoverOptions, useFinalPosition);
+          lastEvent = e.type === 'click' ? this._lastEvent : e;
         }
 
-        me._lastEvent = null;
+        this._lastEvent = null;
 
-        if (_isPointInArea(e, me.chartArea, me._minPadding)) {
-          callback(options.onHover, [e, active, me], me);
+        if (_isPointInArea(e, this.chartArea, this._minPadding)) {
+          callback(options.onHover, [e, active, this], this);
 
           if (e.type === 'mouseup' || e.type === 'click' || e.type === 'contextmenu') {
-            callback(options.onClick, [e, active, me], me);
+            callback(options.onClick, [e, active, this], this);
           }
         }
 
         changed = !_elementsEqual(active, lastActive);
 
         if (changed || replay) {
-          me._active = active;
+          this._active = active;
 
-          me._updateHoverStyles(active, lastActive, replay);
+          this._updateHoverStyles(active, lastActive, replay);
         }
 
-        me._lastEvent = lastEvent;
+        this._lastEvent = lastEvent;
         return changed;
       }
     }]);
@@ -12174,25 +12484,25 @@
     var _super12 = _createSuper(ArcElement);
 
     function ArcElement(cfg) {
-      var _this7;
+      var _this22;
 
       _classCallCheck(this, ArcElement);
 
-      _this7 = _super12.call(this);
-      _this7.options = undefined;
-      _this7.circumference = undefined;
-      _this7.startAngle = undefined;
-      _this7.endAngle = undefined;
-      _this7.innerRadius = undefined;
-      _this7.outerRadius = undefined;
-      _this7.pixelMargin = 0;
-      _this7.fullCircles = 0;
+      _this22 = _super12.call(this);
+      _this22.options = undefined;
+      _this22.circumference = undefined;
+      _this22.startAngle = undefined;
+      _this22.endAngle = undefined;
+      _this22.innerRadius = undefined;
+      _this22.outerRadius = undefined;
+      _this22.pixelMargin = 0;
+      _this22.fullCircles = 0;
 
       if (cfg) {
-        Object.assign(_assertThisInitialized(_this7), cfg);
+        Object.assign(_assertThisInitialized(_this22), cfg);
       }
 
-      return _this7;
+      return _this22;
     }
 
     _createClass(ArcElement, [{
@@ -12232,9 +12542,9 @@
             innerRadius = _this$getProps3.innerRadius,
             outerRadius = _this$getProps3.outerRadius;
 
-        var _this$options4 = this.options,
-            offset = _this$options4.offset,
-            spacing = _this$options4.spacing;
+        var _this$options11 = this.options,
+            offset = _this$options11.offset,
+            spacing = _this$options11.spacing;
         var halfAngle = (startAngle + endAngle) / 2;
         var halfRadius = (innerRadius + outerRadius + spacing + offset) / 2;
         return {
@@ -12250,15 +12560,14 @@
     }, {
       key: "draw",
       value: function draw(ctx) {
-        var me = this;
-        var options = me.options,
-            circumference = me.circumference;
+        var options = this.options,
+            circumference = this.circumference;
         var offset = (options.offset || 0) / 2;
         var spacing = (options.spacing || 0) / 2;
-        me.pixelMargin = options.borderAlign === 'inner' ? 0.33 : 0;
-        me.fullCircles = circumference > TAU ? Math.floor(circumference / TAU) : 0;
+        this.pixelMargin = options.borderAlign === 'inner' ? 0.33 : 0;
+        this.fullCircles = circumference > TAU ? Math.floor(circumference / TAU) : 0;
 
-        if (circumference === 0 || me.innerRadius < 0 || me.outerRadius < 0) {
+        if (circumference === 0 || this.innerRadius < 0 || this.outerRadius < 0) {
           return;
         }
 
@@ -12267,18 +12576,18 @@
 
         if (offset) {
           radiusOffset = offset / 2;
-          var halfAngle = (me.startAngle + me.endAngle) / 2;
+          var halfAngle = (this.startAngle + this.endAngle) / 2;
           ctx.translate(Math.cos(halfAngle) * radiusOffset, Math.sin(halfAngle) * radiusOffset);
 
-          if (me.circumference >= PI) {
+          if (this.circumference >= PI) {
             radiusOffset = offset;
           }
         }
 
         ctx.fillStyle = options.backgroundColor;
         ctx.strokeStyle = options.borderColor;
-        var endAngle = drawArc(ctx, me, radiusOffset, spacing);
-        drawBorder(ctx, me, radiusOffset, spacing, endAngle);
+        var endAngle = drawArc(ctx, this, radiusOffset, spacing);
+        drawBorder(ctx, this, radiusOffset, spacing, endAngle);
         ctx.restore();
       }
     }]);
@@ -12358,10 +12667,10 @@
 
     var lineMethod = getLineMethod(options);
 
-    var _ref2 = params || {},
-        _ref2$move = _ref2.move,
-        move = _ref2$move === void 0 ? true : _ref2$move,
-        reverse = _ref2.reverse;
+    var _ref3 = params || {},
+        _ref3$move = _ref3.move,
+        move = _ref3$move === void 0 ? true : _ref3$move,
+        reverse = _ref3.reverse;
 
     var i, point, prev;
 
@@ -12396,10 +12705,10 @@
         start = _pathVars2.start,
         ilen = _pathVars2.ilen;
 
-    var _ref3 = params || {},
-        _ref3$move = _ref3.move,
-        move = _ref3$move === void 0 ? true : _ref3$move,
-        reverse = _ref3.reverse;
+    var _ref4 = params || {},
+        _ref4$move = _ref4.move,
+        move = _ref4$move === void 0 ? true : _ref4$move,
+        reverse = _ref4.reverse;
 
     var avgX = 0;
     var countX = 0;
@@ -12495,12 +12804,12 @@
 
     var segmentMethod = _getSegmentMethod(line);
 
-    var _iterator8 = _createForOfIteratorHelper(segments),
-        _step8;
+    var _iterator14 = _createForOfIteratorHelper(segments),
+        _step14;
 
     try {
-      for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-        var segment = _step8.value;
+      for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+        var segment = _step14.value;
         setStyle(ctx, options, segment.style);
         ctx.beginPath();
 
@@ -12514,16 +12823,16 @@
         ctx.stroke();
       }
     } catch (err) {
-      _iterator8.e(err);
+      _iterator14.e(err);
     } finally {
-      _iterator8.f();
+      _iterator14.f();
     }
   }
 
   var usePath2D = typeof Path2D === 'function';
 
   function _draw(ctx, line, start, count) {
-    if (usePath2D && line.segments.length === 1) {
+    if (usePath2D && !line.options.segment) {
       strokePathWithCache(ctx, line, start, count);
     } else {
       strokePathDirect(ctx, line, start, count);
@@ -12536,40 +12845,41 @@
     var _super13 = _createSuper(LineElement);
 
     function LineElement(cfg) {
-      var _this8;
+      var _this23;
 
       _classCallCheck(this, LineElement);
 
-      _this8 = _super13.call(this);
-      _this8.animated = true;
-      _this8.options = undefined;
-      _this8._loop = undefined;
-      _this8._fullLoop = undefined;
-      _this8._path = undefined;
-      _this8._points = undefined;
-      _this8._segments = undefined;
-      _this8._decimated = false;
-      _this8._pointsUpdated = false;
+      _this23 = _super13.call(this);
+      _this23.animated = true;
+      _this23.options = undefined;
+      _this23._chart = undefined;
+      _this23._loop = undefined;
+      _this23._fullLoop = undefined;
+      _this23._path = undefined;
+      _this23._points = undefined;
+      _this23._segments = undefined;
+      _this23._decimated = false;
+      _this23._pointsUpdated = false;
+      _this23._datasetIndex = undefined;
 
       if (cfg) {
-        Object.assign(_assertThisInitialized(_this8), cfg);
+        Object.assign(_assertThisInitialized(_this23), cfg);
       }
 
-      return _this8;
+      return _this23;
     }
 
     _createClass(LineElement, [{
       key: "updateControlPoints",
       value: function updateControlPoints(chartArea, indexAxis) {
-        var me = this;
-        var options = me.options;
+        var options = this.options;
 
-        if ((options.tension || options.cubicInterpolationMode === 'monotone') && !options.stepped && !me._pointsUpdated) {
-          var loop = options.spanGaps ? me._loop : me._fullLoop;
+        if ((options.tension || options.cubicInterpolationMode === 'monotone') && !options.stepped && !this._pointsUpdated) {
+          var loop = options.spanGaps ? this._loop : this._fullLoop;
 
-          _updateBezierControlPoints(me._points, options, chartArea, loop, indexAxis);
+          _updateBezierControlPoints(this._points, options, chartArea, loop, indexAxis);
 
-          me._pointsUpdated = true;
+          this._pointsUpdated = true;
         }
       }
     }, {
@@ -12578,11 +12888,10 @@
         return this._points;
       },
       set: function set(points) {
-        var me = this;
-        me._points = points;
-        delete me._segments;
-        delete me._path;
-        me._pointsUpdated = false;
+        this._points = points;
+        delete this._segments;
+        delete this._path;
+        this._pointsUpdated = false;
       }
     }, {
       key: "segments",
@@ -12607,12 +12916,11 @@
     }, {
       key: "interpolate",
       value: function interpolate(point, property) {
-        var me = this;
-        var options = me.options;
+        var options = this.options;
         var value = point[property];
-        var points = me.points;
+        var points = this.points;
 
-        var segments = _boundSegments(me, {
+        var segments = _boundSegments(this, {
           property: property,
           start: value,
           end: value
@@ -12660,30 +12968,29 @@
     }, {
       key: "path",
       value: function path(ctx, start, count) {
-        var me = this;
-        var segments = me.segments;
+        var segments = this.segments;
 
-        var segmentMethod = _getSegmentMethod(me);
+        var segmentMethod = _getSegmentMethod(this);
 
-        var loop = me._loop;
+        var loop = this._loop;
         start = start || 0;
-        count = count || me.points.length - start;
+        count = count || this.points.length - start;
 
-        var _iterator9 = _createForOfIteratorHelper(segments),
-            _step9;
+        var _iterator15 = _createForOfIteratorHelper(segments),
+            _step15;
 
         try {
-          for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-            var segment = _step9.value;
-            loop &= segmentMethod(ctx, me, segment, {
+          for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+            var segment = _step15.value;
+            loop &= segmentMethod(ctx, this, segment, {
               start: start,
               end: start + count - 1
             });
           }
         } catch (err) {
-          _iterator9.e(err);
+          _iterator15.e(err);
         } finally {
-          _iterator9.f();
+          _iterator15.f();
         }
 
         return !!loop;
@@ -12691,23 +12998,20 @@
     }, {
       key: "draw",
       value: function draw(ctx, chartArea, start, count) {
-        var me = this;
-        var options = me.options || {};
-        var points = me.points || [];
+        var options = this.options || {};
+        var points = this.points || [];
 
-        if (!points.length || !options.borderWidth) {
-          return;
+        if (points.length && options.borderWidth) {
+          ctx.save();
+
+          _draw(ctx, this, start, count);
+
+          ctx.restore();
         }
 
-        ctx.save();
-
-        _draw(ctx, me, start, count);
-
-        ctx.restore();
-
-        if (me.animated) {
-          me._pointsUpdated = false;
-          me._path = undefined;
+        if (this.animated) {
+          this._pointsUpdated = false;
+          this._path = undefined;
         }
       }
     }]);
@@ -12755,21 +13059,21 @@
     var _super14 = _createSuper(PointElement);
 
     function PointElement(cfg) {
-      var _this9;
+      var _this24;
 
       _classCallCheck(this, PointElement);
 
-      _this9 = _super14.call(this);
-      _this9.options = undefined;
-      _this9.parsed = undefined;
-      _this9.skip = undefined;
-      _this9.stop = undefined;
+      _this24 = _super14.call(this);
+      _this24.options = undefined;
+      _this24.parsed = undefined;
+      _this24.skip = undefined;
+      _this24.stop = undefined;
 
       if (cfg) {
-        Object.assign(_assertThisInitialized(_this9), cfg);
+        Object.assign(_assertThisInitialized(_this24), cfg);
       }
 
-      return _this9;
+      return _this24;
     }
 
     _createClass(PointElement, [{
@@ -12816,18 +13120,17 @@
       }
     }, {
       key: "draw",
-      value: function draw(ctx) {
-        var me = this;
-        var options = me.options;
+      value: function draw(ctx, area) {
+        var options = this.options;
 
-        if (me.skip || options.radius < 0.1) {
+        if (this.skip || options.radius < 0.1 || !_isPointInArea(this, area, this.size(options) / 2)) {
           return;
         }
 
         ctx.strokeStyle = options.borderColor;
         ctx.lineWidth = options.borderWidth;
         ctx.fillStyle = options.backgroundColor;
-        drawPoint(ctx, options, me.x, me.y);
+        drawPoint(ctx, options, this.x, this.y);
       }
     }, {
       key: "getRange",
@@ -12887,45 +13190,13 @@
     };
   }
 
-  function parseBorderSkipped(bar) {
-    var edge = bar.options.borderSkipped;
-    var res = {};
-
-    if (!edge) {
-      return res;
-    }
-
-    edge = bar.horizontal ? parseEdge(edge, 'left', 'right', bar.base > bar.x) : parseEdge(edge, 'bottom', 'top', bar.base < bar.y);
-    res[edge] = true;
-    return res;
-  }
-
-  function parseEdge(edge, a, b, reverse) {
-    if (reverse) {
-      edge = swap(edge, a, b);
-      edge = startEnd(edge, b, a);
-    } else {
-      edge = startEnd(edge, a, b);
-    }
-
-    return edge;
-  }
-
-  function swap(orig, v1, v2) {
-    return orig === v1 ? v2 : orig === v2 ? v1 : orig;
-  }
-
-  function startEnd(v, start, end) {
-    return v === 'start' ? start : v === 'end' ? end : v;
-  }
-
   function skipOrLimit(skip, value, min, max) {
-    return skip ? 0 : Math.max(Math.min(value, max), min);
+    return skip ? 0 : _limitValue(value, min, max);
   }
 
   function parseBorderWidth(bar, maxW, maxH) {
     var value = bar.options.borderWidth;
-    var skip = parseBorderSkipped(bar);
+    var skip = bar.borderSkipped;
     var o = toTRBL(value);
     return {
       t: skipOrLimit(skip.top, o.top, 0, maxH),
@@ -12942,7 +13213,7 @@
     var value = bar.options.borderRadius;
     var o = toTRBLCorners(value);
     var maxR = Math.min(maxW, maxH);
-    var skip = parseBorderSkipped(bar);
+    var skip = bar.borderSkipped;
     var enableBorder = enableBorderRadius || isObject(value);
     return {
       topLeft: skipOrLimit(!enableBorder || skip.top || skip.left, o.topLeft, 0, maxR),
@@ -12997,34 +13268,53 @@
     ctx.rect(rect.x, rect.y, rect.w, rect.h);
   }
 
+  function inflateRect(rect, amount) {
+    var refRect = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var x = rect.x !== refRect.x ? -amount : 0;
+    var y = rect.y !== refRect.y ? -amount : 0;
+    var w = (rect.x + rect.w !== refRect.x + refRect.w ? amount : 0) - x;
+    var h = (rect.y + rect.h !== refRect.y + refRect.h ? amount : 0) - y;
+    return {
+      x: rect.x + x,
+      y: rect.y + y,
+      w: rect.w + w,
+      h: rect.h + h,
+      radius: rect.radius
+    };
+  }
+
   var BarElement = /*#__PURE__*/function (_Element5) {
     _inherits(BarElement, _Element5);
 
     var _super15 = _createSuper(BarElement);
 
     function BarElement(cfg) {
-      var _this10;
+      var _this25;
 
       _classCallCheck(this, BarElement);
 
-      _this10 = _super15.call(this);
-      _this10.options = undefined;
-      _this10.horizontal = undefined;
-      _this10.base = undefined;
-      _this10.width = undefined;
-      _this10.height = undefined;
+      _this25 = _super15.call(this);
+      _this25.options = undefined;
+      _this25.horizontal = undefined;
+      _this25.base = undefined;
+      _this25.width = undefined;
+      _this25.height = undefined;
+      _this25.inflateAmount = undefined;
 
       if (cfg) {
-        Object.assign(_assertThisInitialized(_this10), cfg);
+        Object.assign(_assertThisInitialized(_this25), cfg);
       }
 
-      return _this10;
+      return _this25;
     }
 
     _createClass(BarElement, [{
       key: "draw",
       value: function draw(ctx) {
-        var options = this.options;
+        var inflateAmount = this.inflateAmount,
+            _this$options12 = this.options,
+            borderColor = _this$options12.borderColor,
+            backgroundColor = _this$options12.backgroundColor;
 
         var _boundingRects = boundingRects(this),
             inner = _boundingRects.inner,
@@ -13035,16 +13325,16 @@
 
         if (outer.w !== inner.w || outer.h !== inner.h) {
           ctx.beginPath();
-          addRectPath(ctx, outer);
+          addRectPath(ctx, inflateRect(outer, inflateAmount, inner));
           ctx.clip();
-          addRectPath(ctx, inner);
-          ctx.fillStyle = options.borderColor;
+          addRectPath(ctx, inflateRect(inner, -inflateAmount, outer));
+          ctx.fillStyle = borderColor;
           ctx.fill('evenodd');
         }
 
         ctx.beginPath();
-        addRectPath(ctx, inner);
-        ctx.fillStyle = options.backgroundColor;
+        addRectPath(ctx, inflateRect(inner, inflateAmount));
+        ctx.fillStyle = backgroundColor;
         ctx.fill();
         ctx.restore();
       }
@@ -13092,7 +13382,7 @@
     borderSkipped: 'start',
     borderWidth: 0,
     borderRadius: 0,
-    enableBorderRadius: true,
+    inflateAmount: 'auto',
     pointStyle: undefined
   };
   BarElement.defaultRoutes = {
@@ -13138,7 +13428,7 @@
       avgX /= avgRangeLength;
       avgY /= avgRangeLength;
       var rangeOffs = Math.floor(i * bucketWidth) + 1 + start;
-      var rangeTo = Math.floor((i + 1) * bucketWidth) + 1 + start;
+      var rangeTo = Math.min(Math.floor((i + 1) * bucketWidth) + 1, count) + start;
       var _data$a = data[a],
           pointAx = _data$a.x,
           pointAy = _data$a.y;
@@ -13309,7 +13599,9 @@
             start = _getStartAndCountOfVi2.start,
             count = _getStartAndCountOfVi2.count;
 
-        if (count <= 4 * availableWidth) {
+        var threshold = options.threshold || 4 * availableWidth;
+
+        if (count <= threshold) {
           cleanDecimatedDataset(dataset);
           return;
         }
@@ -13399,7 +13691,7 @@
       return target;
     }
 
-    return ['origin', 'start', 'end', 'stack'].indexOf(fill) >= 0 && fill;
+    return ['origin', 'start', 'end', 'stack', 'shape'].indexOf(fill) >= 0 && fill;
   }
 
   function computeLinearBoundary(source) {
@@ -13529,17 +13821,17 @@
   }
 
   function pointsFromSegments(boundary, line) {
-    var _ref4 = boundary || {},
-        _ref4$x = _ref4.x,
-        x = _ref4$x === void 0 ? null : _ref4$x,
-        _ref4$y = _ref4.y,
-        y = _ref4$y === void 0 ? null : _ref4$y;
+    var _ref5 = boundary || {},
+        _ref5$x = _ref5.x,
+        x = _ref5$x === void 0 ? null : _ref5$x,
+        _ref5$y = _ref5.y,
+        y = _ref5$y === void 0 ? null : _ref5$y;
 
     var linePoints = line.points;
     var points = [];
-    line.segments.forEach(function (_ref5) {
-      var start = _ref5.start,
-          end = _ref5.end;
+    line.segments.forEach(function (_ref6) {
+      var start = _ref6.start,
+          end = _ref6.end;
       end = findSegmentEnd(start, end, linePoints);
       var first = linePoints[start];
       var last = linePoints[end];
@@ -13568,14 +13860,13 @@
   }
 
   function buildStackLine(source) {
-    var chart = source.chart,
-        scale = source.scale,
+    var scale = source.scale,
         index = source.index,
         line = source.line;
     var points = [];
     var segments = line.segments;
     var sourcePoints = line.points;
-    var linesBelow = getLinesBelow(chart, index);
+    var linesBelow = getLinesBelow(scale, index);
     linesBelow.push(createBoundaryLine({
       x: null,
       y: scale.bottom
@@ -13595,13 +13886,9 @@
     });
   }
 
-  var isLineAndNotInHideAnimation = function isLineAndNotInHideAnimation(meta) {
-    return meta.type === 'line' && !meta.hidden;
-  };
-
-  function getLinesBelow(chart, index) {
+  function getLinesBelow(scale, index) {
     var below = [];
-    var metas = chart.getSortedVisibleDatasetMetas();
+    var metas = scale.getMatchingVisibleMetas('line');
 
     for (var i = 0; i < metas.length; i++) {
       var meta = metas[i];
@@ -13610,7 +13897,7 @@
         break;
       }
 
-      if (isLineAndNotInHideAnimation(meta)) {
+      if (!meta.hidden) {
         below.unshift(meta.dataset);
       }
     }
@@ -13690,6 +13977,10 @@
 
     if (fill === 'stack') {
       return buildStackLine(source);
+    }
+
+    if (fill === 'shape') {
+      return true;
     }
 
     var boundary = computeBoundary(source);
@@ -13797,12 +14088,12 @@
     var tpoints = target.points;
     var parts = [];
 
-    var _iterator10 = _createForOfIteratorHelper(segments),
-        _step10;
+    var _iterator16 = _createForOfIteratorHelper(segments),
+        _step16;
 
     try {
-      for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-        var segment = _step10.value;
+      for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+        var segment = _step16.value;
         var start = segment.start,
             end = segment.end;
         end = findSegmentEnd(start, end, points);
@@ -13820,22 +14111,22 @@
 
         var targetSegments = _boundSegments(target, bounds);
 
-        var _iterator11 = _createForOfIteratorHelper(targetSegments),
-            _step11;
+        var _iterator17 = _createForOfIteratorHelper(targetSegments),
+            _step17;
 
         try {
-          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-            var tgt = _step11.value;
+          for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+            var tgt = _step17.value;
             var subBounds = getBounds(property, tpoints[tgt.start], tpoints[tgt.end], tgt.loop);
 
             var fillSources = _boundSegment(segment, points, subBounds);
 
-            var _iterator12 = _createForOfIteratorHelper(fillSources),
-                _step12;
+            var _iterator18 = _createForOfIteratorHelper(fillSources),
+                _step18;
 
             try {
-              for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-                var fillSource = _step12.value;
+              for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+                var fillSource = _step18.value;
                 parts.push({
                   source: fillSource,
                   target: tgt,
@@ -13844,21 +14135,21 @@
                 });
               }
             } catch (err) {
-              _iterator12.e(err);
+              _iterator18.e(err);
             } finally {
-              _iterator12.f();
+              _iterator18.f();
             }
           }
         } catch (err) {
-          _iterator11.e(err);
+          _iterator17.e(err);
         } finally {
-          _iterator11.f();
+          _iterator17.f();
         }
       }
     } catch (err) {
-      _iterator10.e(err);
+      _iterator16.e(err);
     } finally {
-      _iterator10.f();
+      _iterator16.f();
     }
 
     return parts;
@@ -13869,10 +14160,10 @@
         top = _scale$chart$chartAre.top,
         bottom = _scale$chart$chartAre.bottom;
 
-    var _ref6 = bounds || {},
-        property = _ref6.property,
-        start = _ref6.start,
-        end = _ref6.end;
+    var _ref7 = bounds || {},
+        property = _ref7.property,
+        start = _ref7.start,
+        end = _ref7.end;
 
     if (property === 'x') {
       ctx.beginPath();
@@ -13898,40 +14189,44 @@
 
     var segments = _segments(line, target, property);
 
-    var _iterator13 = _createForOfIteratorHelper(segments),
-        _step13;
+    var _iterator19 = _createForOfIteratorHelper(segments),
+        _step19;
 
     try {
-      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-        var _step13$value = _step13.value,
-            src = _step13$value.source,
-            tgt = _step13$value.target,
-            start = _step13$value.start,
-            end = _step13$value.end;
+      for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+        var _step19$value = _step19.value,
+            src = _step19$value.source,
+            tgt = _step19$value.target,
+            start = _step19$value.start,
+            end = _step19$value.end;
         var _src$style = src.style;
         _src$style = _src$style === void 0 ? {} : _src$style;
         var _src$style$background = _src$style.backgroundColor,
             backgroundColor = _src$style$background === void 0 ? color : _src$style$background;
+        var notShape = target !== true;
         ctx.save();
         ctx.fillStyle = backgroundColor;
-        clipBounds(ctx, scale, getBounds(property, start, end));
+        clipBounds(ctx, scale, notShape && getBounds(property, start, end));
         ctx.beginPath();
         var lineLoop = !!line.pathSegment(ctx, src);
+        var loop = void 0;
 
-        if (lineLoop) {
-          ctx.closePath();
-        } else {
-          interpolatedLineTo(ctx, target, end, property);
-        }
+        if (notShape) {
+          if (lineLoop) {
+            ctx.closePath();
+          } else {
+            interpolatedLineTo(ctx, target, end, property);
+          }
 
-        var targetLoop = !!target.pathSegment(ctx, tgt, {
-          move: lineLoop,
-          reverse: true
-        });
-        var loop = lineLoop && targetLoop;
+          var targetLoop = !!target.pathSegment(ctx, tgt, {
+            move: lineLoop,
+            reverse: true
+          });
+          loop = lineLoop && targetLoop;
 
-        if (!loop) {
-          interpolatedLineTo(ctx, target, start, property);
+          if (!loop) {
+            interpolatedLineTo(ctx, target, start, property);
+          }
         }
 
         ctx.closePath();
@@ -13939,9 +14234,9 @@
         ctx.restore();
       }
     } catch (err) {
-      _iterator13.e(err);
+      _iterator19.e(err);
     } finally {
-      _iterator13.f();
+      _iterator19.f();
     }
   }
 
@@ -13992,11 +14287,11 @@
     var fillOption = lineOpts.fill;
     var color = lineOpts.backgroundColor;
 
-    var _ref7 = fillOption || {},
-        _ref7$above = _ref7.above,
-        above = _ref7$above === void 0 ? color : _ref7$above,
-        _ref7$below = _ref7.below,
-        below = _ref7$below === void 0 ? color : _ref7$below;
+    var _ref8 = fillOption || {},
+        _ref8$above = _ref8.above,
+        above = _ref8$above === void 0 ? color : _ref8$above,
+        _ref8$below = _ref8.below,
+        below = _ref8$below === void 0 ? color : _ref8$below;
 
     if (target && line.points.length) {
       clipArea(ctx, area);
@@ -14128,96 +14423,93 @@
     var _super16 = _createSuper(Legend);
 
     function Legend(config) {
-      var _this11;
+      var _this26;
 
       _classCallCheck(this, Legend);
 
-      _this11 = _super16.call(this);
-      _this11._added = false;
-      _this11.legendHitBoxes = [];
-      _this11._hoveredItem = null;
-      _this11.doughnutMode = false;
-      _this11.chart = config.chart;
-      _this11.options = config.options;
-      _this11.ctx = config.ctx;
-      _this11.legendItems = undefined;
-      _this11.columnSizes = undefined;
-      _this11.lineWidths = undefined;
-      _this11.maxHeight = undefined;
-      _this11.maxWidth = undefined;
-      _this11.top = undefined;
-      _this11.bottom = undefined;
-      _this11.left = undefined;
-      _this11.right = undefined;
-      _this11.height = undefined;
-      _this11.width = undefined;
-      _this11._margins = undefined;
-      _this11.position = undefined;
-      _this11.weight = undefined;
-      _this11.fullSize = undefined;
-      return _this11;
+      _this26 = _super16.call(this);
+      _this26._added = false;
+      _this26.legendHitBoxes = [];
+      _this26._hoveredItem = null;
+      _this26.doughnutMode = false;
+      _this26.chart = config.chart;
+      _this26.options = config.options;
+      _this26.ctx = config.ctx;
+      _this26.legendItems = undefined;
+      _this26.columnSizes = undefined;
+      _this26.lineWidths = undefined;
+      _this26.maxHeight = undefined;
+      _this26.maxWidth = undefined;
+      _this26.top = undefined;
+      _this26.bottom = undefined;
+      _this26.left = undefined;
+      _this26.right = undefined;
+      _this26.height = undefined;
+      _this26.width = undefined;
+      _this26._margins = undefined;
+      _this26.position = undefined;
+      _this26.weight = undefined;
+      _this26.fullSize = undefined;
+      return _this26;
     }
 
     _createClass(Legend, [{
       key: "update",
       value: function update(maxWidth, maxHeight, margins) {
-        var me = this;
-        me.maxWidth = maxWidth;
-        me.maxHeight = maxHeight;
-        me._margins = margins;
-        me.setDimensions();
-        me.buildLabels();
-        me.fit();
+        this.maxWidth = maxWidth;
+        this.maxHeight = maxHeight;
+        this._margins = margins;
+        this.setDimensions();
+        this.buildLabels();
+        this.fit();
       }
     }, {
       key: "setDimensions",
       value: function setDimensions() {
-        var me = this;
-
-        if (me.isHorizontal()) {
-          me.width = me.maxWidth;
-          me.left = me._margins.left;
-          me.right = me.width;
+        if (this.isHorizontal()) {
+          this.width = this.maxWidth;
+          this.left = this._margins.left;
+          this.right = this.width;
         } else {
-          me.height = me.maxHeight;
-          me.top = me._margins.top;
-          me.bottom = me.height;
+          this.height = this.maxHeight;
+          this.top = this._margins.top;
+          this.bottom = this.height;
         }
       }
     }, {
       key: "buildLabels",
       value: function buildLabels() {
-        var me = this;
-        var labelOpts = me.options.labels || {};
-        var legendItems = callback(labelOpts.generateLabels, [me.chart], me) || [];
+        var _this27 = this;
+
+        var labelOpts = this.options.labels || {};
+        var legendItems = callback(labelOpts.generateLabels, [this.chart], this) || [];
 
         if (labelOpts.filter) {
           legendItems = legendItems.filter(function (item) {
-            return labelOpts.filter(item, me.chart.data);
+            return labelOpts.filter(item, _this27.chart.data);
           });
         }
 
         if (labelOpts.sort) {
           legendItems = legendItems.sort(function (a, b) {
-            return labelOpts.sort(a, b, me.chart.data);
+            return labelOpts.sort(a, b, _this27.chart.data);
           });
         }
 
-        if (me.options.reverse) {
+        if (this.options.reverse) {
           legendItems.reverse();
         }
 
-        me.legendItems = legendItems;
+        this.legendItems = legendItems;
       }
     }, {
       key: "fit",
       value: function fit() {
-        var me = this;
-        var options = me.options,
-            ctx = me.ctx;
+        var options = this.options,
+            ctx = this.ctx;
 
         if (!options.display) {
-          me.width = me.height = 0;
+          this.width = this.height = 0;
           return;
         }
 
@@ -14225,7 +14517,7 @@
         var labelFont = toFont(labelOpts.font);
         var fontSize = labelFont.size;
 
-        var titleHeight = me._computeTitleHeight();
+        var titleHeight = this._computeTitleHeight();
 
         var _getBoxSize = getBoxSize(labelOpts, fontSize),
             boxWidth = _getBoxSize.boxWidth,
@@ -14234,33 +14526,32 @@
         var width, height;
         ctx.font = labelFont.string;
 
-        if (me.isHorizontal()) {
-          width = me.maxWidth;
-          height = me._fitRows(titleHeight, fontSize, boxWidth, itemHeight) + 10;
+        if (this.isHorizontal()) {
+          width = this.maxWidth;
+          height = this._fitRows(titleHeight, fontSize, boxWidth, itemHeight) + 10;
         } else {
-          height = me.maxHeight;
-          width = me._fitCols(titleHeight, fontSize, boxWidth, itemHeight) + 10;
+          height = this.maxHeight;
+          width = this._fitCols(titleHeight, fontSize, boxWidth, itemHeight) + 10;
         }
 
-        me.width = Math.min(width, options.maxWidth || me.maxWidth);
-        me.height = Math.min(height, options.maxHeight || me.maxHeight);
+        this.width = Math.min(width, options.maxWidth || this.maxWidth);
+        this.height = Math.min(height, options.maxHeight || this.maxHeight);
       }
     }, {
       key: "_fitRows",
       value: function _fitRows(titleHeight, fontSize, boxWidth, itemHeight) {
-        var me = this;
-        var ctx = me.ctx,
-            maxWidth = me.maxWidth,
-            padding = me.options.labels.padding;
-        var hitboxes = me.legendHitBoxes = [];
-        var lineWidths = me.lineWidths = [0];
+        var ctx = this.ctx,
+            maxWidth = this.maxWidth,
+            padding = this.options.labels.padding;
+        var hitboxes = this.legendHitBoxes = [];
+        var lineWidths = this.lineWidths = [0];
         var lineHeight = itemHeight + padding;
         var totalHeight = titleHeight;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         var row = -1;
         var top = -lineHeight;
-        me.legendItems.forEach(function (legendItem, i) {
+        this.legendItems.forEach(function (legendItem, i) {
           var itemWidth = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width;
 
           if (i === 0 || lineWidths[lineWidths.length - 1] + itemWidth + 2 * padding > maxWidth) {
@@ -14284,19 +14575,18 @@
     }, {
       key: "_fitCols",
       value: function _fitCols(titleHeight, fontSize, boxWidth, itemHeight) {
-        var me = this;
-        var ctx = me.ctx,
-            maxHeight = me.maxHeight,
-            padding = me.options.labels.padding;
-        var hitboxes = me.legendHitBoxes = [];
-        var columnSizes = me.columnSizes = [];
+        var ctx = this.ctx,
+            maxHeight = this.maxHeight,
+            padding = this.options.labels.padding;
+        var hitboxes = this.legendHitBoxes = [];
+        var columnSizes = this.columnSizes = [];
         var heightLimit = maxHeight - titleHeight;
         var totalWidth = padding;
         var currentColWidth = 0;
         var currentColHeight = 0;
         var left = 0;
         var col = 0;
-        me.legendItems.forEach(function (legendItem, i) {
+        this.legendItems.forEach(function (legendItem, i) {
           var itemWidth = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width;
 
           if (i > 0 && currentColHeight + itemHeight + 2 * padding > heightLimit) {
@@ -14330,85 +14620,71 @@
     }, {
       key: "adjustHitBoxes",
       value: function adjustHitBoxes() {
-        var me = this;
-
-        if (!me.options.display) {
+        if (!this.options.display) {
           return;
         }
 
-        var titleHeight = me._computeTitleHeight();
+        var titleHeight = this._computeTitleHeight();
 
-        var hitboxes = me.legendHitBoxes,
-            _me$options6 = me.options,
-            align = _me$options6.align,
-            padding = _me$options6.labels.padding,
-            rtl = _me$options6.rtl;
+        var hitboxes = this.legendHitBoxes,
+            _this$options13 = this.options,
+            align = _this$options13.align,
+            padding = _this$options13.labels.padding,
+            rtl = _this$options13.rtl;
+        var rtlHelper = getRtlAdapter(rtl, this.left, this.width);
 
         if (this.isHorizontal()) {
           var row = 0;
 
-          var left = _alignStartEnd(align, me.left + padding, me.right - me.lineWidths[row]);
+          var left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
 
-          var _iterator14 = _createForOfIteratorHelper(hitboxes),
-              _step14;
+          var _iterator20 = _createForOfIteratorHelper(hitboxes),
+              _step20;
 
           try {
-            for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-              var hitbox = _step14.value;
+            for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
+              var hitbox = _step20.value;
 
               if (row !== hitbox.row) {
                 row = hitbox.row;
-                left = _alignStartEnd(align, me.left + padding, me.right - me.lineWidths[row]);
+                left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
               }
 
-              hitbox.top += me.top + titleHeight + padding;
-              hitbox.left = left;
+              hitbox.top += this.top + titleHeight + padding;
+              hitbox.left = rtlHelper.leftForLtr(rtlHelper.x(left), hitbox.width);
               left += hitbox.width + padding;
             }
           } catch (err) {
-            _iterator14.e(err);
+            _iterator20.e(err);
           } finally {
-            _iterator14.f();
-          }
-
-          if (rtl) {
-            var boxMap = hitboxes.reduce(function (map, box) {
-              map[box.row] = map[box.row] || [];
-              map[box.row].push(box);
-              return map;
-            }, {});
-            var newBoxes = [];
-            Object.keys(boxMap).forEach(function (key) {
-              boxMap[key].reverse();
-              newBoxes.push.apply(newBoxes, _toConsumableArray(boxMap[key]));
-            });
-            me.legendHitBoxes = newBoxes;
+            _iterator20.f();
           }
         } else {
           var col = 0;
 
-          var top = _alignStartEnd(align, me.top + titleHeight + padding, me.bottom - me.columnSizes[col].height);
+          var top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
 
-          var _iterator15 = _createForOfIteratorHelper(hitboxes),
-              _step15;
+          var _iterator21 = _createForOfIteratorHelper(hitboxes),
+              _step21;
 
           try {
-            for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-              var _hitbox = _step15.value;
+            for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
+              var _hitbox = _step21.value;
 
               if (_hitbox.col !== col) {
                 col = _hitbox.col;
-                top = _alignStartEnd(align, me.top + titleHeight + padding, me.bottom - me.columnSizes[col].height);
+                top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
               }
 
               _hitbox.top = top;
-              _hitbox.left += me.left + padding;
+              _hitbox.left += this.left + padding;
+              _hitbox.left = rtlHelper.leftForLtr(rtlHelper.x(_hitbox.left), _hitbox.width);
               top += _hitbox.height + padding;
             }
           } catch (err) {
-            _iterator15.e(err);
+            _iterator21.e(err);
           } finally {
-            _iterator15.f();
+            _iterator21.f();
           }
         }
       }
@@ -14420,13 +14696,11 @@
     }, {
       key: "draw",
       value: function draw() {
-        var me = this;
+        if (this.options.display) {
+          var ctx = this.ctx;
+          clipArea(ctx, this);
 
-        if (me.options.display) {
-          var ctx = me.ctx;
-          clipArea(ctx, me);
-
-          me._draw();
+          this._draw();
 
           unclipArea(ctx);
         }
@@ -14434,22 +14708,23 @@
     }, {
       key: "_draw",
       value: function _draw() {
-        var me = this;
-        var opts = me.options,
-            columnSizes = me.columnSizes,
-            lineWidths = me.lineWidths,
-            ctx = me.ctx;
+        var _this28 = this;
+
+        var opts = this.options,
+            columnSizes = this.columnSizes,
+            lineWidths = this.lineWidths,
+            ctx = this.ctx;
         var align = opts.align,
             labelOpts = opts.labels;
         var defaultColor = defaults.color;
-        var rtlHelper = getRtlAdapter(opts.rtl, me.left, me.width);
+        var rtlHelper = getRtlAdapter(opts.rtl, this.left, this.width);
         var labelFont = toFont(labelOpts.font);
         var fontColor = labelOpts.color,
             padding = labelOpts.padding;
         var fontSize = labelFont.size;
         var halfFontSize = fontSize / 2;
         var cursor;
-        me.drawTitle();
+        this.drawTitle();
         ctx.textAlign = rtlHelper.textAlign('left');
         ctx.textBaseline = 'middle';
         ctx.lineWidth = 0.5;
@@ -14522,27 +14797,27 @@
           });
         };
 
-        var isHorizontal = me.isHorizontal();
+        var isHorizontal = this.isHorizontal();
 
         var titleHeight = this._computeTitleHeight();
 
         if (isHorizontal) {
           cursor = {
-            x: _alignStartEnd(align, me.left + padding, me.right - lineWidths[0]),
-            y: me.top + padding + titleHeight,
+            x: _alignStartEnd(align, this.left + padding, this.right - lineWidths[0]),
+            y: this.top + padding + titleHeight,
             line: 0
           };
         } else {
           cursor = {
-            x: me.left + padding,
-            y: _alignStartEnd(align, me.top + titleHeight + padding, me.bottom - columnSizes[0].height),
+            x: this.left + padding,
+            y: _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - columnSizes[0].height),
             line: 0
           };
         }
 
-        overrideTextDirection(me.ctx, opts.textDirection);
+        overrideTextDirection(this.ctx, opts.textDirection);
         var lineHeight = itemHeight + padding;
-        me.legendItems.forEach(function (legendItem, i) {
+        this.legendItems.forEach(function (legendItem, i) {
           ctx.strokeStyle = legendItem.fontColor || fontColor;
           ctx.fillStyle = legendItem.fontColor || fontColor;
           var textWidth = ctx.measureText(legendItem.text).width;
@@ -14550,23 +14825,23 @@
           var width = boxWidth + halfFontSize + textWidth;
           var x = cursor.x;
           var y = cursor.y;
-          rtlHelper.setWidth(me.width);
+          rtlHelper.setWidth(_this28.width);
 
           if (isHorizontal) {
-            if (i > 0 && x + width + padding > me.right) {
+            if (i > 0 && x + width + padding > _this28.right) {
               y = cursor.y += lineHeight;
               cursor.line++;
-              x = cursor.x = _alignStartEnd(align, me.left + padding, me.right - lineWidths[cursor.line]);
+              x = cursor.x = _alignStartEnd(align, _this28.left + padding, _this28.right - lineWidths[cursor.line]);
             }
-          } else if (i > 0 && y + lineHeight > me.bottom) {
+          } else if (i > 0 && y + lineHeight > _this28.bottom) {
             x = cursor.x = x + columnSizes[cursor.line].width + padding;
             cursor.line++;
-            y = cursor.y = _alignStartEnd(align, me.top + titleHeight + padding, me.bottom - columnSizes[cursor.line].height);
+            y = cursor.y = _alignStartEnd(align, _this28.top + titleHeight + padding, _this28.bottom - columnSizes[cursor.line].height);
           }
 
           var realX = rtlHelper.x(x);
           drawLegendBox(realX, y, legendItem);
-          x = _textX(textAlign, x + boxWidth + halfFontSize, isHorizontal ? x + width : me.right, opts.rtl);
+          x = _textX(textAlign, x + boxWidth + halfFontSize, isHorizontal ? x + width : _this28.right, opts.rtl);
           fillText(rtlHelper.x(x), y, legendItem);
 
           if (isHorizontal) {
@@ -14575,13 +14850,12 @@
             cursor.y += lineHeight;
           }
         });
-        restoreTextDirection(me.ctx, opts.textDirection);
+        restoreTextDirection(this.ctx, opts.textDirection);
       }
     }, {
       key: "drawTitle",
       value: function drawTitle() {
-        var me = this;
-        var opts = me.options;
+        var opts = this.options;
         var titleOpts = opts.title;
         var titleFont = toFont(titleOpts.font);
         var titlePadding = toPadding(titleOpts.padding);
@@ -14590,24 +14864,24 @@
           return;
         }
 
-        var rtlHelper = getRtlAdapter(opts.rtl, me.left, me.width);
-        var ctx = me.ctx;
+        var rtlHelper = getRtlAdapter(opts.rtl, this.left, this.width);
+        var ctx = this.ctx;
         var position = titleOpts.position;
         var halfFontSize = titleFont.size / 2;
         var topPaddingPlusHalfFontSize = titlePadding.top + halfFontSize;
         var y;
-        var left = me.left;
-        var maxWidth = me.width;
+        var left = this.left;
+        var maxWidth = this.width;
 
         if (this.isHorizontal()) {
-          maxWidth = Math.max.apply(Math, _toConsumableArray(me.lineWidths));
-          y = me.top + topPaddingPlusHalfFontSize;
-          left = _alignStartEnd(opts.align, left, me.right - maxWidth);
+          maxWidth = Math.max.apply(Math, _toConsumableArray(this.lineWidths));
+          y = this.top + topPaddingPlusHalfFontSize;
+          left = _alignStartEnd(opts.align, left, this.right - maxWidth);
         } else {
-          var maxHeight = me.columnSizes.reduce(function (acc, size) {
+          var maxHeight = this.columnSizes.reduce(function (acc, size) {
             return Math.max(acc, size.height);
           }, 0);
-          y = topPaddingPlusHalfFontSize + _alignStartEnd(opts.align, me.top, me.bottom - maxHeight - opts.labels.padding - me._computeTitleHeight());
+          y = topPaddingPlusHalfFontSize + _alignStartEnd(opts.align, this.top, this.bottom - maxHeight - opts.labels.padding - this._computeTitleHeight());
         }
 
         var x = _alignStartEnd(position, left, left + maxWidth);
@@ -14630,17 +14904,16 @@
     }, {
       key: "_getLegendItemAt",
       value: function _getLegendItemAt(x, y) {
-        var me = this;
         var i, hitBox, lh;
 
-        if (x >= me.left && x <= me.right && y >= me.top && y <= me.bottom) {
-          lh = me.legendHitBoxes;
+        if (x >= this.left && x <= this.right && y >= this.top && y <= this.bottom) {
+          lh = this.legendHitBoxes;
 
           for (i = 0; i < lh.length; ++i) {
             hitBox = lh[i];
 
             if (x >= hitBox.left && x <= hitBox.left + hitBox.width && y >= hitBox.top && y <= hitBox.top + hitBox.height) {
-              return me.legendItems[i];
+              return this.legendItems[i];
             }
           }
         }
@@ -14650,30 +14923,29 @@
     }, {
       key: "handleEvent",
       value: function handleEvent(e) {
-        var me = this;
-        var opts = me.options;
+        var opts = this.options;
 
         if (!isListened(e.type, opts)) {
           return;
         }
 
-        var hoveredItem = me._getLegendItemAt(e.x, e.y);
+        var hoveredItem = this._getLegendItemAt(e.x, e.y);
 
         if (e.type === 'mousemove') {
-          var previous = me._hoveredItem;
+          var previous = this._hoveredItem;
           var sameItem = itemsEqual(previous, hoveredItem);
 
           if (previous && !sameItem) {
-            callback(opts.onLeave, [e, previous, me], me);
+            callback(opts.onLeave, [e, previous, this], this);
           }
 
-          me._hoveredItem = hoveredItem;
+          this._hoveredItem = hoveredItem;
 
           if (hoveredItem && !sameItem) {
-            callback(opts.onHover, [e, hoveredItem, me], me);
+            callback(opts.onHover, [e, hoveredItem, this], this);
           }
         } else if (hoveredItem) {
-          callback(opts.onClick, [e, hoveredItem, me], me);
+          callback(opts.onClick, [e, hoveredItem, this], this);
         }
       }
     }]);
@@ -14808,51 +15080,50 @@
     var _super17 = _createSuper(Title);
 
     function Title(config) {
-      var _this12;
+      var _this29;
 
       _classCallCheck(this, Title);
 
-      _this12 = _super17.call(this);
-      _this12.chart = config.chart;
-      _this12.options = config.options;
-      _this12.ctx = config.ctx;
-      _this12._padding = undefined;
-      _this12.top = undefined;
-      _this12.bottom = undefined;
-      _this12.left = undefined;
-      _this12.right = undefined;
-      _this12.width = undefined;
-      _this12.height = undefined;
-      _this12.position = undefined;
-      _this12.weight = undefined;
-      _this12.fullSize = undefined;
-      return _this12;
+      _this29 = _super17.call(this);
+      _this29.chart = config.chart;
+      _this29.options = config.options;
+      _this29.ctx = config.ctx;
+      _this29._padding = undefined;
+      _this29.top = undefined;
+      _this29.bottom = undefined;
+      _this29.left = undefined;
+      _this29.right = undefined;
+      _this29.width = undefined;
+      _this29.height = undefined;
+      _this29.position = undefined;
+      _this29.weight = undefined;
+      _this29.fullSize = undefined;
+      return _this29;
     }
 
     _createClass(Title, [{
       key: "update",
       value: function update(maxWidth, maxHeight) {
-        var me = this;
-        var opts = me.options;
-        me.left = 0;
-        me.top = 0;
+        var opts = this.options;
+        this.left = 0;
+        this.top = 0;
 
         if (!opts.display) {
-          me.width = me.height = me.right = me.bottom = 0;
+          this.width = this.height = this.right = this.bottom = 0;
           return;
         }
 
-        me.width = me.right = maxWidth;
-        me.height = me.bottom = maxHeight;
+        this.width = this.right = maxWidth;
+        this.height = this.bottom = maxHeight;
         var lineCount = isArray(opts.text) ? opts.text.length : 1;
-        me._padding = toPadding(opts.padding);
+        this._padding = toPadding(opts.padding);
 
-        var textSize = lineCount * toFont(opts.font).lineHeight + me._padding.height;
+        var textSize = lineCount * toFont(opts.font).lineHeight + this._padding.height;
 
-        if (me.isHorizontal()) {
-          me.height = textSize;
+        if (this.isHorizontal()) {
+          this.height = textSize;
         } else {
-          me.width = textSize;
+          this.width = textSize;
         }
       }
     }, {
@@ -14901,9 +15172,8 @@
     }, {
       key: "draw",
       value: function draw() {
-        var me = this;
-        var ctx = me.ctx;
-        var opts = me.options;
+        var ctx = this.ctx;
+        var opts = this.options;
 
         if (!opts.display) {
           return;
@@ -14911,13 +15181,13 @@
 
         var fontOpts = toFont(opts.font);
         var lineHeight = fontOpts.lineHeight;
-        var offset = lineHeight / 2 + me._padding.top;
+        var offset = lineHeight / 2 + this._padding.top;
 
-        var _me$_drawArgs = me._drawArgs(offset),
-            titleX = _me$_drawArgs.titleX,
-            titleY = _me$_drawArgs.titleY,
-            maxWidth = _me$_drawArgs.maxWidth,
-            rotation = _me$_drawArgs.rotation;
+        var _this$_drawArgs = this._drawArgs(offset),
+            titleX = _this$_drawArgs.titleX,
+            titleY = _this$_drawArgs.titleY,
+            maxWidth = _this$_drawArgs.maxWidth,
+            rotation = _this$_drawArgs.rotation;
 
         renderText(ctx, opts.text, 0, 0, fontOpts, {
           color: opts.color,
@@ -15174,7 +15444,7 @@
     each(tooltip.title, maxLineWidth);
     ctx.font = bodyFont.string;
     each(tooltip.beforeBody.concat(tooltip.afterBody), maxLineWidth);
-    widthPadding = options.displayColors ? boxWidth + 2 : 0;
+    widthPadding = options.displayColors ? boxWidth + 2 + options.boxPadding : 0;
     each(body, function (bodyItem) {
       each(bodyItem.before, maxLineWidth);
       each(bodyItem.lines, maxLineWidth);
@@ -15285,7 +15555,13 @@
     var xAlign = alignment.xAlign,
         yAlign = alignment.yAlign;
     var paddingAndSize = caretSize + caretPadding;
-    var radiusAndPadding = cornerRadius + caretPadding;
+
+    var _toTRBLCorners = toTRBLCorners(cornerRadius),
+        topLeft = _toTRBLCorners.topLeft,
+        topRight = _toTRBLCorners.topRight,
+        bottomLeft = _toTRBLCorners.bottomLeft,
+        bottomRight = _toTRBLCorners.bottomRight;
+
     var x = alignX(size, xAlign);
     var y = alignY(size, yAlign, paddingAndSize);
 
@@ -15296,9 +15572,9 @@
         x -= paddingAndSize;
       }
     } else if (xAlign === 'left') {
-      x -= radiusAndPadding;
+      x -= Math.max(topLeft, bottomLeft) + caretPadding;
     } else if (xAlign === 'right') {
-      x += radiusAndPadding;
+      x += Math.max(topRight, bottomRight) + caretPadding;
     }
 
     return {
@@ -15317,7 +15593,7 @@
   }
 
   function createTooltipContext(parent, tooltip, tooltipItems) {
-    return Object.assign(Object.create(parent), {
+    return createContext(parent, {
       tooltip: tooltip,
       tooltipItems: tooltipItems,
       type: 'tooltip'
@@ -15335,39 +15611,39 @@
     var _super18 = _createSuper(Tooltip);
 
     function Tooltip(config) {
-      var _this13;
+      var _this30;
 
       _classCallCheck(this, Tooltip);
 
-      _this13 = _super18.call(this);
-      _this13.opacity = 0;
-      _this13._active = [];
-      _this13._chart = config._chart;
-      _this13._eventPosition = undefined;
-      _this13._size = undefined;
-      _this13._cachedAnimations = undefined;
-      _this13._tooltipItems = [];
-      _this13.$animations = undefined;
-      _this13.$context = undefined;
-      _this13.options = config.options;
-      _this13.dataPoints = undefined;
-      _this13.title = undefined;
-      _this13.beforeBody = undefined;
-      _this13.body = undefined;
-      _this13.afterBody = undefined;
-      _this13.footer = undefined;
-      _this13.xAlign = undefined;
-      _this13.yAlign = undefined;
-      _this13.x = undefined;
-      _this13.y = undefined;
-      _this13.height = undefined;
-      _this13.width = undefined;
-      _this13.caretX = undefined;
-      _this13.caretY = undefined;
-      _this13.labelColors = undefined;
-      _this13.labelPointStyles = undefined;
-      _this13.labelTextColors = undefined;
-      return _this13;
+      _this30 = _super18.call(this);
+      _this30.opacity = 0;
+      _this30._active = [];
+      _this30._chart = config._chart;
+      _this30._eventPosition = undefined;
+      _this30._size = undefined;
+      _this30._cachedAnimations = undefined;
+      _this30._tooltipItems = [];
+      _this30.$animations = undefined;
+      _this30.$context = undefined;
+      _this30.options = config.options;
+      _this30.dataPoints = undefined;
+      _this30.title = undefined;
+      _this30.beforeBody = undefined;
+      _this30.body = undefined;
+      _this30.afterBody = undefined;
+      _this30.footer = undefined;
+      _this30.xAlign = undefined;
+      _this30.yAlign = undefined;
+      _this30.x = undefined;
+      _this30.y = undefined;
+      _this30.height = undefined;
+      _this30.width = undefined;
+      _this30.caretX = undefined;
+      _this30.caretY = undefined;
+      _this30.labelColors = undefined;
+      _this30.labelPointStyles = undefined;
+      _this30.labelTextColors = undefined;
+      return _this30;
     }
 
     _createClass(Tooltip, [{
@@ -15380,20 +15656,19 @@
     }, {
       key: "_resolveAnimations",
       value: function _resolveAnimations() {
-        var me = this;
-        var cached = me._cachedAnimations;
+        var cached = this._cachedAnimations;
 
         if (cached) {
           return cached;
         }
 
-        var chart = me._chart;
-        var options = me.options.setContext(me.getContext());
+        var chart = this._chart;
+        var options = this.options.setContext(this.getContext());
         var opts = options.enabled && chart.options.animation && options.animations;
-        var animations = new Animations(me._chart, opts);
+        var animations = new Animations(this._chart, opts);
 
         if (opts._cacheable) {
-          me._cachedAnimations = Object.freeze(animations);
+          this._cachedAnimations = Object.freeze(animations);
         }
 
         return animations;
@@ -15401,17 +15676,15 @@
     }, {
       key: "getContext",
       value: function getContext() {
-        var me = this;
-        return me.$context || (me.$context = createTooltipContext(me._chart.getContext(), me, me._tooltipItems));
+        return this.$context || (this.$context = createTooltipContext(this._chart.getContext(), this, this._tooltipItems));
       }
     }, {
       key: "getTitle",
       value: function getTitle(context, options) {
-        var me = this;
         var callbacks = options.callbacks;
-        var beforeTitle = callbacks.beforeTitle.apply(me, [context]);
-        var title = callbacks.title.apply(me, [context]);
-        var afterTitle = callbacks.afterTitle.apply(me, [context]);
+        var beforeTitle = callbacks.beforeTitle.apply(this, [context]);
+        var title = callbacks.title.apply(this, [context]);
+        var afterTitle = callbacks.afterTitle.apply(this, [context]);
         var lines = [];
         lines = pushOrConcat(lines, splitNewlines(beforeTitle));
         lines = pushOrConcat(lines, splitNewlines(title));
@@ -15426,7 +15699,8 @@
     }, {
       key: "getBody",
       value: function getBody(tooltipItems, options) {
-        var me = this;
+        var _this31 = this;
+
         var callbacks = options.callbacks;
         var bodyItems = [];
         each(tooltipItems, function (context) {
@@ -15436,9 +15710,9 @@
             after: []
           };
           var scoped = overrideCallbacks(callbacks, context);
-          pushOrConcat(bodyItem.before, splitNewlines(scoped.beforeLabel.call(me, context)));
-          pushOrConcat(bodyItem.lines, scoped.label.call(me, context));
-          pushOrConcat(bodyItem.after, splitNewlines(scoped.afterLabel.call(me, context)));
+          pushOrConcat(bodyItem.before, splitNewlines(scoped.beforeLabel.call(_this31, context)));
+          pushOrConcat(bodyItem.lines, scoped.label.call(_this31, context));
+          pushOrConcat(bodyItem.after, splitNewlines(scoped.afterLabel.call(_this31, context)));
           bodyItems.push(bodyItem);
         });
         return bodyItems;
@@ -15451,11 +15725,10 @@
     }, {
       key: "getFooter",
       value: function getFooter(tooltipItems, options) {
-        var me = this;
         var callbacks = options.callbacks;
-        var beforeFooter = callbacks.beforeFooter.apply(me, [tooltipItems]);
-        var footer = callbacks.footer.apply(me, [tooltipItems]);
-        var afterFooter = callbacks.afterFooter.apply(me, [tooltipItems]);
+        var beforeFooter = callbacks.beforeFooter.apply(this, [tooltipItems]);
+        var footer = callbacks.footer.apply(this, [tooltipItems]);
+        var afterFooter = callbacks.afterFooter.apply(this, [tooltipItems]);
         var lines = [];
         lines = pushOrConcat(lines, splitNewlines(beforeFooter));
         lines = pushOrConcat(lines, splitNewlines(footer));
@@ -15465,9 +15738,10 @@
     }, {
       key: "_createItems",
       value: function _createItems(options) {
-        var me = this;
-        var active = me._active;
-        var data = me._chart.data;
+        var _this32 = this;
+
+        var active = this._active;
+        var data = this._chart.data;
         var labelColors = [];
         var labelPointStyles = [];
         var labelTextColors = [];
@@ -15475,7 +15749,7 @@
         var i, len;
 
         for (i = 0, len = active.length; i < len; ++i) {
-          tooltipItems.push(createTooltipItem(me._chart, active[i]));
+          tooltipItems.push(createTooltipItem(this._chart, active[i]));
         }
 
         if (options.filter) {
@@ -15492,45 +15766,44 @@
 
         each(tooltipItems, function (context) {
           var scoped = overrideCallbacks(options.callbacks, context);
-          labelColors.push(scoped.labelColor.call(me, context));
-          labelPointStyles.push(scoped.labelPointStyle.call(me, context));
-          labelTextColors.push(scoped.labelTextColor.call(me, context));
+          labelColors.push(scoped.labelColor.call(_this32, context));
+          labelPointStyles.push(scoped.labelPointStyle.call(_this32, context));
+          labelTextColors.push(scoped.labelTextColor.call(_this32, context));
         });
-        me.labelColors = labelColors;
-        me.labelPointStyles = labelPointStyles;
-        me.labelTextColors = labelTextColors;
-        me.dataPoints = tooltipItems;
+        this.labelColors = labelColors;
+        this.labelPointStyles = labelPointStyles;
+        this.labelTextColors = labelTextColors;
+        this.dataPoints = tooltipItems;
         return tooltipItems;
       }
     }, {
       key: "update",
       value: function update(changed, replay) {
-        var me = this;
-        var options = me.options.setContext(me.getContext());
-        var active = me._active;
+        var options = this.options.setContext(this.getContext());
+        var active = this._active;
         var properties;
         var tooltipItems = [];
 
         if (!active.length) {
-          if (me.opacity !== 0) {
+          if (this.opacity !== 0) {
             properties = {
               opacity: 0
             };
           }
         } else {
-          var position = positioners[options.position].call(me, active, me._eventPosition);
-          tooltipItems = me._createItems(options);
-          me.title = me.getTitle(tooltipItems, options);
-          me.beforeBody = me.getBeforeBody(tooltipItems, options);
-          me.body = me.getBody(tooltipItems, options);
-          me.afterBody = me.getAfterBody(tooltipItems, options);
-          me.footer = me.getFooter(tooltipItems, options);
-          var size = me._size = getTooltipSize(me, options);
+          var position = positioners[options.position].call(this, active, this._eventPosition);
+          tooltipItems = this._createItems(options);
+          this.title = this.getTitle(tooltipItems, options);
+          this.beforeBody = this.getBeforeBody(tooltipItems, options);
+          this.body = this.getBody(tooltipItems, options);
+          this.afterBody = this.getAfterBody(tooltipItems, options);
+          this.footer = this.getFooter(tooltipItems, options);
+          var size = this._size = getTooltipSize(this, options);
           var positionAndSize = Object.assign({}, position, size);
-          var alignment = determineAlignment(me._chart, options, positionAndSize);
-          var backgroundPoint = getBackgroundPoint(options, positionAndSize, alignment, me._chart);
-          me.xAlign = alignment.xAlign;
-          me.yAlign = alignment.yAlign;
+          var alignment = determineAlignment(this._chart, options, positionAndSize);
+          var backgroundPoint = getBackgroundPoint(options, positionAndSize, alignment, this._chart);
+          this.xAlign = alignment.xAlign;
+          this.yAlign = alignment.yAlign;
           properties = {
             opacity: 1,
             x: backgroundPoint.x,
@@ -15542,17 +15815,17 @@
           };
         }
 
-        me._tooltipItems = tooltipItems;
-        me.$context = undefined;
+        this._tooltipItems = tooltipItems;
+        this.$context = undefined;
 
         if (properties) {
-          me._resolveAnimations().update(me, properties);
+          this._resolveAnimations().update(this, properties);
         }
 
         if (changed && options.external) {
-          options.external.call(me, {
-            chart: me._chart,
-            tooltip: me,
+          options.external.call(this, {
+            chart: this._chart,
+            tooltip: this,
             replay: replay
           });
         }
@@ -15570,8 +15843,15 @@
       value: function getCaretPosition(tooltipPoint, size, options) {
         var xAlign = this.xAlign,
             yAlign = this.yAlign;
-        var cornerRadius = options.cornerRadius,
-            caretSize = options.caretSize;
+        var caretSize = options.caretSize,
+            cornerRadius = options.cornerRadius;
+
+        var _toTRBLCorners2 = toTRBLCorners(cornerRadius),
+            topLeft = _toTRBLCorners2.topLeft,
+            topRight = _toTRBLCorners2.topRight,
+            bottomLeft = _toTRBLCorners2.bottomLeft,
+            bottomRight = _toTRBLCorners2.bottomRight;
+
         var ptX = tooltipPoint.x,
             ptY = tooltipPoint.y;
         var width = size.width,
@@ -15596,9 +15876,9 @@
           x3 = x1;
         } else {
           if (xAlign === 'left') {
-            x2 = ptX + cornerRadius + caretSize;
+            x2 = ptX + Math.max(topLeft, bottomLeft) + caretSize;
           } else if (xAlign === 'right') {
-            x2 = ptX + width - cornerRadius - caretSize;
+            x2 = ptX + width - Math.max(topRight, bottomRight) - caretSize;
           } else {
             x2 = this.caretX;
           }
@@ -15630,14 +15910,13 @@
     }, {
       key: "drawTitle",
       value: function drawTitle(pt, ctx, options) {
-        var me = this;
-        var title = me.title;
+        var title = this.title;
         var length = title.length;
         var titleFont, titleSpacing, i;
 
         if (length) {
-          var rtlHelper = getRtlAdapter(options.rtl, me.x, me.width);
-          pt.x = getAlignedX(me, options.titleAlign, options);
+          var rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
+          pt.x = getAlignedX(this, options.titleAlign, options);
           ctx.textAlign = rtlHelper.textAlign(options.titleAlign);
           ctx.textBaseline = 'middle';
           titleFont = toFont(options.titleFont);
@@ -15658,13 +15937,13 @@
     }, {
       key: "_drawColorBox",
       value: function _drawColorBox(ctx, pt, i, rtlHelper, options) {
-        var me = this;
-        var labelColors = me.labelColors[i];
-        var labelPointStyle = me.labelPointStyles[i];
+        var labelColors = this.labelColors[i];
+        var labelPointStyle = this.labelPointStyles[i];
         var boxHeight = options.boxHeight,
-            boxWidth = options.boxWidth;
+            boxWidth = options.boxWidth,
+            boxPadding = options.boxPadding;
         var bodyFont = toFont(options.bodyFont);
-        var colorX = getAlignedX(me, 'left', options);
+        var colorX = getAlignedX(this, 'left', options);
         var rtlColorX = rtlHelper.x(colorX);
         var yOffSet = boxHeight < bodyFont.lineHeight ? (bodyFont.lineHeight - boxHeight) / 2 : 0;
         var colorY = pt.y + yOffSet;
@@ -15689,8 +15968,8 @@
           ctx.strokeStyle = labelColors.borderColor;
           ctx.setLineDash(labelColors.borderDash || []);
           ctx.lineDashOffset = labelColors.borderDashOffset || 0;
-          var outerX = rtlHelper.leftForLtr(rtlColorX, boxWidth);
-          var innerX = rtlHelper.leftForLtr(rtlHelper.xPlus(rtlColorX, 1), boxWidth - 2);
+          var outerX = rtlHelper.leftForLtr(rtlColorX, boxWidth - boxPadding);
+          var innerX = rtlHelper.leftForLtr(rtlHelper.xPlus(rtlColorX, 1), boxWidth - boxPadding - 2);
           var borderRadius = toTRBLCorners(labelColors.borderRadius);
 
           if (Object.values(borderRadius).some(function (v) {
@@ -15726,22 +16005,22 @@
           }
         }
 
-        ctx.fillStyle = me.labelTextColors[i];
+        ctx.fillStyle = this.labelTextColors[i];
       }
     }, {
       key: "drawBody",
       value: function drawBody(pt, ctx, options) {
-        var me = this;
-        var body = me.body;
+        var body = this.body;
         var bodySpacing = options.bodySpacing,
             bodyAlign = options.bodyAlign,
             displayColors = options.displayColors,
             boxHeight = options.boxHeight,
-            boxWidth = options.boxWidth;
+            boxWidth = options.boxWidth,
+            boxPadding = options.boxPadding;
         var bodyFont = toFont(options.bodyFont);
         var bodyLineHeight = bodyFont.lineHeight;
         var xLinePadding = 0;
-        var rtlHelper = getRtlAdapter(options.rtl, me.x, me.width);
+        var rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
 
         var fillLineOfText = function fillLineOfText(line) {
           ctx.fillText(line, rtlHelper.x(pt.x + xLinePadding), pt.y + bodyLineHeight / 2);
@@ -15753,20 +16032,20 @@
         ctx.textAlign = bodyAlign;
         ctx.textBaseline = 'middle';
         ctx.font = bodyFont.string;
-        pt.x = getAlignedX(me, bodyAlignForCalculation, options);
+        pt.x = getAlignedX(this, bodyAlignForCalculation, options);
         ctx.fillStyle = options.bodyColor;
-        each(me.beforeBody, fillLineOfText);
-        xLinePadding = displayColors && bodyAlignForCalculation !== 'right' ? bodyAlign === 'center' ? boxWidth / 2 + 1 : boxWidth + 2 : 0;
+        each(this.beforeBody, fillLineOfText);
+        xLinePadding = displayColors && bodyAlignForCalculation !== 'right' ? bodyAlign === 'center' ? boxWidth / 2 + boxPadding : boxWidth + 2 + boxPadding : 0;
 
         for (i = 0, ilen = body.length; i < ilen; ++i) {
           bodyItem = body[i];
-          textColor = me.labelTextColors[i];
+          textColor = this.labelTextColors[i];
           ctx.fillStyle = textColor;
           each(bodyItem.before, fillLineOfText);
           lines = bodyItem.lines;
 
           if (displayColors && lines.length) {
-            me._drawColorBox(ctx, pt, i, rtlHelper, options);
+            this._drawColorBox(ctx, pt, i, rtlHelper, options);
 
             bodyLineHeight = Math.max(bodyFont.lineHeight, boxHeight);
           }
@@ -15781,20 +16060,19 @@
 
         xLinePadding = 0;
         bodyLineHeight = bodyFont.lineHeight;
-        each(me.afterBody, fillLineOfText);
+        each(this.afterBody, fillLineOfText);
         pt.y -= bodySpacing;
       }
     }, {
       key: "drawFooter",
       value: function drawFooter(pt, ctx, options) {
-        var me = this;
-        var footer = me.footer;
+        var footer = this.footer;
         var length = footer.length;
         var footerFont, i;
 
         if (length) {
-          var rtlHelper = getRtlAdapter(options.rtl, me.x, me.width);
-          pt.x = getAlignedX(me, options.footerAlign, options);
+          var rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
+          pt.x = getAlignedX(this, options.footerAlign, options);
           pt.y += options.footerMarginTop;
           ctx.textAlign = rtlHelper.textAlign(options.footerAlign);
           ctx.textBaseline = 'middle';
@@ -15817,40 +16095,46 @@
             y = pt.y;
         var width = tooltipSize.width,
             height = tooltipSize.height;
-        var radius = options.cornerRadius;
+
+        var _toTRBLCorners3 = toTRBLCorners(options.cornerRadius),
+            topLeft = _toTRBLCorners3.topLeft,
+            topRight = _toTRBLCorners3.topRight,
+            bottomLeft = _toTRBLCorners3.bottomLeft,
+            bottomRight = _toTRBLCorners3.bottomRight;
+
         ctx.fillStyle = options.backgroundColor;
         ctx.strokeStyle = options.borderColor;
         ctx.lineWidth = options.borderWidth;
         ctx.beginPath();
-        ctx.moveTo(x + radius, y);
+        ctx.moveTo(x + topLeft, y);
 
         if (yAlign === 'top') {
           this.drawCaret(pt, ctx, tooltipSize, options);
         }
 
-        ctx.lineTo(x + width - radius, y);
-        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width - topRight, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + topRight);
 
         if (yAlign === 'center' && xAlign === 'right') {
           this.drawCaret(pt, ctx, tooltipSize, options);
         }
 
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + width, y + height - bottomRight);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - bottomRight, y + height);
 
         if (yAlign === 'bottom') {
           this.drawCaret(pt, ctx, tooltipSize, options);
         }
 
-        ctx.lineTo(x + radius, y + height);
-        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x + bottomLeft, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - bottomLeft);
 
         if (yAlign === 'center' && xAlign === 'left') {
           this.drawCaret(pt, ctx, tooltipSize, options);
         }
 
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.lineTo(x, y + topLeft);
+        ctx.quadraticCurveTo(x, y, x + topLeft, y);
         ctx.closePath();
         ctx.fill();
 
@@ -15861,70 +16145,68 @@
     }, {
       key: "_updateAnimationTarget",
       value: function _updateAnimationTarget(options) {
-        var me = this;
-        var chart = me._chart;
-        var anims = me.$animations;
+        var chart = this._chart;
+        var anims = this.$animations;
         var animX = anims && anims.x;
         var animY = anims && anims.y;
 
         if (animX || animY) {
-          var position = positioners[options.position].call(me, me._active, me._eventPosition);
+          var position = positioners[options.position].call(this, this._active, this._eventPosition);
 
           if (!position) {
             return;
           }
 
-          var size = me._size = getTooltipSize(me, options);
-          var positionAndSize = Object.assign({}, position, me._size);
+          var size = this._size = getTooltipSize(this, options);
+          var positionAndSize = Object.assign({}, position, this._size);
           var alignment = determineAlignment(chart, options, positionAndSize);
           var point = getBackgroundPoint(options, positionAndSize, alignment, chart);
 
           if (animX._to !== point.x || animY._to !== point.y) {
-            me.xAlign = alignment.xAlign;
-            me.yAlign = alignment.yAlign;
-            me.width = size.width;
-            me.height = size.height;
-            me.caretX = position.x;
-            me.caretY = position.y;
+            this.xAlign = alignment.xAlign;
+            this.yAlign = alignment.yAlign;
+            this.width = size.width;
+            this.height = size.height;
+            this.caretX = position.x;
+            this.caretY = position.y;
 
-            me._resolveAnimations().update(me, point);
+            this._resolveAnimations().update(this, point);
           }
         }
       }
     }, {
       key: "draw",
       value: function draw(ctx) {
-        var me = this;
-        var options = me.options.setContext(me.getContext());
-        var opacity = me.opacity;
+        var options = this.options.setContext(this.getContext());
+        var opacity = this.opacity;
 
         if (!opacity) {
           return;
         }
 
-        me._updateAnimationTarget(options);
+        this._updateAnimationTarget(options);
 
         var tooltipSize = {
-          width: me.width,
-          height: me.height
+          width: this.width,
+          height: this.height
         };
         var pt = {
-          x: me.x,
-          y: me.y
+          x: this.x,
+          y: this.y
         };
         opacity = Math.abs(opacity) < 1e-3 ? 0 : opacity;
         var padding = toPadding(options.padding);
-        var hasTooltipContent = me.title.length || me.beforeBody.length || me.body.length || me.afterBody.length || me.footer.length;
+        var hasTooltipContent = this.title.length || this.beforeBody.length || this.body.length || this.afterBody.length || this.footer.length;
 
         if (options.enabled && hasTooltipContent) {
           ctx.save();
           ctx.globalAlpha = opacity;
-          me.drawBackground(pt, ctx, tooltipSize, options);
+          this.drawBackground(pt, ctx, tooltipSize, options);
           overrideTextDirection(ctx, options.textDirection);
           pt.y += padding.top;
-          me.drawTitle(pt, ctx, options);
-          me.drawBody(pt, ctx, options);
-          me.drawFooter(pt, ctx, options);
+          this.drawTitle(pt, ctx, options);
+          this.drawBody(pt, ctx, options);
+          this.drawFooter(pt, ctx, options);
           restoreTextDirection(ctx, options.textDirection);
           ctx.restore();
         }
@@ -15937,13 +16219,14 @@
     }, {
       key: "setActiveElements",
       value: function setActiveElements(activeElements, eventPosition) {
-        var me = this;
-        var lastActive = me._active;
-        var active = activeElements.map(function (_ref8) {
-          var datasetIndex = _ref8.datasetIndex,
-              index = _ref8.index;
+        var _this33 = this;
 
-          var meta = me._chart.getDatasetMeta(datasetIndex);
+        var lastActive = this._active;
+        var active = activeElements.map(function (_ref9) {
+          var datasetIndex = _ref9.datasetIndex,
+              index = _ref9.index;
+
+          var meta = _this33._chart.getDatasetMeta(datasetIndex);
 
           if (!meta) {
             throw new Error('Cannot find a dataset at index ' + datasetIndex);
@@ -15957,44 +16240,43 @@
         });
         var changed = !_elementsEqual(lastActive, active);
 
-        var positionChanged = me._positionChanged(active, eventPosition);
+        var positionChanged = this._positionChanged(active, eventPosition);
 
         if (changed || positionChanged) {
-          me._active = active;
-          me._eventPosition = eventPosition;
-          me.update(true);
+          this._active = active;
+          this._eventPosition = eventPosition;
+          this.update(true);
         }
       }
     }, {
       key: "handleEvent",
       value: function handleEvent(e, replay) {
-        var me = this;
-        var options = me.options;
-        var lastActive = me._active || [];
+        var options = this.options;
+        var lastActive = this._active || [];
         var changed = false;
         var active = [];
 
         if (e.type !== 'mouseout') {
-          active = me._chart.getElementsAtEventForMode(e, options.mode, options, replay);
+          active = this._chart.getElementsAtEventForMode(e, options.mode, options, replay);
 
           if (options.reverse) {
             active.reverse();
           }
         }
 
-        var positionChanged = me._positionChanged(active, e);
+        var positionChanged = this._positionChanged(active, e);
 
         changed = replay || !_elementsEqual(active, lastActive) || positionChanged;
 
         if (changed) {
-          me._active = active;
+          this._active = active;
 
           if (options.enabled || options.external) {
-            me._eventPosition = {
+            this._eventPosition = {
               x: e.x,
               y: e.y
             };
-            me.update(true, replay);
+            this.update(true, replay);
           }
         }
 
@@ -16097,6 +16379,7 @@
       },
       multiKeyBackground: '#fff',
       displayColors: true,
+      boxPadding: 0,
       borderColor: 'rgba(0,0,0,0)',
       borderWidth: 0,
       animation: {
@@ -16242,14 +16525,14 @@
     var _super19 = _createSuper(CategoryScale);
 
     function CategoryScale(cfg) {
-      var _this14;
+      var _this34;
 
       _classCallCheck(this, CategoryScale);
 
-      _this14 = _super19.call(this, cfg);
-      _this14._startValue = undefined;
-      _this14._valueRange = 0;
-      return _this14;
+      _this34 = _super19.call(this, cfg);
+      _this34._startValue = undefined;
+      _this34._valueRange = 0;
+      return _this34;
     }
 
     _createClass(CategoryScale, [{
@@ -16266,41 +16549,38 @@
     }, {
       key: "determineDataLimits",
       value: function determineDataLimits() {
-        var me = this;
+        var _this$getUserBounds2 = this.getUserBounds(),
+            minDefined = _this$getUserBounds2.minDefined,
+            maxDefined = _this$getUserBounds2.maxDefined;
 
-        var _me$getUserBounds2 = me.getUserBounds(),
-            minDefined = _me$getUserBounds2.minDefined,
-            maxDefined = _me$getUserBounds2.maxDefined;
+        var _this$getMinMax = this.getMinMax(true),
+            min = _this$getMinMax.min,
+            max = _this$getMinMax.max;
 
-        var _me$getMinMax = me.getMinMax(true),
-            min = _me$getMinMax.min,
-            max = _me$getMinMax.max;
-
-        if (me.options.bounds === 'ticks') {
+        if (this.options.bounds === 'ticks') {
           if (!minDefined) {
             min = 0;
           }
 
           if (!maxDefined) {
-            max = me.getLabels().length - 1;
+            max = this.getLabels().length - 1;
           }
         }
 
-        me.min = min;
-        me.max = max;
+        this.min = min;
+        this.max = max;
       }
     }, {
       key: "buildTicks",
       value: function buildTicks() {
-        var me = this;
-        var min = me.min;
-        var max = me.max;
-        var offset = me.options.offset;
+        var min = this.min;
+        var max = this.max;
+        var offset = this.options.offset;
         var ticks = [];
-        var labels = me.getLabels();
+        var labels = this.getLabels();
         labels = min === 0 && max === labels.length - 1 ? labels : labels.slice(min, max + 1);
-        me._valueRange = Math.max(labels.length - (offset ? 0 : 1), 1);
-        me._startValue = me.min - (offset ? 0.5 : 0);
+        this._valueRange = Math.max(labels.length - (offset ? 0 : 1), 1);
+        this._startValue = this.min - (offset ? 0.5 : 0);
 
         for (var value = min; value <= max; value++) {
           ticks.push({
@@ -16313,8 +16593,7 @@
     }, {
       key: "getLabelForValue",
       value: function getLabelForValue(value) {
-        var me = this;
-        var labels = me.getLabels();
+        var labels = this.getLabels();
 
         if (value >= 0 && value < labels.length) {
           return labels[value];
@@ -16325,42 +16604,36 @@
     }, {
       key: "configure",
       value: function configure() {
-        var me = this;
-
         _get(_getPrototypeOf(CategoryScale.prototype), "configure", this).call(this);
 
-        if (!me.isHorizontal()) {
-          me._reversePixels = !me._reversePixels;
+        if (!this.isHorizontal()) {
+          this._reversePixels = !this._reversePixels;
         }
       }
     }, {
       key: "getPixelForValue",
       value: function getPixelForValue(value) {
-        var me = this;
-
         if (typeof value !== 'number') {
-          value = me.parse(value);
+          value = this.parse(value);
         }
 
-        return value === null ? NaN : me.getPixelForDecimal((value - me._startValue) / me._valueRange);
+        return value === null ? NaN : this.getPixelForDecimal((value - this._startValue) / this._valueRange);
       }
     }, {
       key: "getPixelForTick",
       value: function getPixelForTick(index) {
-        var me = this;
-        var ticks = me.ticks;
+        var ticks = this.ticks;
 
         if (index < 0 || index > ticks.length - 1) {
           return null;
         }
 
-        return me.getPixelForValue(ticks[index].value);
+        return this.getPixelForValue(ticks[index].value);
       }
     }, {
       key: "getValueForPixel",
       value: function getValueForPixel(pixel) {
-        var me = this;
-        return Math.round(me._startValue + me.getDecimalForPixel(pixel) * me._valueRange);
+        return Math.round(this._startValue + this.getDecimalForPixel(pixel) * this._valueRange);
       }
     }, {
       key: "getBasePixel",
@@ -16480,7 +16753,7 @@
     }
 
     if (maxDefined && includeBounds && niceMax !== max) {
-      if (almostEquals(ticks[ticks.length - 1].value, max, relativeLabelSize(max, minSpacing, generationOptions))) {
+      if (ticks.length && almostEquals(ticks[ticks.length - 1].value, max, relativeLabelSize(max, minSpacing, generationOptions))) {
         ticks[ticks.length - 1].value = max;
       } else {
         ticks.push({
@@ -16496,9 +16769,9 @@
     return ticks;
   }
 
-  function relativeLabelSize(value, minSpacing, _ref9) {
-    var horizontal = _ref9.horizontal,
-        minRotation = _ref9.minRotation;
+  function relativeLabelSize(value, minSpacing, _ref10) {
+    var horizontal = _ref10.horizontal,
+        minRotation = _ref10.minRotation;
     var rad = toRadians(minRotation);
     var ratio = (horizontal ? Math.sin(rad) : Math.cos(rad)) || 0.001;
     var length = 0.75 * minSpacing * ('' + value).length;
@@ -16511,17 +16784,17 @@
     var _super20 = _createSuper(LinearScaleBase);
 
     function LinearScaleBase(cfg) {
-      var _this15;
+      var _this35;
 
       _classCallCheck(this, LinearScaleBase);
 
-      _this15 = _super20.call(this, cfg);
-      _this15.start = undefined;
-      _this15.end = undefined;
-      _this15._startValue = undefined;
-      _this15._endValue = undefined;
-      _this15._valueRange = 0;
-      return _this15;
+      _this35 = _super20.call(this, cfg);
+      _this35.start = undefined;
+      _this35.end = undefined;
+      _this35._startValue = undefined;
+      _this35._endValue = undefined;
+      _this35._valueRange = 0;
+      return _this35;
     }
 
     _createClass(LinearScaleBase, [{
@@ -16540,15 +16813,14 @@
     }, {
       key: "handleTickRangeOptions",
       value: function handleTickRangeOptions() {
-        var me = this;
-        var beginAtZero = me.options.beginAtZero;
+        var beginAtZero = this.options.beginAtZero;
 
-        var _me$getUserBounds3 = me.getUserBounds(),
-            minDefined = _me$getUserBounds3.minDefined,
-            maxDefined = _me$getUserBounds3.maxDefined;
+        var _this$getUserBounds3 = this.getUserBounds(),
+            minDefined = _this$getUserBounds3.minDefined,
+            maxDefined = _this$getUserBounds3.maxDefined;
 
-        var min = me.min,
-            max = me.max;
+        var min = this.min,
+            max = this.max;
 
         var setMin = function setMin(v) {
           return min = minDefined ? min : v;
@@ -16570,29 +16842,39 @@
         }
 
         if (min === max) {
-          setMax(max + 1);
+          var offset = 1;
+
+          if (max >= Number.MAX_SAFE_INTEGER || min <= Number.MIN_SAFE_INTEGER) {
+            offset = Math.abs(max * 0.05);
+          }
+
+          setMax(max + offset);
 
           if (!beginAtZero) {
-            setMin(min - 1);
+            setMin(min - offset);
           }
         }
 
-        me.min = min;
-        me.max = max;
+        this.min = min;
+        this.max = max;
       }
     }, {
       key: "getTickLimit",
       value: function getTickLimit() {
-        var me = this;
-        var tickOpts = me.options.ticks;
+        var tickOpts = this.options.ticks;
         var maxTicksLimit = tickOpts.maxTicksLimit,
             stepSize = tickOpts.stepSize;
         var maxTicks;
 
         if (stepSize) {
-          maxTicks = Math.ceil(me.max / stepSize) - Math.floor(me.min / stepSize) + 1;
+          maxTicks = Math.ceil(this.max / stepSize) - Math.floor(this.min / stepSize) + 1;
+
+          if (maxTicks > 1000) {
+            console.warn("scales.".concat(this.id, ".ticks.stepSize: ").concat(stepSize, " would result generating up to ").concat(maxTicks, " ticks. Limiting to 1000."));
+            maxTicks = 1000;
+          }
         } else {
-          maxTicks = me.computeTickLimit();
+          maxTicks = this.computeTickLimit();
           maxTicksLimit = maxTicksLimit || 11;
         }
 
@@ -16610,10 +16892,9 @@
     }, {
       key: "buildTicks",
       value: function buildTicks() {
-        var me = this;
-        var opts = me.options;
+        var opts = this.options;
         var tickOpts = opts.ticks;
-        var maxTicks = me.getTickLimit();
+        var maxTicks = this.getTickLimit();
         maxTicks = Math.max(2, maxTicks);
         var numericGeneratorOptions = {
           maxTicks: maxTicks,
@@ -16623,25 +16904,25 @@
           precision: tickOpts.precision,
           step: tickOpts.stepSize,
           count: tickOpts.count,
-          maxDigits: me._maxDigits(),
-          horizontal: me.isHorizontal(),
+          maxDigits: this._maxDigits(),
+          horizontal: this.isHorizontal(),
           minRotation: tickOpts.minRotation || 0,
           includeBounds: tickOpts.includeBounds !== false
         };
-        var dataRange = me._range || me;
+        var dataRange = this._range || this;
         var ticks = generateTicks$1(numericGeneratorOptions, dataRange);
 
         if (opts.bounds === 'ticks') {
-          _setMinAndMaxByKey(ticks, me, 'value');
+          _setMinAndMaxByKey(ticks, this, 'value');
         }
 
         if (opts.reverse) {
           ticks.reverse();
-          me.start = me.max;
-          me.end = me.min;
+          this.start = this.max;
+          this.end = this.min;
         } else {
-          me.start = me.min;
-          me.end = me.max;
+          this.start = this.min;
+          this.end = this.max;
         }
 
         return ticks;
@@ -16649,22 +16930,21 @@
     }, {
       key: "configure",
       value: function configure() {
-        var me = this;
-        var ticks = me.ticks;
-        var start = me.min;
-        var end = me.max;
+        var ticks = this.ticks;
+        var start = this.min;
+        var end = this.max;
 
         _get(_getPrototypeOf(LinearScaleBase.prototype), "configure", this).call(this);
 
-        if (me.options.offset && ticks.length) {
+        if (this.options.offset && ticks.length) {
           var offset = (end - start) / Math.max(ticks.length - 1, 1) / 2;
           start -= offset;
           end += offset;
         }
 
-        me._startValue = start;
-        me._endValue = end;
-        me._valueRange = end - start;
+        this._startValue = start;
+        this._endValue = end;
+        this._valueRange = end - start;
       }
     }, {
       key: "getLabelForValue",
@@ -16690,26 +16970,23 @@
     _createClass(LinearScale, [{
       key: "determineDataLimits",
       value: function determineDataLimits() {
-        var me = this;
+        var _this$getMinMax2 = this.getMinMax(true),
+            min = _this$getMinMax2.min,
+            max = _this$getMinMax2.max;
 
-        var _me$getMinMax2 = me.getMinMax(true),
-            min = _me$getMinMax2.min,
-            max = _me$getMinMax2.max;
-
-        me.min = isNumberFinite(min) ? min : 0;
-        me.max = isNumberFinite(max) ? max : 1;
-        me.handleTickRangeOptions();
+        this.min = isNumberFinite(min) ? min : 0;
+        this.max = isNumberFinite(max) ? max : 1;
+        this.handleTickRangeOptions();
       }
     }, {
       key: "computeTickLimit",
       value: function computeTickLimit() {
-        var me = this;
-        var horizontal = me.isHorizontal();
-        var length = horizontal ? me.width : me.height;
-        var minRotation = toRadians(me.options.ticks.minRotation);
+        var horizontal = this.isHorizontal();
+        var length = horizontal ? this.width : this.height;
+        var minRotation = toRadians(this.options.ticks.minRotation);
         var ratio = (horizontal ? Math.sin(minRotation) : Math.cos(minRotation)) || 0.001;
 
-        var tickFont = me._resolveTickFontOptions(0);
+        var tickFont = this._resolveTickFontOptions(0);
 
         return Math.ceil(length / Math.min(40, tickFont.lineHeight / ratio));
       }
@@ -16779,16 +17056,16 @@
     var _super22 = _createSuper(LogarithmicScale);
 
     function LogarithmicScale(cfg) {
-      var _this16;
+      var _this36;
 
       _classCallCheck(this, LogarithmicScale);
 
-      _this16 = _super22.call(this, cfg);
-      _this16.start = undefined;
-      _this16.end = undefined;
-      _this16._startValue = undefined;
-      _this16._valueRange = 0;
-      return _this16;
+      _this36 = _super22.call(this, cfg);
+      _this36.start = undefined;
+      _this36.end = undefined;
+      _this36._startValue = undefined;
+      _this36._valueRange = 0;
+      return _this36;
     }
 
     _createClass(LogarithmicScale, [{
@@ -16806,32 +17083,28 @@
     }, {
       key: "determineDataLimits",
       value: function determineDataLimits() {
-        var me = this;
+        var _this$getMinMax3 = this.getMinMax(true),
+            min = _this$getMinMax3.min,
+            max = _this$getMinMax3.max;
 
-        var _me$getMinMax3 = me.getMinMax(true),
-            min = _me$getMinMax3.min,
-            max = _me$getMinMax3.max;
+        this.min = isNumberFinite(min) ? Math.max(0, min) : null;
+        this.max = isNumberFinite(max) ? Math.max(0, max) : null;
 
-        me.min = isNumberFinite(min) ? Math.max(0, min) : null;
-        me.max = isNumberFinite(max) ? Math.max(0, max) : null;
-
-        if (me.options.beginAtZero) {
-          me._zero = true;
+        if (this.options.beginAtZero) {
+          this._zero = true;
         }
 
-        me.handleTickRangeOptions();
+        this.handleTickRangeOptions();
       }
     }, {
       key: "handleTickRangeOptions",
       value: function handleTickRangeOptions() {
-        var me = this;
+        var _this$getUserBounds4 = this.getUserBounds(),
+            minDefined = _this$getUserBounds4.minDefined,
+            maxDefined = _this$getUserBounds4.maxDefined;
 
-        var _me$getUserBounds4 = me.getUserBounds(),
-            minDefined = _me$getUserBounds4.minDefined,
-            maxDefined = _me$getUserBounds4.maxDefined;
-
-        var min = me.min;
-        var max = me.max;
+        var min = this.min;
+        var max = this.max;
 
         var setMin = function setMin(v) {
           return min = minDefined ? min : v;
@@ -16863,35 +17136,34 @@
           setMax(exp(min, +1));
         }
 
-        if (me._zero && me.min !== me._suggestedMin && min === exp(me.min, 0)) {
+        if (this._zero && this.min !== this._suggestedMin && min === exp(this.min, 0)) {
           setMin(exp(min, -1));
         }
 
-        me.min = min;
-        me.max = max;
+        this.min = min;
+        this.max = max;
       }
     }, {
       key: "buildTicks",
       value: function buildTicks() {
-        var me = this;
-        var opts = me.options;
+        var opts = this.options;
         var generationOptions = {
-          min: me._userMin,
-          max: me._userMax
+          min: this._userMin,
+          max: this._userMax
         };
-        var ticks = generateTicks(generationOptions, me);
+        var ticks = generateTicks(generationOptions, this);
 
         if (opts.bounds === 'ticks') {
-          _setMinAndMaxByKey(ticks, me, 'value');
+          _setMinAndMaxByKey(ticks, this, 'value');
         }
 
         if (opts.reverse) {
           ticks.reverse();
-          me.start = me.max;
-          me.end = me.min;
+          this.start = this.max;
+          this.end = this.min;
         } else {
-          me.start = me.min;
-          me.end = me.max;
+          this.start = this.min;
+          this.end = this.max;
         }
 
         return ticks;
@@ -16904,35 +17176,31 @@
     }, {
       key: "configure",
       value: function configure() {
-        var me = this;
-        var start = me.min;
+        var start = this.min;
 
         _get(_getPrototypeOf(LogarithmicScale.prototype), "configure", this).call(this);
 
-        me._startValue = log10(start);
-        me._valueRange = log10(me.max) - log10(start);
+        this._startValue = log10(start);
+        this._valueRange = log10(this.max) - log10(start);
       }
     }, {
       key: "getPixelForValue",
       value: function getPixelForValue(value) {
-        var me = this;
-
         if (value === undefined || value === 0) {
-          value = me.min;
+          value = this.min;
         }
 
         if (value === null || isNaN(value)) {
           return NaN;
         }
 
-        return me.getPixelForDecimal(value === me.min ? 0 : (log10(value) - me._startValue) / me._valueRange);
+        return this.getPixelForDecimal(value === this.min ? 0 : (log10(value) - this._startValue) / this._valueRange);
       }
     }, {
       key: "getValueForPixel",
       value: function getValueForPixel(pixel) {
-        var me = this;
-        var decimal = me.getDecimalForPixel(pixel);
-        return Math.pow(10, me._startValue + decimal * me._valueRange);
+        var decimal = this.getDecimalForPixel(pixel);
+        return Math.pow(10, this._startValue + decimal * this._valueRange);
       }
     }]);
 
@@ -17000,7 +17268,7 @@
     var valueCount = scale.getLabels().length;
 
     for (var i = 0; i < valueCount; i++) {
-      var opts = scale.options.pointLabels.setContext(scale.getContext(i));
+      var opts = scale.options.pointLabels.setContext(scale.getPointLabelContext(i));
       padding[i] = opts.padding;
       var pointPosition = scale.getPointPosition(i, scale.drawingArea + padding[i]);
       var plFont = toFont(opts.font);
@@ -17101,7 +17369,7 @@
         pointLabels = scale.options.pointLabels;
 
     for (var i = labelCount - 1; i >= 0; i--) {
-      var optsAtIndex = pointLabels.setContext(scale.getContext(i));
+      var optsAtIndex = pointLabels.setContext(scale.getPointLabelContext(i));
       var plFont = toFont(optsAtIndex.font);
       var _scale$_pointLabelIte = scale._pointLabelItems[i],
           x = _scale$_pointLabelIte.x,
@@ -17169,48 +17437,53 @@
     return isNumber(param) ? param : 0;
   }
 
+  function createPointLabelContext(parent, index, label) {
+    return createContext(parent, {
+      label: label,
+      index: index,
+      type: 'pointLabel'
+    });
+  }
+
   var RadialLinearScale = /*#__PURE__*/function (_LinearScaleBase2) {
     _inherits(RadialLinearScale, _LinearScaleBase2);
 
     var _super23 = _createSuper(RadialLinearScale);
 
     function RadialLinearScale(cfg) {
-      var _this17;
+      var _this37;
 
       _classCallCheck(this, RadialLinearScale);
 
-      _this17 = _super23.call(this, cfg);
-      _this17.xCenter = undefined;
-      _this17.yCenter = undefined;
-      _this17.drawingArea = undefined;
-      _this17._pointLabels = [];
-      _this17._pointLabelItems = [];
-      return _this17;
+      _this37 = _super23.call(this, cfg);
+      _this37.xCenter = undefined;
+      _this37.yCenter = undefined;
+      _this37.drawingArea = undefined;
+      _this37._pointLabels = [];
+      _this37._pointLabelItems = [];
+      return _this37;
     }
 
     _createClass(RadialLinearScale, [{
       key: "setDimensions",
       value: function setDimensions() {
-        var me = this;
-        me.width = me.maxWidth;
-        me.height = me.maxHeight;
-        me.paddingTop = getTickBackdropHeight(me.options) / 2;
-        me.xCenter = Math.floor(me.width / 2);
-        me.yCenter = Math.floor((me.height - me.paddingTop) / 2);
-        me.drawingArea = Math.min(me.height - me.paddingTop, me.width) / 2;
+        this.width = this.maxWidth;
+        this.height = this.maxHeight;
+        this.paddingTop = getTickBackdropHeight(this.options) / 2;
+        this.xCenter = Math.floor(this.width / 2);
+        this.yCenter = Math.floor((this.height - this.paddingTop) / 2);
+        this.drawingArea = Math.min(this.height - this.paddingTop, this.width) / 2;
       }
     }, {
       key: "determineDataLimits",
       value: function determineDataLimits() {
-        var me = this;
+        var _this$getMinMax4 = this.getMinMax(false),
+            min = _this$getMinMax4.min,
+            max = _this$getMinMax4.max;
 
-        var _me$getMinMax4 = me.getMinMax(false),
-            min = _me$getMinMax4.min,
-            max = _me$getMinMax4.max;
-
-        me.min = isNumberFinite(min) && !isNaN(min) ? min : 0;
-        me.max = isNumberFinite(max) && !isNaN(max) ? max : 0;
-        me.handleTickRangeOptions();
+        this.min = isNumberFinite(min) && !isNaN(min) ? min : 0;
+        this.max = isNumberFinite(max) && !isNaN(max) ? max : 0;
+        this.handleTickRangeOptions();
       }
     }, {
       key: "computeTickLimit",
@@ -17220,50 +17493,48 @@
     }, {
       key: "generateTickLabels",
       value: function generateTickLabels(ticks) {
-        var me = this;
-        LinearScaleBase.prototype.generateTickLabels.call(me, ticks);
-        me._pointLabels = me.getLabels().map(function (value, index) {
-          var label = callback(me.options.pointLabels.callback, [value, index], me);
+        var _this38 = this;
+
+        LinearScaleBase.prototype.generateTickLabels.call(this, ticks);
+        this._pointLabels = this.getLabels().map(function (value, index) {
+          var label = callback(_this38.options.pointLabels.callback, [value, index], _this38);
           return label || label === 0 ? label : '';
         });
       }
     }, {
       key: "fit",
       value: function fit() {
-        var me = this;
-        var opts = me.options;
+        var opts = this.options;
 
         if (opts.display && opts.pointLabels.display) {
-          fitWithPointLabels(me);
+          fitWithPointLabels(this);
         } else {
-          me.setCenterPoint(0, 0, 0, 0);
+          this.setCenterPoint(0, 0, 0, 0);
         }
       }
     }, {
       key: "_setReductions",
       value: function _setReductions(largestPossibleRadius, furthestLimits, furthestAngles) {
-        var me = this;
         var radiusReductionLeft = furthestLimits.l / Math.sin(furthestAngles.l);
-        var radiusReductionRight = Math.max(furthestLimits.r - me.width, 0) / Math.sin(furthestAngles.r);
+        var radiusReductionRight = Math.max(furthestLimits.r - this.width, 0) / Math.sin(furthestAngles.r);
         var radiusReductionTop = -furthestLimits.t / Math.cos(furthestAngles.t);
-        var radiusReductionBottom = -Math.max(furthestLimits.b - (me.height - me.paddingTop), 0) / Math.cos(furthestAngles.b);
+        var radiusReductionBottom = -Math.max(furthestLimits.b - (this.height - this.paddingTop), 0) / Math.cos(furthestAngles.b);
         radiusReductionLeft = numberOrZero(radiusReductionLeft);
         radiusReductionRight = numberOrZero(radiusReductionRight);
         radiusReductionTop = numberOrZero(radiusReductionTop);
         radiusReductionBottom = numberOrZero(radiusReductionBottom);
-        me.drawingArea = Math.max(largestPossibleRadius / 2, Math.min(Math.floor(largestPossibleRadius - (radiusReductionLeft + radiusReductionRight) / 2), Math.floor(largestPossibleRadius - (radiusReductionTop + radiusReductionBottom) / 2)));
-        me.setCenterPoint(radiusReductionLeft, radiusReductionRight, radiusReductionTop, radiusReductionBottom);
+        this.drawingArea = Math.max(largestPossibleRadius / 2, Math.min(Math.floor(largestPossibleRadius - (radiusReductionLeft + radiusReductionRight) / 2), Math.floor(largestPossibleRadius - (radiusReductionTop + radiusReductionBottom) / 2)));
+        this.setCenterPoint(radiusReductionLeft, radiusReductionRight, radiusReductionTop, radiusReductionBottom);
       }
     }, {
       key: "setCenterPoint",
       value: function setCenterPoint(leftMovement, rightMovement, topMovement, bottomMovement) {
-        var me = this;
-        var maxRight = me.width - rightMovement - me.drawingArea;
-        var maxLeft = leftMovement + me.drawingArea;
-        var maxTop = topMovement + me.drawingArea;
-        var maxBottom = me.height - me.paddingTop - bottomMovement - me.drawingArea;
-        me.xCenter = Math.floor((maxLeft + maxRight) / 2 + me.left);
-        me.yCenter = Math.floor((maxTop + maxBottom) / 2 + me.top + me.paddingTop);
+        var maxRight = this.width - rightMovement - this.drawingArea;
+        var maxLeft = leftMovement + this.drawingArea;
+        var maxTop = topMovement + this.drawingArea;
+        var maxBottom = this.height - this.paddingTop - bottomMovement - this.drawingArea;
+        this.xCenter = Math.floor((maxLeft + maxRight) / 2 + this.left);
+        this.yCenter = Math.floor((maxTop + maxBottom) / 2 + this.top + this.paddingTop);
       }
     }, {
       key: "getIndexAngle",
@@ -17275,19 +17546,17 @@
     }, {
       key: "getDistanceFromCenterForValue",
       value: function getDistanceFromCenterForValue(value) {
-        var me = this;
-
         if (isNullOrUndef(value)) {
           return NaN;
         }
 
-        var scalingFactor = me.drawingArea / (me.max - me.min);
+        var scalingFactor = this.drawingArea / (this.max - this.min);
 
-        if (me.options.reverse) {
-          return (me.max - value) * scalingFactor;
+        if (this.options.reverse) {
+          return (this.max - value) * scalingFactor;
         }
 
-        return (value - me.min) * scalingFactor;
+        return (value - this.min) * scalingFactor;
       }
     }, {
       key: "getValueForDistanceFromCenter",
@@ -17296,18 +17565,26 @@
           return NaN;
         }
 
-        var me = this;
-        var scaledDistance = distance / (me.drawingArea / (me.max - me.min));
-        return me.options.reverse ? me.max - scaledDistance : me.min + scaledDistance;
+        var scaledDistance = distance / (this.drawingArea / (this.max - this.min));
+        return this.options.reverse ? this.max - scaledDistance : this.min + scaledDistance;
+      }
+    }, {
+      key: "getPointLabelContext",
+      value: function getPointLabelContext(index) {
+        var pointLabels = this._pointLabels || [];
+
+        if (index >= 0 && index < pointLabels.length) {
+          var pointLabel = pointLabels[index];
+          return createPointLabelContext(this.getContext(), index, pointLabel);
+        }
       }
     }, {
       key: "getPointPosition",
       value: function getPointPosition(index, distanceFromCenter) {
-        var me = this;
-        var angle = me.getIndexAngle(index) - HALF_PI;
+        var angle = this.getIndexAngle(index) - HALF_PI;
         return {
-          x: Math.cos(angle) * distanceFromCenter + me.xCenter,
-          y: Math.sin(angle) * distanceFromCenter + me.yCenter,
+          x: Math.cos(angle) * distanceFromCenter + this.xCenter,
+          y: Math.sin(angle) * distanceFromCenter + this.yCenter,
           angle: angle
         };
       }
@@ -17339,16 +17616,15 @@
     }, {
       key: "drawBackground",
       value: function drawBackground() {
-        var me = this;
-        var _me$options7 = me.options,
-            backgroundColor = _me$options7.backgroundColor,
-            circular = _me$options7.grid.circular;
+        var _this$options14 = this.options,
+            backgroundColor = _this$options14.backgroundColor,
+            circular = _this$options14.grid.circular;
 
         if (backgroundColor) {
-          var ctx = me.ctx;
+          var ctx = this.ctx;
           ctx.save();
           ctx.beginPath();
-          pathRadiusLine(me, me.getDistanceFromCenterForValue(me._endValue), circular, me.getLabels().length);
+          pathRadiusLine(this, this.getDistanceFromCenterForValue(this._endValue), circular, this.getLabels().length);
           ctx.closePath();
           ctx.fillStyle = backgroundColor;
           ctx.fill();
@@ -17358,24 +17634,25 @@
     }, {
       key: "drawGrid",
       value: function drawGrid() {
-        var me = this;
-        var ctx = me.ctx;
-        var opts = me.options;
+        var _this39 = this;
+
+        var ctx = this.ctx;
+        var opts = this.options;
         var angleLines = opts.angleLines,
             grid = opts.grid;
-        var labelCount = me.getLabels().length;
+        var labelCount = this.getLabels().length;
         var i, offset, position;
 
         if (opts.pointLabels.display) {
-          drawPointLabels(me, labelCount);
+          drawPointLabels(this, labelCount);
         }
 
         if (grid.display) {
-          me.ticks.forEach(function (tick, index) {
+          this.ticks.forEach(function (tick, index) {
             if (index !== 0) {
-              offset = me.getDistanceFromCenterForValue(tick.value);
-              var optsAtIndex = grid.setContext(me.getContext(index - 1));
-              drawRadiusLine(me, optsAtIndex, offset, labelCount);
+              offset = _this39.getDistanceFromCenterForValue(tick.value);
+              var optsAtIndex = grid.setContext(_this39.getContext(index - 1));
+              drawRadiusLine(_this39, optsAtIndex, offset, labelCount);
             }
           });
         }
@@ -17383,8 +17660,8 @@
         if (angleLines.display) {
           ctx.save();
 
-          for (i = me.getLabels().length - 1; i >= 0; i--) {
-            var optsAtIndex = angleLines.setContext(me.getContext(i));
+          for (i = this.getLabels().length - 1; i >= 0; i--) {
+            var optsAtIndex = angleLines.setContext(this.getPointLabelContext(i));
             var color = optsAtIndex.color,
                 lineWidth = optsAtIndex.lineWidth;
 
@@ -17396,10 +17673,10 @@
             ctx.strokeStyle = color;
             ctx.setLineDash(optsAtIndex.borderDash);
             ctx.lineDashOffset = optsAtIndex.borderDashOffset;
-            offset = me.getDistanceFromCenterForValue(opts.ticks.reverse ? me.min : me.max);
-            position = me.getPointPosition(i, offset);
+            offset = this.getDistanceFromCenterForValue(opts.ticks.reverse ? this.min : this.max);
+            position = this.getPointPosition(i, offset);
             ctx.beginPath();
-            ctx.moveTo(me.xCenter, me.yCenter);
+            ctx.moveTo(this.xCenter, this.yCenter);
             ctx.lineTo(position.x, position.y);
             ctx.stroke();
           }
@@ -17413,30 +17690,31 @@
     }, {
       key: "drawLabels",
       value: function drawLabels() {
-        var me = this;
-        var ctx = me.ctx;
-        var opts = me.options;
+        var _this40 = this;
+
+        var ctx = this.ctx;
+        var opts = this.options;
         var tickOpts = opts.ticks;
 
         if (!tickOpts.display) {
           return;
         }
 
-        var startAngle = me.getIndexAngle(0);
+        var startAngle = this.getIndexAngle(0);
         var offset, width;
         ctx.save();
-        ctx.translate(me.xCenter, me.yCenter);
+        ctx.translate(this.xCenter, this.yCenter);
         ctx.rotate(startAngle);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        me.ticks.forEach(function (tick, index) {
+        this.ticks.forEach(function (tick, index) {
           if (index === 0 && !opts.reverse) {
             return;
           }
 
-          var optsAtIndex = tickOpts.setContext(me.getContext(index));
+          var optsAtIndex = tickOpts.setContext(_this40.getContext(index));
           var tickFont = toFont(optsAtIndex.font);
-          offset = me.getDistanceFromCenterForValue(me.ticks[index].value);
+          offset = _this40.getDistanceFromCenterForValue(_this40.ticks[index].value);
 
           if (optsAtIndex.showLabelBackdrop) {
             ctx.font = tickFont.string;
@@ -17674,22 +17952,22 @@
     var _super24 = _createSuper(TimeScale);
 
     function TimeScale(props) {
-      var _this18;
+      var _this41;
 
       _classCallCheck(this, TimeScale);
 
-      _this18 = _super24.call(this, props);
-      _this18._cache = {
+      _this41 = _super24.call(this, props);
+      _this41._cache = {
         data: [],
         labels: [],
         all: []
       };
-      _this18._unit = 'day';
-      _this18._majorUnit = undefined;
-      _this18._offsets = {};
-      _this18._normalized = false;
-      _this18._parseOpts = undefined;
-      return _this18;
+      _this41._unit = 'day';
+      _this41._majorUnit = undefined;
+      _this41._offsets = {};
+      _this41._normalized = false;
+      _this41._parseOpts = undefined;
+      return _this41;
     }
 
     _createClass(TimeScale, [{
@@ -17731,16 +18009,15 @@
     }, {
       key: "determineDataLimits",
       value: function determineDataLimits() {
-        var me = this;
-        var options = me.options;
-        var adapter = me._adapter;
+        var options = this.options;
+        var adapter = this._adapter;
         var unit = options.time.unit || 'day';
 
-        var _me$getUserBounds5 = me.getUserBounds(),
-            min = _me$getUserBounds5.min,
-            max = _me$getUserBounds5.max,
-            minDefined = _me$getUserBounds5.minDefined,
-            maxDefined = _me$getUserBounds5.maxDefined;
+        var _this$getUserBounds5 = this.getUserBounds(),
+            min = _this$getUserBounds5.min,
+            max = _this$getUserBounds5.max,
+            minDefined = _this$getUserBounds5.minDefined,
+            maxDefined = _this$getUserBounds5.maxDefined;
 
         function _applyBounds(bounds) {
           if (!minDefined && !isNaN(bounds.min)) {
@@ -17753,17 +18030,17 @@
         }
 
         if (!minDefined || !maxDefined) {
-          _applyBounds(me._getLabelBounds());
+          _applyBounds(this._getLabelBounds());
 
           if (options.bounds !== 'ticks' || options.ticks.source !== 'labels') {
-            _applyBounds(me.getMinMax(false));
+            _applyBounds(this.getMinMax(false));
           }
         }
 
         min = isNumberFinite(min) && !isNaN(min) ? min : +adapter.startOf(Date.now(), unit);
         max = isNumberFinite(max) && !isNaN(max) ? max : +adapter.endOf(Date.now(), unit) + 1;
-        me.min = Math.min(min, max - 1);
-        me.max = Math.max(min + 1, max);
+        this.min = Math.min(min, max - 1);
+        this.max = Math.max(min + 1, max);
       }
     }, {
       key: "_getLabelBounds",
@@ -17785,62 +18062,60 @@
     }, {
       key: "buildTicks",
       value: function buildTicks() {
-        var me = this;
-        var options = me.options;
+        var options = this.options;
         var timeOpts = options.time;
         var tickOpts = options.ticks;
-        var timestamps = tickOpts.source === 'labels' ? me.getLabelTimestamps() : me._generate();
+        var timestamps = tickOpts.source === 'labels' ? this.getLabelTimestamps() : this._generate();
 
         if (options.bounds === 'ticks' && timestamps.length) {
-          me.min = me._userMin || timestamps[0];
-          me.max = me._userMax || timestamps[timestamps.length - 1];
+          this.min = this._userMin || timestamps[0];
+          this.max = this._userMax || timestamps[timestamps.length - 1];
         }
 
-        var min = me.min;
-        var max = me.max;
+        var min = this.min;
+        var max = this.max;
 
         var ticks = _filterBetween(timestamps, min, max);
 
-        me._unit = timeOpts.unit || (tickOpts.autoSkip ? determineUnitForAutoTicks(timeOpts.minUnit, me.min, me.max, me._getLabelCapacity(min)) : determineUnitForFormatting(me, ticks.length, timeOpts.minUnit, me.min, me.max));
-        me._majorUnit = !tickOpts.major.enabled || me._unit === 'year' ? undefined : determineMajorUnit(me._unit);
-        me.initOffsets(timestamps);
+        this._unit = timeOpts.unit || (tickOpts.autoSkip ? determineUnitForAutoTicks(timeOpts.minUnit, this.min, this.max, this._getLabelCapacity(min)) : determineUnitForFormatting(this, ticks.length, timeOpts.minUnit, this.min, this.max));
+        this._majorUnit = !tickOpts.major.enabled || this._unit === 'year' ? undefined : determineMajorUnit(this._unit);
+        this.initOffsets(timestamps);
 
         if (options.reverse) {
           ticks.reverse();
         }
 
-        return ticksFromTimestamps(me, ticks, me._majorUnit);
+        return ticksFromTimestamps(this, ticks, this._majorUnit);
       }
     }, {
       key: "initOffsets",
       value: function initOffsets(timestamps) {
-        var me = this;
         var start = 0;
         var end = 0;
         var first, last;
 
-        if (me.options.offset && timestamps.length) {
-          first = me.getDecimalForValue(timestamps[0]);
+        if (this.options.offset && timestamps.length) {
+          first = this.getDecimalForValue(timestamps[0]);
 
           if (timestamps.length === 1) {
             start = 1 - first;
           } else {
-            start = (me.getDecimalForValue(timestamps[1]) - first) / 2;
+            start = (this.getDecimalForValue(timestamps[1]) - first) / 2;
           }
 
-          last = me.getDecimalForValue(timestamps[timestamps.length - 1]);
+          last = this.getDecimalForValue(timestamps[timestamps.length - 1]);
 
           if (timestamps.length === 1) {
             end = last;
           } else {
-            end = (last - me.getDecimalForValue(timestamps[timestamps.length - 2])) / 2;
+            end = (last - this.getDecimalForValue(timestamps[timestamps.length - 2])) / 2;
           }
         }
 
         var limit = timestamps.length < 3 ? 0.5 : 0.25;
         start = _limitValue(start, 0, limit);
         end = _limitValue(end, 0, limit);
-        me._offsets = {
+        this._offsets = {
           start: start,
           end: end,
           factor: 1 / (start + 1 + end)
@@ -17849,13 +18124,12 @@
     }, {
       key: "_generate",
       value: function _generate() {
-        var me = this;
-        var adapter = me._adapter;
-        var min = me.min;
-        var max = me.max;
-        var options = me.options;
+        var adapter = this._adapter;
+        var min = this.min;
+        var max = this.max;
+        var options = this.options;
         var timeOpts = options.time;
-        var minor = timeOpts.unit || determineUnitForAutoTicks(timeOpts.minUnit, min, max, me._getLabelCapacity(min));
+        var minor = timeOpts.unit || determineUnitForAutoTicks(timeOpts.minUnit, min, max, this._getLabelCapacity(min));
         var stepSize = valueOrDefault(timeOpts.stepSize, 1);
         var weekday = minor === 'week' ? timeOpts.isoWeekday : false;
         var hasWeekday = isNumber(weekday) || weekday === true;
@@ -17873,7 +18147,7 @@
           throw new Error(min + ' and ' + max + ' are too far apart with stepSize of ' + stepSize + ' ' + minor);
         }
 
-        var timestamps = options.ticks.source === 'data' && me.getDataTimestamps();
+        var timestamps = options.ticks.source === 'data' && this.getDataTimestamps();
 
         for (time = first, count = 0; time < max; time = +adapter.add(time, stepSize, minor), count++) {
           addTick(ticks, time, timestamps);
@@ -17892,9 +18166,8 @@
     }, {
       key: "getLabelForValue",
       value: function getLabelForValue(value) {
-        var me = this;
-        var adapter = me._adapter;
-        var timeOpts = me.options.time;
+        var adapter = this._adapter;
+        var timeOpts = this.options.time;
 
         if (timeOpts.tooltipFormat) {
           return adapter.format(value, timeOpts.tooltipFormat);
@@ -17905,20 +18178,19 @@
     }, {
       key: "_tickFormatFunction",
       value: function _tickFormatFunction(time, index, ticks, format) {
-        var me = this;
-        var options = me.options;
+        var options = this.options;
         var formats = options.time.displayFormats;
-        var unit = me._unit;
-        var majorUnit = me._majorUnit;
+        var unit = this._unit;
+        var majorUnit = this._majorUnit;
         var minorFormat = unit && formats[unit];
         var majorFormat = majorUnit && formats[majorUnit];
         var tick = ticks[index];
         var major = majorUnit && majorFormat && tick && tick.major;
 
-        var label = me._adapter.format(time, format || (major ? majorFormat : minorFormat));
+        var label = this._adapter.format(time, format || (major ? majorFormat : minorFormat));
 
         var formatter = options.ticks.callback;
-        return formatter ? callback(formatter, [label, index, ticks], me) : label;
+        return formatter ? callback(formatter, [label, index, ticks], this) : label;
       }
     }, {
       key: "generateTickLabels",
@@ -17933,36 +18205,32 @@
     }, {
       key: "getDecimalForValue",
       value: function getDecimalForValue(value) {
-        var me = this;
-        return value === null ? NaN : (value - me.min) / (me.max - me.min);
+        return value === null ? NaN : (value - this.min) / (this.max - this.min);
       }
     }, {
       key: "getPixelForValue",
       value: function getPixelForValue(value) {
-        var me = this;
-        var offsets = me._offsets;
-        var pos = me.getDecimalForValue(value);
-        return me.getPixelForDecimal((offsets.start + pos) * offsets.factor);
+        var offsets = this._offsets;
+        var pos = this.getDecimalForValue(value);
+        return this.getPixelForDecimal((offsets.start + pos) * offsets.factor);
       }
     }, {
       key: "getValueForPixel",
       value: function getValueForPixel(pixel) {
-        var me = this;
-        var offsets = me._offsets;
-        var pos = me.getDecimalForPixel(pixel) / offsets.factor - offsets.end;
-        return me.min + pos * (me.max - me.min);
+        var offsets = this._offsets;
+        var pos = this.getDecimalForPixel(pixel) / offsets.factor - offsets.end;
+        return this.min + pos * (this.max - this.min);
       }
     }, {
       key: "_getLabelSize",
       value: function _getLabelSize(label) {
-        var me = this;
-        var ticksOpts = me.options.ticks;
-        var tickLabelWidth = me.ctx.measureText(label).width;
-        var angle = toRadians(me.isHorizontal() ? ticksOpts.maxRotation : ticksOpts.minRotation);
+        var ticksOpts = this.options.ticks;
+        var tickLabelWidth = this.ctx.measureText(label).width;
+        var angle = toRadians(this.isHorizontal() ? ticksOpts.maxRotation : ticksOpts.minRotation);
         var cosRotation = Math.cos(angle);
         var sinRotation = Math.sin(angle);
 
-        var tickFontSize = me._resolveTickFontOptions(0).size;
+        var tickFontSize = this._resolveTickFontOptions(0).size;
 
         return {
           w: tickLabelWidth * cosRotation + tickFontSize * sinRotation,
@@ -17972,59 +18240,56 @@
     }, {
       key: "_getLabelCapacity",
       value: function _getLabelCapacity(exampleTime) {
-        var me = this;
-        var timeOpts = me.options.time;
+        var timeOpts = this.options.time;
         var displayFormats = timeOpts.displayFormats;
         var format = displayFormats[timeOpts.unit] || displayFormats.millisecond;
 
-        var exampleLabel = me._tickFormatFunction(exampleTime, 0, ticksFromTimestamps(me, [exampleTime], me._majorUnit), format);
+        var exampleLabel = this._tickFormatFunction(exampleTime, 0, ticksFromTimestamps(this, [exampleTime], this._majorUnit), format);
 
-        var size = me._getLabelSize(exampleLabel);
+        var size = this._getLabelSize(exampleLabel);
 
-        var capacity = Math.floor(me.isHorizontal() ? me.width / size.w : me.height / size.h) - 1;
+        var capacity = Math.floor(this.isHorizontal() ? this.width / size.w : this.height / size.h) - 1;
         return capacity > 0 ? capacity : 1;
       }
     }, {
       key: "getDataTimestamps",
       value: function getDataTimestamps() {
-        var me = this;
-        var timestamps = me._cache.data || [];
+        var timestamps = this._cache.data || [];
         var i, ilen;
 
         if (timestamps.length) {
           return timestamps;
         }
 
-        var metas = me.getMatchingVisibleMetas();
+        var metas = this.getMatchingVisibleMetas();
 
-        if (me._normalized && metas.length) {
-          return me._cache.data = metas[0].controller.getAllParsedValues(me);
+        if (this._normalized && metas.length) {
+          return this._cache.data = metas[0].controller.getAllParsedValues(this);
         }
 
         for (i = 0, ilen = metas.length; i < ilen; ++i) {
-          timestamps = timestamps.concat(metas[i].controller.getAllParsedValues(me));
+          timestamps = timestamps.concat(metas[i].controller.getAllParsedValues(this));
         }
 
-        return me._cache.data = me.normalize(timestamps);
+        return this._cache.data = this.normalize(timestamps);
       }
     }, {
       key: "getLabelTimestamps",
       value: function getLabelTimestamps() {
-        var me = this;
-        var timestamps = me._cache.labels || [];
+        var timestamps = this._cache.labels || [];
         var i, ilen;
 
         if (timestamps.length) {
           return timestamps;
         }
 
-        var labels = me.getLabels();
+        var labels = this.getLabels();
 
         for (i = 0, ilen = labels.length; i < ilen; ++i) {
-          timestamps.push(_parse(me, labels[i]));
+          timestamps.push(_parse(this, labels[i]));
         }
 
-        return me._cache.labels = me._normalized ? timestamps : me.normalize(timestamps);
+        return this._cache.labels = this._normalized ? timestamps : this.normalize(timestamps);
       }
     }, {
       key: "normalize",
@@ -18101,27 +18366,25 @@
     var _super25 = _createSuper(TimeSeriesScale);
 
     function TimeSeriesScale(props) {
-      var _this19;
+      var _this42;
 
       _classCallCheck(this, TimeSeriesScale);
 
-      _this19 = _super25.call(this, props);
-      _this19._table = [];
-      _this19._minPos = undefined;
-      _this19._tableRange = undefined;
-      return _this19;
+      _this42 = _super25.call(this, props);
+      _this42._table = [];
+      _this42._minPos = undefined;
+      _this42._tableRange = undefined;
+      return _this42;
     }
 
     _createClass(TimeSeriesScale, [{
       key: "initOffsets",
       value: function initOffsets() {
-        var me = this;
+        var timestamps = this._getTimestampsForTable();
 
-        var timestamps = me._getTimestampsForTable();
-
-        var table = me._table = me.buildLookupTable(timestamps);
-        me._minPos = interpolate(table, me.min);
-        me._tableRange = interpolate(table, me.max) - me._minPos;
+        var table = this._table = this.buildLookupTable(timestamps);
+        this._minPos = interpolate(table, this.min);
+        this._tableRange = interpolate(table, this.max) - this._minPos;
 
         _get(_getPrototypeOf(TimeSeriesScale.prototype), "initOffsets", this).call(this, timestamps);
       }
@@ -18170,23 +18433,22 @@
     }, {
       key: "_getTimestampsForTable",
       value: function _getTimestampsForTable() {
-        var me = this;
-        var timestamps = me._cache.all || [];
+        var timestamps = this._cache.all || [];
 
         if (timestamps.length) {
           return timestamps;
         }
 
-        var data = me.getDataTimestamps();
-        var label = me.getLabelTimestamps();
+        var data = this.getDataTimestamps();
+        var label = this.getLabelTimestamps();
 
         if (data.length && label.length) {
-          timestamps = me.normalize(data.concat(label));
+          timestamps = this.normalize(data.concat(label));
         } else {
           timestamps = data.length ? data : label;
         }
 
-        timestamps = me._cache.all = timestamps;
+        timestamps = this._cache.all = timestamps;
         return timestamps;
       }
     }, {
@@ -18197,10 +18459,9 @@
     }, {
       key: "getValueForPixel",
       value: function getValueForPixel(pixel) {
-        var me = this;
-        var offsets = me._offsets;
-        var decimal = me.getDecimalForPixel(pixel) / offsets.factor - offsets.end;
-        return interpolate(me._table, decimal * me._tableRange + me._minPos, true);
+        var offsets = this._offsets;
+        var decimal = this.getDecimalForPixel(pixel) / offsets.factor - offsets.end;
+        return interpolate(this._table, decimal * this._tableRange + this._minPos, true);
       }
     }]);
 
@@ -18432,7 +18693,7 @@
     return new Date(timestamp + amount);
   }
 
-  var MILLISECONDS_IN_HOUR$3 = 3600000;
+  var MILLISECONDS_IN_HOUR$2 = 3600000;
   /**
    * @name addHours
    * @category Hour Helpers
@@ -18459,7 +18720,7 @@
   function addHours(dirtyDate, dirtyAmount) {
     requiredArgs(2, arguments);
     var amount = toInteger(dirtyAmount);
-    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_HOUR$3);
+    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_HOUR$2);
   }
 
   /**
@@ -18583,14 +18844,14 @@
    * @example
    * // How many calendar days are between
    * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
-   * var result = differenceInCalendarDays(
+   * const result = differenceInCalendarDays(
    *   new Date(2012, 6, 2, 0, 0),
    *   new Date(2011, 6, 2, 23, 0)
    * )
    * //=> 366
    * // How many calendar days are between
    * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
-   * var result = differenceInCalendarDays(
+   * const result = differenceInCalendarDays(
    *   new Date(2011, 6, 3, 0, 1),
    *   new Date(2011, 6, 2, 23, 59)
    * )
@@ -18609,7 +18870,7 @@
     return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_DAY$1);
   }
 
-  var MILLISECONDS_IN_MINUTE$3 = 60000;
+  var MILLISECONDS_IN_MINUTE$2 = 60000;
   /**
    * @name addMinutes
    * @category Minute Helpers
@@ -18636,7 +18897,7 @@
   function addMinutes(dirtyDate, dirtyAmount) {
     requiredArgs(2, arguments);
     var amount = toInteger(dirtyAmount);
-    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_MINUTE$3);
+    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_MINUTE$2);
   }
 
   /**
@@ -18810,6 +19071,77 @@
   }
 
   /**
+   * Days in 1 week.
+   *
+   * @name daysInWeek
+   * @constant
+   * @type {number}
+   * @default
+   */
+  /**
+   * Milliseconds in 1 minute
+   *
+   * @name millisecondsInMinute
+   * @constant
+   * @type {number}
+   * @default
+   */
+
+  var millisecondsInMinute = 60000;
+  /**
+   * Milliseconds in 1 hour
+   *
+   * @name millisecondsInHour
+   * @constant
+   * @type {number}
+   * @default
+   */
+
+  var millisecondsInHour = 3600000;
+
+  /**
+   * @name isDate
+   * @category Common Helpers
+   * @summary Is the given value a date?
+   *
+   * @description
+   * Returns true if the given value is an instance of Date. The function works for dates transferred across iframes.
+   *
+   * ### v2.0.0 breaking changes:
+   *
+   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
+   *
+   * @param {*} value - the value to check
+   * @returns {boolean} true if the given value is a date
+   * @throws {TypeError} 1 arguments required
+   *
+   * @example
+   * // For a valid date:
+   * const result = isDate(new Date())
+   * //=> true
+   *
+   * @example
+   * // For an invalid date:
+   * const result = isDate(new Date(NaN))
+   * //=> true
+   *
+   * @example
+   * // For some value:
+   * const result = isDate('2014-02-31')
+   * //=> false
+   *
+   * @example
+   * // For an object:
+   * const result = isDate({})
+   * //=> false
+   */
+
+  function isDate(value) {
+    requiredArgs(1, arguments);
+    return value instanceof Date || _typeof(value) === 'object' && Object.prototype.toString.call(value) === '[object Date]';
+  }
+
+  /**
    * @name isValid
    * @category Common Helpers
    * @summary Is the given date valid?
@@ -18853,24 +19185,29 @@
    *
    * @example
    * // For the valid date:
-   * var result = isValid(new Date(2014, 1, 31))
+   * const result = isValid(new Date(2014, 1, 31))
    * //=> true
    *
    * @example
    * // For the value, convertable into a date:
-   * var result = isValid(1393804800000)
+   * const result = isValid(1393804800000)
    * //=> true
    *
    * @example
    * // For the invalid date:
-   * var result = isValid(new Date(''))
+   * const result = isValid(new Date(''))
    * //=> false
    */
 
   function isValid(dirtyDate) {
     requiredArgs(1, arguments);
+
+    if (!isDate(dirtyDate) && typeof dirtyDate !== 'number') {
+      return false;
+    }
+
     var date = toDate(dirtyDate);
-    return !isNaN(date);
+    return !isNaN(Number(date));
   }
 
   /**
@@ -18927,7 +19264,7 @@
    *
    * @example
    * // How many calendar years are between 31 December 2013 and 11 February 2015?
-   * var result = differenceInCalendarYears(
+   * const result = differenceInCalendarYears(
    *   new Date(2015, 1, 11),
    *   new Date(2013, 11, 31)
    * )
@@ -18985,14 +19322,14 @@
    * @example
    * // How many full days are between
    * // 2 July 2011 23:00:00 and 2 July 2012 00:00:00?
-   * var result = differenceInDays(
+   * const result = differenceInDays(
    *   new Date(2012, 6, 2, 0, 0),
    *   new Date(2011, 6, 2, 23, 0)
    * )
    * //=> 365
    * // How many full days are between
    * // 2 July 2011 23:59:00 and 3 July 2011 00:01:00?
-   * var result = differenceInDays(
+   * const result = differenceInDays(
    *   new Date(2011, 6, 3, 0, 1),
    *   new Date(2011, 6, 2, 23, 59)
    * )
@@ -19003,7 +19340,7 @@
    * // result will always be 92 days, even in
    * // time zones where DST starts and the
    * // period has only 92*24-1 hours.
-   * var result = differenceInDays(
+   * const result = differenceInDays(
    *   new Date(2020, 5, 1),
    *   new Date(2020, 2, 1)
    * )
@@ -19020,7 +19357,7 @@
     dateLeft.setDate(dateLeft.getDate() - sign * difference); // Math.abs(diff in full days - diff in calendar days) === 1 if last calendar day is not full
     // If so, result must be decreased by 1 in absolute value
 
-    var isLastDayNotFull = compareLocalAsc(dateLeft, dateRight) === -sign;
+    var isLastDayNotFull = Number(compareLocalAsc(dateLeft, dateRight) === -sign);
     var result = sign * (difference - isLastDayNotFull); // Prevent negative zero
 
     return result === 0 ? 0 : result;
@@ -19046,21 +19383,32 @@
    * @example
    * // How many milliseconds are between
    * // 2 July 2014 12:30:20.600 and 2 July 2014 12:30:21.700?
-   * var result = differenceInMilliseconds(
+   * const result = differenceInMilliseconds(
    *   new Date(2014, 6, 2, 12, 30, 21, 700),
    *   new Date(2014, 6, 2, 12, 30, 20, 600)
    * )
    * //=> 1100
    */
 
-  function differenceInMilliseconds(dirtyDateLeft, dirtyDateRight) {
+  function differenceInMilliseconds(dateLeft, dateRight) {
     requiredArgs(2, arguments);
-    var dateLeft = toDate(dirtyDateLeft);
-    var dateRight = toDate(dirtyDateRight);
-    return dateLeft.getTime() - dateRight.getTime();
+    return toDate(dateLeft).getTime() - toDate(dateRight).getTime();
   }
 
-  var MILLISECONDS_IN_HOUR$2 = 3600000;
+  var roundingMap = {
+    ceil: Math.ceil,
+    round: Math.round,
+    floor: Math.floor,
+    trunc: function trunc(value) {
+      return value < 0 ? Math.ceil(value) : Math.floor(value);
+    } // Math.trunc is not supported by IE
+
+  };
+  var defaultRoundingMethod = 'trunc';
+  function getRoundingMethod(method) {
+    return method ? roundingMap[method] : roundingMap[defaultRoundingMethod];
+  }
+
   /**
    * @name differenceInHours
    * @category Hour Helpers
@@ -19075,25 +19423,26 @@
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
+   * @param {Object} [options] - an object with options.
+   * @param {String} [options.roundingMethod='trunc'] - a rounding method (`ceil`, `floor`, `round` or `trunc`)
    * @returns {Number} the number of hours
    * @throws {TypeError} 2 arguments required
    *
    * @example
    * // How many hours are between 2 July 2014 06:50:00 and 2 July 2014 19:00:00?
-   * var result = differenceInHours(
+   * const result = differenceInHours(
    *   new Date(2014, 6, 2, 19, 0),
    *   new Date(2014, 6, 2, 6, 50)
    * )
    * //=> 12
    */
 
-  function differenceInHours(dirtyDateLeft, dirtyDateRight) {
+  function differenceInHours(dateLeft, dateRight, options) {
     requiredArgs(2, arguments);
-    var diff = differenceInMilliseconds(dirtyDateLeft, dirtyDateRight) / MILLISECONDS_IN_HOUR$2;
-    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
+    var diff = differenceInMilliseconds(dateLeft, dateRight) / millisecondsInHour;
+    return getRoundingMethod(options === null || options === void 0 ? void 0 : options.roundingMethod)(diff);
   }
 
-  var MILLISECONDS_IN_MINUTE$2 = 60000;
   /**
    * @name differenceInMinutes
    * @category Minute Helpers
@@ -19108,30 +19457,32 @@
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
+   * @param {Object} [options] - an object with options.
+   * @param {String} [options.roundingMethod='trunc'] - a rounding method (`ceil`, `floor`, `round` or `trunc`)
    * @returns {Number} the number of minutes
    * @throws {TypeError} 2 arguments required
    *
    * @example
    * // How many minutes are between 2 July 2014 12:07:59 and 2 July 2014 12:20:00?
-   * var result = differenceInMinutes(
+   * const result = differenceInMinutes(
    *   new Date(2014, 6, 2, 12, 20, 0),
    *   new Date(2014, 6, 2, 12, 7, 59)
    * )
    * //=> 12
    *
    * @example
-   * // How many minutes are from 10:01:59 to 10:00:00
-   * var result = differenceInMinutes(
+   * // How many minutes are between 10:01:59 and 10:00:00
+   * const result = differenceInMinutes(
    *   new Date(2000, 0, 1, 10, 0, 0),
    *   new Date(2000, 0, 1, 10, 1, 59)
    * )
    * //=> -1
    */
 
-  function differenceInMinutes(dirtyDateLeft, dirtyDateRight) {
+  function differenceInMinutes(dateLeft, dateRight, options) {
     requiredArgs(2, arguments);
-    var diff = differenceInMilliseconds(dirtyDateLeft, dirtyDateRight) / MILLISECONDS_IN_MINUTE$2;
-    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
+    var diff = differenceInMilliseconds(dateLeft, dateRight) / millisecondsInMinute;
+    return getRoundingMethod(options === null || options === void 0 ? void 0 : options.roundingMethod)(diff);
   }
 
   /**
@@ -19230,7 +19581,7 @@
    * @summary Get the number of full months between the given dates.
    *
    * @description
-   * Get the number of full months between the given dates.
+   * Get the number of full months between the given dates using trunc as a default rounding method.
    *
    * ### v2.0.0 breaking changes:
    *
@@ -19243,7 +19594,7 @@
    *
    * @example
    * // How many full months are between 31 January 2014 and 1 September 2014?
-   * var result = differenceInMonths(new Date(2014, 8, 1), new Date(2014, 0, 31))
+   * const result = differenceInMonths(new Date(2014, 8, 1), new Date(2014, 0, 31))
    * //=> 7
    */
 
@@ -19273,7 +19624,7 @@
         isLastMonthNotFull = false;
       }
 
-      result = sign * (difference - isLastMonthNotFull);
+      result = sign * (difference - Number(isLastMonthNotFull));
     } // Prevent negative zero
 
 
@@ -19283,10 +19634,10 @@
   /**
    * @name differenceInQuarters
    * @category Quarter Helpers
-   * @summary Get the number of full quarters between the given dates.
+   * @summary Get the number of quarters between the given dates.
    *
    * @description
-   * Get the number of full quarters between the given dates.
+   * Get the number of quarters between the given dates.
    *
    * ### v2.0.0 breaking changes:
    *
@@ -19294,19 +19645,21 @@
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
+   * @param {Object} [options] - an object with options.
+   * @param {String} [options.roundingMethod='trunc'] - a rounding method (`ceil`, `floor`, `round` or `trunc`)
    * @returns {Number} the number of full quarters
    * @throws {TypeError} 2 arguments required
    *
    * @example
    * // How many full quarters are between 31 December 2013 and 2 July 2014?
-   * var result = differenceInQuarters(new Date(2014, 6, 2), new Date(2013, 11, 31))
+   * const result = differenceInQuarters(new Date(2014, 6, 2), new Date(2013, 11, 31))
    * //=> 2
    */
 
-  function differenceInQuarters(dirtyDateLeft, dirtyDateRight) {
+  function differenceInQuarters(dateLeft, dateRight, options) {
     requiredArgs(2, arguments);
-    var diff = differenceInMonths(dirtyDateLeft, dirtyDateRight) / 3;
-    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
+    var diff = differenceInMonths(dateLeft, dateRight) / 3;
+    return getRoundingMethod(options === null || options === void 0 ? void 0 : options.roundingMethod)(diff);
   }
 
   /**
@@ -19323,23 +19676,25 @@
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
+   * @param {Object} [options] - an object with options.
+   * @param {String} [options.roundingMethod='trunc'] - a rounding method (`ceil`, `floor`, `round` or `trunc`)
    * @returns {Number} the number of seconds
    * @throws {TypeError} 2 arguments required
    *
    * @example
    * // How many seconds are between
    * // 2 July 2014 12:30:07.999 and 2 July 2014 12:30:20.000?
-   * var result = differenceInSeconds(
+   * const result = differenceInSeconds(
    *   new Date(2014, 6, 2, 12, 30, 20, 0),
    *   new Date(2014, 6, 2, 12, 30, 7, 999)
    * )
    * //=> 12
    */
 
-  function differenceInSeconds(dirtyDateLeft, dirtyDateRight) {
+  function differenceInSeconds(dateLeft, dateRight, options) {
     requiredArgs(2, arguments);
-    var diff = differenceInMilliseconds(dirtyDateLeft, dirtyDateRight) / 1000;
-    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
+    var diff = differenceInMilliseconds(dateLeft, dateRight) / 1000;
+    return getRoundingMethod(options === null || options === void 0 ? void 0 : options.roundingMethod)(diff);
   }
 
   /**
@@ -19349,7 +19704,7 @@
    *
    * @description
    * Get the number of full weeks between two dates. Fractional weeks are
-   * truncated towards zero.
+   * truncated towards zero by default.
    *
    * One "full week" is the distance between a local time in one day to the same
    * local time 7 days earlier or later. A full week can sometimes be less than
@@ -19365,12 +19720,14 @@
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
+   * @param {Object} [options] - an object with options.
+   * @param {String} [options.roundingMethod='trunc'] - a rounding method (`ceil`, `floor`, `round` or `trunc`)
    * @returns {Number} the number of full weeks
    * @throws {TypeError} 2 arguments required
    *
    * @example
    * // How many full weeks are between 5 July 2014 and 20 July 2014?
-   * var result = differenceInWeeks(new Date(2014, 6, 20), new Date(2014, 6, 5))
+   * const result = differenceInWeeks(new Date(2014, 6, 20), new Date(2014, 6, 5))
    * //=> 2
    *
    * // How many full weeks are between
@@ -19379,17 +19736,17 @@
    * // result will always be 8 weeks (54 days),
    * // even if DST starts and the period has
    * // only 54*24-1 hours.
-   * var result = differenceInWeeks(
+   * const result = differenceInWeeks(
    *   new Date(2020, 5, 1),
    *   new Date(2020, 2, 6)
    * )
    * //=> 8
    */
 
-  function differenceInWeeks(dirtyDateLeft, dirtyDateRight) {
+  function differenceInWeeks(dateLeft, dateRight, options) {
     requiredArgs(2, arguments);
-    var diff = differenceInDays(dirtyDateLeft, dirtyDateRight) / 7;
-    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
+    var diff = differenceInDays(dateLeft, dateRight) / 7;
+    return getRoundingMethod(options === null || options === void 0 ? void 0 : options.roundingMethod)(diff);
   }
 
   /**
@@ -19411,7 +19768,7 @@
    *
    * @example
    * // How many full years are between 31 December 2013 and 11 February 2015?
-   * var result = differenceInYears(new Date(2015, 1, 11), new Date(2013, 11, 31))
+   * const result = differenceInYears(new Date(2015, 1, 11), new Date(2013, 11, 31))
    * //=> 1
    */
 
@@ -19423,12 +19780,12 @@
     var difference = Math.abs(differenceInCalendarYears(dateLeft, dateRight)); // Set both dates to a valid leap year for accurate comparison when dealing
     // with leap days
 
-    dateLeft.setFullYear('1584');
-    dateRight.setFullYear('1584'); // Math.abs(diff in full years - diff in calendar years) === 1 if last calendar year is not full
+    dateLeft.setFullYear(1584);
+    dateRight.setFullYear(1584); // Math.abs(diff in full years - diff in calendar years) === 1 if last calendar year is not full
     // If so, result must be decreased by 1 in absolute value
 
     var isLastYearNotFull = compareAsc(dateLeft, dateRight) === -sign;
-    var result = sign * (difference - isLastYearNotFull); // Prevent negative zero
+    var result = sign * (difference - Number(isLastYearNotFull)); // Prevent negative zero
 
     return result === 0 ? 0 : result;
   }
@@ -19829,20 +20186,21 @@
       other: 'almost {{count}} years'
     }
   };
-  function formatDistance(token, count, options) {
-    options = options || {};
-    var result;
 
-    if (typeof formatDistanceLocale[token] === 'string') {
-      result = formatDistanceLocale[token];
+  var formatDistance = function formatDistance(token, count, options) {
+    var result;
+    var tokenValue = formatDistanceLocale[token];
+
+    if (typeof tokenValue === 'string') {
+      result = tokenValue;
     } else if (count === 1) {
-      result = formatDistanceLocale[token].one;
+      result = tokenValue.one;
     } else {
-      result = formatDistanceLocale[token].other.replace('{{count}}', count);
+      result = tokenValue.other.replace('{{count}}', count.toString());
     }
 
-    if (options.addSuffix) {
-      if (options.comparison > 0) {
+    if (options !== null && options !== void 0 && options.addSuffix) {
+      if (options.comparison && options.comparison > 0) {
         return 'in ' + result;
       } else {
         return result + ' ago';
@@ -19850,11 +20208,12 @@
     }
 
     return result;
-  }
+  };
 
   function buildFormatLongFn(args) {
-    return function (dirtyOptions) {
-      var options = dirtyOptions || {};
+    return function () {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {}; // TODO: Remove String()
+
       var width = options.width ? String(options.width) : args.defaultWidth;
       var format = args.formats[width] || args.formats[args.defaultWidth];
       return format;
@@ -19902,9 +20261,10 @@
     nextWeek: "eeee 'at' p",
     other: 'P'
   };
-  function formatRelative(token, _date, _baseDate, _options) {
+
+  var formatRelative = function formatRelative(token, _date, _baseDate, _options) {
     return formatRelativeLocale[token];
-  }
+  };
 
   function buildLocalizeFn(args) {
     return function (dirtyIndex, dirtyOptions) {
@@ -19924,7 +20284,8 @@
         valuesArray = args.values[_width] || args.values[_defaultWidth];
       }
 
-      var index = args.argumentCallback ? args.argumentCallback(dirtyIndex) : dirtyIndex;
+      var index = args.argumentCallback ? args.argumentCallback(dirtyIndex) : dirtyIndex; // @ts-ignore: For some reason TypeScript just don't want to match it, no matter how hard we try. I challange you to try to remove it!
+
       return valuesArray[index];
     };
   }
@@ -19937,12 +20298,12 @@
   var quarterValues = {
     narrow: ['1', '2', '3', '4'],
     abbreviated: ['Q1', 'Q2', 'Q3', 'Q4'],
-    wide: ['1st quarter', '2nd quarter', '3rd quarter', '4th quarter'] // Note: in English, the names of days of the week and months are capitalized.
-    // If you are making a new locale based on this one, check if the same is true for the language you're working on.
-    // Generally, formatted dates should look like they are in the middle of a sentence,
-    // e.g. in Spanish language the weekdays and months should be in the lowercase.
+    wide: ['1st quarter', '2nd quarter', '3rd quarter', '4th quarter']
+  }; // Note: in English, the names of days of the week and months are capitalized.
+  // If you are making a new locale based on this one, check if the same is true for the language you're working on.
+  // Generally, formatted dates should look like they are in the middle of a sentence,
+  // e.g. in Spanish language the weekdays and months should be in the lowercase.
 
-  };
   var monthValues = {
     narrow: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
     abbreviated: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -20019,16 +20380,13 @@
     }
   };
 
-  function ordinalNumber(dirtyNumber, _dirtyOptions) {
+  var ordinalNumber = function ordinalNumber(dirtyNumber, _options) {
     var number = Number(dirtyNumber); // If ordinal numbers depend on context, for example,
     // if they are different for different grammatical genders,
-    // use `options.unit`:
+    // use `options.unit`.
     //
-    //   var options = dirtyOptions || {}
-    //   var unit = String(options.unit)
-    //
-    // where `unit` can be 'year', 'quarter', 'month', 'week', 'date', 'dayOfYear',
-    // 'day', 'hour', 'minute', 'second'
+    // `unit` can be 'year', 'quarter', 'month', 'week', 'date', 'dayOfYear',
+    // 'day', 'hour', 'minute', 'second'.
 
     var rem100 = number % 100;
 
@@ -20046,7 +20404,7 @@
     }
 
     return number + 'th';
-  }
+  };
 
   var localize = {
     ordinalNumber: ordinalNumber,
@@ -20058,7 +20416,7 @@
       values: quarterValues,
       defaultWidth: 'wide',
       argumentCallback: function argumentCallback(quarter) {
-        return Number(quarter) - 1;
+        return quarter - 1;
       }
     }),
     month: buildLocalizeFn({
@@ -20077,36 +20435,9 @@
     })
   };
 
-  function buildMatchPatternFn(args) {
-    return function (dirtyString, dirtyOptions) {
-      var string = String(dirtyString);
-      var options = dirtyOptions || {};
-      var matchResult = string.match(args.matchPattern);
-
-      if (!matchResult) {
-        return null;
-      }
-
-      var matchedString = matchResult[0];
-      var parseResult = string.match(args.parsePattern);
-
-      if (!parseResult) {
-        return null;
-      }
-
-      var value = args.valueCallback ? args.valueCallback(parseResult[0]) : parseResult[0];
-      value = options.valueCallback ? options.valueCallback(value) : value;
-      return {
-        value: value,
-        rest: string.slice(matchedString.length)
-      };
-    };
-  }
-
   function buildMatchFn(args) {
-    return function (dirtyString, dirtyOptions) {
-      var string = String(dirtyString);
-      var options = dirtyOptions || {};
+    return function (string) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var width = options.width;
       var matchPattern = width && args.matchPatterns[width] || args.matchPatterns[args.defaultMatchWidth];
       var matchResult = string.match(matchPattern);
@@ -20117,23 +20448,18 @@
 
       var matchedString = matchResult[0];
       var parsePatterns = width && args.parsePatterns[width] || args.parsePatterns[args.defaultParseWidth];
+      var key = Array.isArray(parsePatterns) ? findIndex(parsePatterns, function (pattern) {
+        return pattern.test(matchedString);
+      }) : findKey(parsePatterns, function (pattern) {
+        return pattern.test(matchedString);
+      });
       var value;
-
-      if (Object.prototype.toString.call(parsePatterns) === '[object Array]') {
-        value = findIndex(parsePatterns, function (pattern) {
-          return pattern.test(matchedString);
-        });
-      } else {
-        value = findKey(parsePatterns, function (pattern) {
-          return pattern.test(matchedString);
-        });
-      }
-
-      value = args.valueCallback ? args.valueCallback(value) : value;
+      value = args.valueCallback ? args.valueCallback(key) : key;
       value = options.valueCallback ? options.valueCallback(value) : value;
+      var rest = string.slice(matchedString.length);
       return {
         value: value,
-        rest: string.slice(matchedString.length)
+        rest: rest
       };
     };
   }
@@ -20144,6 +20470,8 @@
         return key;
       }
     }
+
+    return undefined;
   }
 
   function findIndex(array, predicate) {
@@ -20152,6 +20480,26 @@
         return key;
       }
     }
+
+    return undefined;
+  }
+
+  function buildMatchPatternFn(args) {
+    return function (string) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var matchResult = string.match(args.matchPattern);
+      if (!matchResult) return null;
+      var matchedString = matchResult[0];
+      var parseResult = string.match(args.parsePattern);
+      if (!parseResult) return null;
+      var value = args.valueCallback ? args.valueCallback(parseResult[0]) : parseResult[0];
+      value = options.valueCallback ? options.valueCallback(value) : value;
+      var rest = string.slice(matchedString.length);
+      return {
+        value: value,
+        rest: rest
+      };
+    };
   }
 
   var matchOrdinalNumberPattern = /^(\d+)(th|st|nd|rd)?/i;
@@ -20569,53 +20917,53 @@
     afternoon: 'afternoon',
     evening: 'evening',
     night: 'night'
-    /*
-     * |     | Unit                           |     | Unit                           |
-     * |-----|--------------------------------|-----|--------------------------------|
-     * |  a  | AM, PM                         |  A* | Milliseconds in day            |
-     * |  b  | AM, PM, noon, midnight         |  B  | Flexible day period            |
-     * |  c  | Stand-alone local day of week  |  C* | Localized hour w/ day period   |
-     * |  d  | Day of month                   |  D  | Day of year                    |
-     * |  e  | Local day of week              |  E  | Day of week                    |
-     * |  f  |                                |  F* | Day of week in month           |
-     * |  g* | Modified Julian day            |  G  | Era                            |
-     * |  h  | Hour [1-12]                    |  H  | Hour [0-23]                    |
-     * |  i! | ISO day of week                |  I! | ISO week of year               |
-     * |  j* | Localized hour w/ day period   |  J* | Localized hour w/o day period  |
-     * |  k  | Hour [1-24]                    |  K  | Hour [0-11]                    |
-     * |  l* | (deprecated)                   |  L  | Stand-alone month              |
-     * |  m  | Minute                         |  M  | Month                          |
-     * |  n  |                                |  N  |                                |
-     * |  o! | Ordinal number modifier        |  O  | Timezone (GMT)                 |
-     * |  p! | Long localized time            |  P! | Long localized date            |
-     * |  q  | Stand-alone quarter            |  Q  | Quarter                        |
-     * |  r* | Related Gregorian year         |  R! | ISO week-numbering year        |
-     * |  s  | Second                         |  S  | Fraction of second             |
-     * |  t! | Seconds timestamp              |  T! | Milliseconds timestamp         |
-     * |  u  | Extended year                  |  U* | Cyclic year                    |
-     * |  v* | Timezone (generic non-locat.)  |  V* | Timezone (location)            |
-     * |  w  | Local week of year             |  W* | Week of month                  |
-     * |  x  | Timezone (ISO-8601 w/o Z)      |  X  | Timezone (ISO-8601)            |
-     * |  y  | Year (abs)                     |  Y  | Local week-numbering year      |
-     * |  z  | Timezone (specific non-locat.) |  Z* | Timezone (aliases)             |
-     *
-     * Letters marked by * are not implemented but reserved by Unicode standard.
-     *
-     * Letters marked by ! are non-standard, but implemented by date-fns:
-     * - `o` modifies the previous token to turn it into an ordinal (see `format` docs)
-     * - `i` is ISO day of week. For `i` and `ii` is returns numeric ISO week days,
-     *   i.e. 7 for Sunday, 1 for Monday, etc.
-     * - `I` is ISO week of year, as opposed to `w` which is local week of year.
-     * - `R` is ISO week-numbering year, as opposed to `Y` which is local week-numbering year.
-     *   `R` is supposed to be used in conjunction with `I` and `i`
-     *   for universal ISO week-numbering date, whereas
-     *   `Y` is supposed to be used in conjunction with `w` and `e`
-     *   for week-numbering date specific to the locale.
-     * - `P` is long localized date format
-     * - `p` is long localized time format
-     */
-
   };
+  /*
+   * |     | Unit                           |     | Unit                           |
+   * |-----|--------------------------------|-----|--------------------------------|
+   * |  a  | AM, PM                         |  A* | Milliseconds in day            |
+   * |  b  | AM, PM, noon, midnight         |  B  | Flexible day period            |
+   * |  c  | Stand-alone local day of week  |  C* | Localized hour w/ day period   |
+   * |  d  | Day of month                   |  D  | Day of year                    |
+   * |  e  | Local day of week              |  E  | Day of week                    |
+   * |  f  |                                |  F* | Day of week in month           |
+   * |  g* | Modified Julian day            |  G  | Era                            |
+   * |  h  | Hour [1-12]                    |  H  | Hour [0-23]                    |
+   * |  i! | ISO day of week                |  I! | ISO week of year               |
+   * |  j* | Localized hour w/ day period   |  J* | Localized hour w/o day period  |
+   * |  k  | Hour [1-24]                    |  K  | Hour [0-11]                    |
+   * |  l* | (deprecated)                   |  L  | Stand-alone month              |
+   * |  m  | Minute                         |  M  | Month                          |
+   * |  n  |                                |  N  |                                |
+   * |  o! | Ordinal number modifier        |  O  | Timezone (GMT)                 |
+   * |  p! | Long localized time            |  P! | Long localized date            |
+   * |  q  | Stand-alone quarter            |  Q  | Quarter                        |
+   * |  r* | Related Gregorian year         |  R! | ISO week-numbering year        |
+   * |  s  | Second                         |  S  | Fraction of second             |
+   * |  t! | Seconds timestamp              |  T! | Milliseconds timestamp         |
+   * |  u  | Extended year                  |  U* | Cyclic year                    |
+   * |  v* | Timezone (generic non-locat.)  |  V* | Timezone (location)            |
+   * |  w  | Local week of year             |  W* | Week of month                  |
+   * |  x  | Timezone (ISO-8601 w/o Z)      |  X  | Timezone (ISO-8601)            |
+   * |  y  | Year (abs)                     |  Y  | Local week-numbering year      |
+   * |  z  | Timezone (specific non-locat.) |  Z* | Timezone (aliases)             |
+   *
+   * Letters marked by * are not implemented but reserved by Unicode standard.
+   *
+   * Letters marked by ! are non-standard, but implemented by date-fns:
+   * - `o` modifies the previous token to turn it into an ordinal (see `format` docs)
+   * - `i` is ISO day of week. For `i` and `ii` is returns numeric ISO week days,
+   *   i.e. 7 for Sunday, 1 for Monday, etc.
+   * - `I` is ISO week of year, as opposed to `w` which is local week of year.
+   * - `R` is ISO week-numbering year, as opposed to `Y` which is local week-numbering year.
+   *   `R` is supposed to be used in conjunction with `I` and `i`
+   *   for universal ISO week-numbering date, whereas
+   *   `Y` is supposed to be used in conjunction with `w` and `e`
+   *   for week-numbering date specific to the locale.
+   * - `P` is long localized date format
+   * - `p` is long localized time format
+   */
+
   var formatters = {
     // Era
     G: function G(date, token, localize) {
@@ -21640,28 +21988,28 @@
    * | Day of week (formatting)        | E..EEE  | Mon, Tue, Wed, ..., Sun           |       |
    * |                                 | EEEE    | Monday, Tuesday, ..., Sunday      | 2     |
    * |                                 | EEEEE   | M, T, W, T, F, S, S               |       |
-   * |                                 | EEEEEE  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+   * |                                 | EEEEEE  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
    * | ISO day of week (formatting)    | i       | 1, 2, 3, ..., 7                   | 7     |
    * |                                 | io      | 1st, 2nd, ..., 7th                | 7     |
    * |                                 | ii      | 01, 02, ..., 07                   | 7     |
    * |                                 | iii     | Mon, Tue, Wed, ..., Sun           | 7     |
    * |                                 | iiii    | Monday, Tuesday, ..., Sunday      | 2,7   |
    * |                                 | iiiii   | M, T, W, T, F, S, S               | 7     |
-   * |                                 | iiiiii  | Mo, Tu, We, Th, Fr, Su, Sa        | 7     |
+   * |                                 | iiiiii  | Mo, Tu, We, Th, Fr, Sa, Su        | 7     |
    * | Local day of week (formatting)  | e       | 2, 3, 4, ..., 1                   |       |
    * |                                 | eo      | 2nd, 3rd, ..., 1st                | 7     |
    * |                                 | ee      | 02, 03, ..., 01                   |       |
    * |                                 | eee     | Mon, Tue, Wed, ..., Sun           |       |
    * |                                 | eeee    | Monday, Tuesday, ..., Sunday      | 2     |
    * |                                 | eeeee   | M, T, W, T, F, S, S               |       |
-   * |                                 | eeeeee  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+   * |                                 | eeeeee  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
    * | Local day of week (stand-alone) | c       | 2, 3, 4, ..., 1                   |       |
    * |                                 | co      | 2nd, 3rd, ..., 1st                | 7     |
    * |                                 | cc      | 02, 03, ..., 01                   |       |
    * |                                 | ccc     | Mon, Tue, Wed, ..., Sun           |       |
    * |                                 | cccc    | Monday, Tuesday, ..., Sunday      | 2     |
    * |                                 | ccccc   | M, T, W, T, F, S, S               |       |
-   * |                                 | cccccc  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+   * |                                 | cccccc  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
    * | AM, PM                          | a..aa   | AM, PM                            |       |
    * |                                 | aaa     | am, pm                            |       |
    * |                                 | aaaa    | a.m., p.m.                        | 2     |
@@ -21966,7 +22314,7 @@
     dirtyObject = dirtyObject || {};
 
     for (var property in dirtyObject) {
-      if (dirtyObject.hasOwnProperty(property)) {
+      if (Object.prototype.hasOwnProperty.call(dirtyObject, property)) {
         target[property] = dirtyObject[property];
       }
     }
@@ -23653,28 +24001,28 @@
    * | Day of week (formatting)        |  90 | E..EEE  | Mon, Tue, Wed, ..., Sun           |       |
    * |                                 |     | EEEE    | Monday, Tuesday, ..., Sunday      | 2     |
    * |                                 |     | EEEEE   | M, T, W, T, F, S, S               |       |
-   * |                                 |     | EEEEEE  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+   * |                                 |     | EEEEEE  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
    * | ISO day of week (formatting)    |  90 | i       | 1, 2, 3, ..., 7                   | 5     |
    * |                                 |     | io      | 1st, 2nd, ..., 7th                | 5     |
    * |                                 |     | ii      | 01, 02, ..., 07                   | 5     |
    * |                                 |     | iii     | Mon, Tue, Wed, ..., Sun           | 5     |
    * |                                 |     | iiii    | Monday, Tuesday, ..., Sunday      | 2,5   |
    * |                                 |     | iiiii   | M, T, W, T, F, S, S               | 5     |
-   * |                                 |     | iiiiii  | Mo, Tu, We, Th, Fr, Su, Sa        | 5     |
+   * |                                 |     | iiiiii  | Mo, Tu, We, Th, Fr, Sa, Su        | 5     |
    * | Local day of week (formatting)  |  90 | e       | 2, 3, 4, ..., 1                   |       |
    * |                                 |     | eo      | 2nd, 3rd, ..., 1st                | 5     |
    * |                                 |     | ee      | 02, 03, ..., 01                   |       |
    * |                                 |     | eee     | Mon, Tue, Wed, ..., Sun           |       |
    * |                                 |     | eeee    | Monday, Tuesday, ..., Sunday      | 2     |
    * |                                 |     | eeeee   | M, T, W, T, F, S, S               |       |
-   * |                                 |     | eeeeee  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+   * |                                 |     | eeeeee  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
    * | Local day of week (stand-alone) |  90 | c       | 2, 3, 4, ..., 1                   |       |
    * |                                 |     | co      | 2nd, 3rd, ..., 1st                | 5     |
    * |                                 |     | cc      | 02, 03, ..., 01                   |       |
    * |                                 |     | ccc     | Mon, Tue, Wed, ..., Sun           |       |
    * |                                 |     | cccc    | Monday, Tuesday, ..., Sunday      | 2     |
    * |                                 |     | ccccc   | M, T, W, T, F, S, S               |       |
-   * |                                 |     | cccccc  | Mo, Tu, We, Th, Fr, Su, Sa        |       |
+   * |                                 |     | cccccc  | Mo, Tu, We, Th, Fr, Sa, Su        |       |
    * | AM, PM                          |  80 | a..aaa  | AM, PM                            |       |
    * |                                 |     | aaaa    | a.m., p.m.                        | 2     |
    * |                                 |     | aaaaa   | a, p                              |       |
@@ -23913,9 +24261,9 @@
     var subFnOptions = {
       firstWeekContainsDate: firstWeekContainsDate,
       weekStartsOn: weekStartsOn,
-      locale: locale$1 // If timezone isn't specified, it will be set to the system timezone
+      locale: locale$1
+    }; // If timezone isn't specified, it will be set to the system timezone
 
-    };
     var setters = [{
       priority: TIMEZONE_UNIT_PRIORITY,
       subPriority: -1,
