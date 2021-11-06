@@ -1,3 +1,7 @@
+## 4.1.2 (unreleased)
+
+- Removed automatic pinning for `importmap-rails` (still experimental)
+
 ## 4.1.1 (2021-11-06)
 
 - Updated Chartkick.js to 4.1.1
