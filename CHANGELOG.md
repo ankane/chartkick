@@ -1,4 +1,4 @@
-## 4.1.2 (unreleased)
+## 4.1.2 (2021-11-06)
 
 - Removed automatic pinning for `importmap-rails` (still experimental)
 
