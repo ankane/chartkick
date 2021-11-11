@@ -1,3 +1,7 @@
+## 4.1.3 (unreleased)
+
+- Fixed asset precompilation issue with `importmap-rails`
+
 ## 4.1.2 (2021-11-06)
 
 - Removed automatic pinning for `importmap-rails` (still experimental)
