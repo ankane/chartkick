@@ -2,12 +2,11 @@ name: build
 on: [push, pull_request]
 jobs:
   build:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.0
+        ruby-version: 3.1
         bundler-cache: true
     - run: bundle exec rake test
