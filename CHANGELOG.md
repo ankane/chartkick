@@ -1,4 +1,4 @@
-## 4.1.3 (unreleased)
+## 4.1.3 (2022-01-15)
 
 - Support for `importmap-rails` is no longer experimental
 - Updated Chart.js to 3.7.0
