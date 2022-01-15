@@ -22,7 +22,7 @@ gem "chartkick"
 
 Then follow the instructions for your framework:
 
-- [Rails 7 / Importmap](#rails-7--importmap) (experimental)
+- [Rails 7 / Importmap](#rails-7--importmap)
 - [Rails 6 / Webpacker](#rails-6--webpacker)
 - [Rails 5 / Sprockets](#rails-5--sprockets)
 
@@ -440,7 +440,7 @@ Next, choose your charting library.
 
 ### Chart.js
 
-For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
+For Rails 7 / Importmap, in `config/importmap.rb`, add:
 
 ```ruby
 pin "chartkick", to: "chartkick.js"
@@ -481,7 +481,7 @@ In your layout or views, add:
 <%= javascript_include_tag "https://www.gstatic.com/charts/loader.js" %>
 ```
 
-For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
+For Rails 7 / Importmap, in `config/importmap.rb`, add:
 
 ```ruby
 pin "chartkick", to: "chartkick.js"
@@ -521,7 +521,7 @@ before your charts.
 
 ### Highcharts
 
-For Rails 7 / Importmap (experimental), run:
+For Rails 7 / Importmap, run:
 
 ```sh
 bin/importmap pin highcharts --download

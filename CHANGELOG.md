@@ -1,5 +1,6 @@
 ## 4.1.3 (unreleased)
 
+- Support for `importmap-rails` is no longer experimental
 - Updated Chart.js to 3.7.0
 - Fixed asset precompilation error with `importmap-rails`
 
