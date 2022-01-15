@@ -20,26 +20,17 @@ Add this line to your application’s Gemfile:
 gem "chartkick"
 ```
 
-For Rails 6 / Webpacker, run:
+Then follow the instructions for your framework:
 
-```sh
-yarn add chartkick chart.js
-```
+- [Rails 7 / Importmap](#rails-7--importmap) (experimental)
+- [Rails 6 / Webpacker](#rails-6--webpacker)
+- [Rails 5 / Sprockets](#rails-5--sprockets)
 
-And in `app/javascript/packs/application.js`, add:
+This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries and frameworks, see [detailed instructions](#installation).
 
-```js
-import "chartkick/chart.js"
-```
+### Rails 7 / Importmap
 
-For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
-
-```js
-//= require chartkick
-//= require Chart.bundle
-```
-
-For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
+In `config/importmap.rb`, add:
 
 ```ruby
 pin "chartkick", to: "chartkick.js"
@@ -53,7 +44,28 @@ import "chartkick"
 import "Chart.bundle"
 ```
 
-This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries, see [detailed instructions](#installation).
+### Rails 6 / Webpacker
+
+Run:
+
+```sh
+yarn add chartkick chart.js
+```
+
+And in `app/javascript/packs/application.js`, add:
+
+```js
+import "chartkick/chart.js"
+```
+
+### Rails 5 / Sprockets
+
+In `app/assets/javascripts/application.js`, add:
+
+```js
+//= require chartkick
+//= require Chart.bundle
+```
 
 ## Charts
 
@@ -428,6 +440,20 @@ Next, choose your charting library.
 
 ### Chart.js
 
+For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
+
+```ruby
+pin "chartkick", to: "chartkick.js"
+pin "Chart.bundle", to: "Chart.bundle.js"
+```
+
+And in `app/javascript/application.js`, add:
+
+```js
+import "chartkick"
+import "Chart.bundle"
+```
+
 For Rails 6 / Webpacker, run:
 
 ```sh
@@ -447,26 +473,24 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require Chart.bundle
 ```
 
-For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
-
-```ruby
-pin "chartkick", to: "chartkick.js"
-pin "Chart.bundle", to: "Chart.bundle.js"
-```
-
-And in `app/javascript/application.js`, add:
-
-```js
-import "chartkick"
-import "Chart.bundle"
-```
-
 ### Google Charts
 
 In your layout or views, add:
 
 ```erb
 <%= javascript_include_tag "https://www.gstatic.com/charts/loader.js" %>
+```
+
+For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
+
+```ruby
+pin "chartkick", to: "chartkick.js"
+```
+
+And in `app/javascript/application.js`, add:
+
+```js
+import "chartkick"
 ```
 
 For Rails 6 / Webpacker, run:
@@ -487,18 +511,6 @@ For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
 //= require chartkick
 ```
 
-For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
-
-```ruby
-pin "chartkick", to: "chartkick.js"
-```
-
-And in `app/javascript/application.js`, add:
-
-```js
-import "chartkick"
-```
-
 To specify a language or Google Maps API key, use:
 
 ```js
@@ -508,6 +520,27 @@ Chartkick.configure({language: "de", mapsApiKey: "..."})
 before your charts.
 
 ### Highcharts
+
+For Rails 7 / Importmap (experimental), run:
+
+```sh
+bin/importmap pin highcharts --download
+```
+
+And in `config/importmap.rb`, add:
+
+```ruby
+pin "chartkick", to: "chartkick.js"
+```
+
+And in `app/javascript/application.js`, add:
+
+```js
+import "chartkick"
+import Highcharts from "highcharts"
+
+window.Highcharts = Highcharts
+```
 
 For Rails 6 / Webpacker, run:
 
@@ -526,27 +559,6 @@ For Rails 5 / Sprockets, download [highcharts.js](https://code.highcharts.com/hi
 ```js
 //= require chartkick
 //= require highcharts
-```
-
-For Rails 7 / Importmap (experimental), in `config/importmap.rb`, add:
-
-```ruby
-pin "chartkick", to: "chartkick.js"
-```
-
-And run:
-
-```sh
-bin/importmap pin highcharts --download
-```
-
-And in `app/javascript/application.js`, add:
-
-```js
-import "chartkick"
-import Highcharts from "highcharts"
-
-window.Highcharts = Highcharts
 ```
 
 ### Sinatra and Padrino
