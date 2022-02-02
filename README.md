@@ -23,6 +23,7 @@ gem "chartkick"
 Then follow the instructions for your framework:
 
 - [Rails 7 / Importmap](#rails-7--importmap)
+- [Rails 7 / esbuild or Webpack](#rails-7--esbuild-or-webpack)
 - [Rails 6 / Webpacker](#rails-6--webpacker)
 - [Rails 5 / Sprockets](#rails-5--sprockets)
 
@@ -42,6 +43,20 @@ And in `app/javascript/application.js`, add:
 ```js
 import "chartkick"
 import "Chart.bundle"
+```
+
+### Rails 7 / esbuild or Webpack
+
+Run:
+
+```sh
+yarn add chartkick chart.js
+```
+
+And in `app/javascript/application.js`, add:
+
+```js
+import "chartkick/chart.js"
 ```
 
 ### Rails 6 / Webpacker
