@@ -26,8 +26,9 @@ Then follow the instructions for your framework:
 - [Rails 7 / esbuild or Webpack](#rails-7--esbuild-or-webpack)
 - [Rails 6 / Webpacker](#rails-6--webpacker)
 - [Rails 5 / Sprockets](#rails-5--sprockets)
+- [Sinatra, Padrino, and others](#sinatra-padrino-and-others)
 
-This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries and frameworks, see [detailed instructions](#installation).
+This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries, see [detailed instructions](#installation).
 
 ### Rails 7 / Importmap
 
@@ -80,6 +81,16 @@ In `app/assets/javascripts/application.js`, add:
 ```js
 //= require chartkick
 //= require Chart.bundle
+```
+
+### Sinatra, Padrino, and Others
+
+Download [Chartkick.js](https://raw.githubusercontent.com/ankane/chartkick/master/vendor/assets/javascripts/chartkick.js), [Chart.js](https://unpkg.com/chart.js@3/dist/chart.js), and the [date-fns adapter bundle](https://unpkg.com/chartjs-adapter-date-fns@2/dist/chartjs-adapter-date-fns.bundle.js) and include them on pages with charts.
+
+```html
+<script src="chartkick.js"></script>
+<script src="chart.js"></script>
+<script src="chartjs-adapter-date-fns.bundle.js"></script>
 ```
 
 ## Charts
