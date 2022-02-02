@@ -4,8 +4,6 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 [See it in action](https://chartkick.com)
 
-**Chartkick 4.0 was recently released** - see [how to upgrade](#upgrading)
-
 :fire: For admin charts and dashboards, check out [Blazer](https://github.com/ankane/blazer/), and for advanced visualizations, check out [Vega](https://github.com/ankane/vega)
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
