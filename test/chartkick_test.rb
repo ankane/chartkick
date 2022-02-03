@@ -142,11 +142,11 @@ class ChartkickTest < Minitest::Test
   end
 
   def test_nonce
-    assert_match "nonce=\"test-123\"", line_chart(@data, nonce: "test-123")
+    assert_match "<script nonce=\"test-123\">", line_chart(@data, nonce: "test-123")
   end
 
   def test_nonce_escaped
-    assert_match "nonce=\"test-123&quot;\"", line_chart(@data, nonce: "test-123\"")
+    assert_match "<script nonce=\"test-123&quot;\">", line_chart(@data, nonce: "test-123\"")
   end
 
   def test_defer
