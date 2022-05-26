@@ -13,8 +13,8 @@
     "rollup": "^2.44.0"
   },
   "dependencies": {
-    "chart.js": "3.7.0",
+    "chart.js": "3.8.0",
     "chartjs-adapter-date-fns": "2.0.0",
-    "date-fns": "2.25.0"
+    "date-fns": "2.28.0"
   }
 }
