@@ -1,3 +1,7 @@
+## 4.2.0 (unreleased)
+
+- Updated Chartkick.js to 4.2.0
+
 ## 4.1.3 (2022-01-15)
 
 - Support for `importmap-rails` is no longer experimental

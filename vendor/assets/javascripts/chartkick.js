@@ -2,7 +2,7 @@
  * Chartkick.js
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
- * v4.1.1
+ * v4.2.0
  * MIT License
  */
 
@@ -10,7 +10,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Chartkick = factory());
-}(this, (function () { 'use strict';
+})(this, (function () { 'use strict';
 
   function isArray(variable) {
     return Object.prototype.toString.call(variable) === "[object Array]";
@@ -1101,7 +1101,8 @@
       zeros: chart.options.zeros
     };
 
-    if (chartType !== "pie" && !options.yAxis.labels.formatter) {
+    // skip when axis is an array (like with min/max)
+    if (chartType !== "pie" && !isArray(options.yAxis) && !options.yAxis.labels.formatter) {
       options.yAxis.labels.formatter = function () {
         return formatValue("", this.value, formatOptions);
       };
@@ -1401,7 +1402,7 @@
   };
 
   defaultExport.prototype.renderLineChart = function renderLineChart (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, function () {
       var chartOptions = {};
@@ -1415,14 +1416,14 @@
       }
 
       var options = jsOptions(chart, chart.options, chartOptions);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1$1.createDataTable(chart.data, chart.xtype);
 
-      this$1.drawChart(chart, "LineChart", data, options);
+      this$1$1.drawChart(chart, "LineChart", data, options);
     });
   };
 
   defaultExport.prototype.renderPieChart = function renderPieChart (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, function () {
       var chartOptions = {
@@ -1446,28 +1447,28 @@
       }
       var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
-      var data = new this$1.library.visualization.DataTable();
+      var data = new this$1$1.library.visualization.DataTable();
       data.addColumn("string", "");
       data.addColumn("number", "Value");
       data.addRows(chart.data);
 
-      this$1.drawChart(chart, "PieChart", data, options);
+      this$1$1.drawChart(chart, "PieChart", data, options);
     });
   };
 
   defaultExport.prototype.renderColumnChart = function renderColumnChart (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, function () {
       var options = jsOptions(chart, chart.options);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1$1.createDataTable(chart.data, chart.xtype);
 
-      this$1.drawChart(chart, "ColumnChart", data, options);
+      this$1$1.drawChart(chart, "ColumnChart", data, options);
     });
   };
 
   defaultExport.prototype.renderBarChart = function renderBarChart (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, function () {
       var chartOptions = {
@@ -1478,14 +1479,14 @@
         }
       };
       var options = jsOptionsFunc(defaultOptions, hideLegend, setTitle, setBarMin, setBarMax, setStacked, setXtitle, setYtitle)(chart, chart.options, chartOptions);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1$1.createDataTable(chart.data, chart.xtype);
 
-      this$1.drawChart(chart, "BarChart", data, options);
+      this$1$1.drawChart(chart, "BarChart", data, options);
     });
   };
 
   defaultExport.prototype.renderAreaChart = function renderAreaChart (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, function () {
       var chartOptions = {
@@ -1495,14 +1496,14 @@
       };
 
       var options = jsOptions(chart, chart.options, chartOptions);
-      var data = this$1.createDataTable(chart.data, chart.xtype);
+      var data = this$1$1.createDataTable(chart.data, chart.xtype);
 
-      this$1.drawChart(chart, "AreaChart", data, options);
+      this$1$1.drawChart(chart, "AreaChart", data, options);
     });
   };
 
   defaultExport.prototype.renderGeoChart = function renderGeoChart (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, "geochart", function () {
       var chartOptions = {
@@ -1513,17 +1514,17 @@
       };
       var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
-      var data = new this$1.library.visualization.DataTable();
+      var data = new this$1$1.library.visualization.DataTable();
       data.addColumn("string", "");
       data.addColumn("number", chart.options.label || "Value");
       data.addRows(chart.data);
 
-      this$1.drawChart(chart, "GeoChart", data, options);
+      this$1$1.drawChart(chart, "GeoChart", data, options);
     });
   };
 
   defaultExport.prototype.renderScatterChart = function renderScatterChart (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, function () {
       var chartOptions = {};
@@ -1541,19 +1542,19 @@
         }
       }
 
-      data = new this$1.library.visualization.DataTable();
+      data = new this$1$1.library.visualization.DataTable();
       data.addColumn("number", "");
       for (i = 0; i < series.length; i++) {
         data.addColumn("number", series[i].name);
       }
       data.addRows(rows2);
 
-      this$1.drawChart(chart, "ScatterChart", data, options);
+      this$1$1.drawChart(chart, "ScatterChart", data, options);
     });
   };
 
   defaultExport.prototype.renderTimeline = function renderTimeline (chart) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     this.waitForLoaded(chart, "timeline", function () {
       var chartOptions = {
@@ -1565,7 +1566,7 @@
       }
       var options = merge(merge(defaultOptions, chartOptions), chart.options.library || {});
 
-      var data = new this$1.library.visualization.DataTable();
+      var data = new this$1$1.library.visualization.DataTable();
       data.addColumn({type: "string", id: "Name"});
       data.addColumn({type: "date", id: "Start"});
       data.addColumn({type: "date", id: "End"});
@@ -1573,7 +1574,7 @@
 
       chart.element.style.lineHeight = "normal";
 
-      this$1.drawChart(chart, "Timeline", data, options);
+      this$1$1.drawChart(chart, "Timeline", data, options);
     });
   };
 
@@ -1599,7 +1600,7 @@
   };
 
   defaultExport.prototype.waitForLoaded = function waitForLoaded (chart, pack, callback) {
-      var this$1 = this;
+      var this$1$1 = this;
 
     if (!callback) {
       callback = pack;
@@ -1616,7 +1617,7 @@
       // https://groups.google.com/forum/#!topic/google-visualization-api/fMKJcyA2yyI
       var loadOptions = {
         packages: [pack],
-        callback: function () { this$1.runCallbacks(); }
+        callback: function () { this$1$1.runCallbacks(); }
       };
       var config = chart.__config();
       if (config.language) {
@@ -2173,7 +2174,7 @@
   };
 
   Chart.prototype.startRefresh = function startRefresh () {
-      var this$1 = this;
+      var this$1$1 = this;
 
     var refresh = this.options.refresh;
 
@@ -2184,7 +2185,7 @@
     if (!this.intervalId) {
       if (refresh) {
         this.intervalId = setInterval( function () {
-          this$1.refreshData();
+          this$1$1.refreshData();
         }, refresh * 1000);
       } else {
         throw new Error("No refresh interval");
@@ -2493,10 +2494,14 @@
 
     // clean up previous charts before Turbolinks loads new page
     document.addEventListener("turbolinks:before-render", function() {
-      Chartkick.destroyAll();
+      if (config.autoDestroy !== false) {
+        Chartkick.destroyAll();
+      }
     });
     document.addEventListener("turbo:before-render", function() {
-      Chartkick.destroyAll();
+      if (config.autoDestroy !== false) {
+        Chartkick.destroyAll();
+      }
     });
 
     // use setTimeout so charting library can come later in same JS file
@@ -2510,4 +2515,4 @@
 
   return Chartkick;
 
-})));
+}));
