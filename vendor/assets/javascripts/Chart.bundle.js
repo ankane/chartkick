@@ -1,5 +1,5 @@
 /*!
- * Chart.js v3.8.0
+ * Chart.js v3.9.0
  * https://www.chartjs.org
  * (c) 2022 Chart.js Contributors
  * Released under the MIT License
@@ -9,7 +9,7 @@
  * (c) 2021 chartjs-adapter-date-fns Contributors
  * Released under the MIT license
  *
- * date-fns v2.28.0
+ * date-fns v2.29.1
  * https://date-fns.org
  * (c) 2021 Sasha Koss and Lesha Koss
  * Released under the MIT License
@@ -38,7 +38,7 @@
     for (var i = 1; i < arguments.length; i++) {
       var source = null != arguments[i] ? arguments[i] : {};
       i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
-        _defineProperty(target, key, source[key]);
+        _defineProperty$x(target, key, source[key]);
       }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
         Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
       });
@@ -82,7 +82,7 @@
     return Constructor;
   }
 
-  function _defineProperty(obj, key, value) {
+  function _defineProperty$x(obj, key, value) {
     if (key in obj) {
       Object.defineProperty(obj, key, {
         value: value,
@@ -342,71 +342,12 @@
     };
   }
 
-  var requestAnimFrame = function () {
-    if (typeof window === 'undefined') {
-      return function (callback) {
-        return callback();
-      };
-    }
-
-    return window.requestAnimationFrame;
-  }();
-
-  function throttled(fn, thisArg, updateFn) {
-    var updateArgs = updateFn || function (args) {
-      return Array.prototype.slice.call(args);
-    };
-
-    var ticking = false;
-    var args = [];
-    return function () {
-      for (var _len = arguments.length, rest = new Array(_len), _key = 0; _key < _len; _key++) {
-        rest[_key] = arguments[_key];
-      }
-
-      args = updateArgs(rest);
-
-      if (!ticking) {
-        ticking = true;
-        requestAnimFrame.call(window, function () {
-          ticking = false;
-          fn.apply(thisArg, args);
-        });
-      }
-    };
-  }
-
-  function debounce(fn, delay) {
-    var timeout;
-    return function () {
-      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
-      if (delay) {
-        clearTimeout(timeout);
-        timeout = setTimeout(fn, delay, args);
-      } else {
-        fn.apply(this, args);
-      }
-
-      return delay;
-    };
-  }
-
-  var _toLeftRightCenter = function _toLeftRightCenter(align) {
-    return align === 'start' ? 'left' : align === 'end' ? 'right' : 'center';
-  };
-
-  var _alignStartEnd = function _alignStartEnd(align, start, end) {
-    return align === 'start' ? start : align === 'end' ? end : (start + end) / 2;
-  };
-
-  var _textX = function _textX(align, left, right, rtl) {
-    var check = rtl ? 'left' : 'right';
-    return align === check ? right : align === 'center' ? (left + right) / 2 : left;
-  };
-
+  /*!
+   * Chart.js v3.9.0
+   * https://www.chartjs.org
+   * (c) 2022 Chart.js Contributors
+   * Released under the MIT License
+   */
   function noop() {}
 
   var uid = function () {
@@ -597,29 +538,78 @@
     }
   }
 
-  var emptyString = '';
-  var dot = '.';
-
-  function indexOfDotOrLength(key, start) {
-    var idx = key.indexOf(dot, start);
-    return idx === -1 ? key.length : idx;
-  }
+  var keyResolvers = {
+    '': function _(v) {
+      return v;
+    },
+    x: function x(o) {
+      return o.x;
+    },
+    y: function y(o) {
+      return o.y;
+    }
+  };
 
   function resolveObjectKey(obj, key) {
-    if (key === emptyString) {
+    var resolver = keyResolvers[key] || (keyResolvers[key] = _getKeyResolver(key));
+
+    return resolver(obj);
+  }
+
+  function _getKeyResolver(key) {
+    var keys = _splitKey(key);
+
+    return function (obj) {
+      var _iterator = _createForOfIteratorHelper(keys),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var k = _step.value;
+
+          if (k === '') {
+            break;
+          }
+
+          obj = obj && obj[k];
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+
       return obj;
+    };
+  }
+
+  function _splitKey(key) {
+    var parts = key.split('.');
+    var keys = [];
+    var tmp = '';
+
+    var _iterator2 = _createForOfIteratorHelper(parts),
+        _step2;
+
+    try {
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var part = _step2.value;
+        tmp += part;
+
+        if (tmp.endsWith('\\')) {
+          tmp = tmp.slice(0, -1) + '.';
+        } else {
+          keys.push(tmp);
+          tmp = '';
+        }
+      }
+    } catch (err) {
+      _iterator2.e(err);
+    } finally {
+      _iterator2.f();
     }
 
-    var pos = 0;
-    var idx = indexOfDotOrLength(key, pos);
-
-    while (obj && idx > pos) {
-      obj = obj[key.slice(pos, idx)];
-      pos = idx + 1;
-      idx = indexOfDotOrLength(key, pos);
-    }
-
-    return obj;
+    return keys;
   }
 
   function _capitalize(str) {
@@ -639,21 +629,21 @@
       return false;
     }
 
-    var _iterator = _createForOfIteratorHelper(a),
-        _step;
+    var _iterator3 = _createForOfIteratorHelper(a),
+        _step3;
 
     try {
-      for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var item = _step.value;
+      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+        var item = _step3.value;
 
         if (!b.has(item)) {
           return false;
         }
       }
     } catch (err) {
-      _iterator.e(err);
+      _iterator3.e(err);
     } finally {
-      _iterator.f();
+      _iterator3.f();
     }
 
     return true;
@@ -812,6 +802,260 @@
   function _isBetween(value, start, end) {
     var epsilon = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1e-6;
     return value >= Math.min(start, end) - epsilon && value <= Math.max(start, end) + epsilon;
+  }
+
+  function _lookup(table, value, cmp) {
+    cmp = cmp || function (index) {
+      return table[index] < value;
+    };
+
+    var hi = table.length - 1;
+    var lo = 0;
+    var mid;
+
+    while (hi - lo > 1) {
+      mid = lo + hi >> 1;
+
+      if (cmp(mid)) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+
+    return {
+      lo: lo,
+      hi: hi
+    };
+  }
+
+  var _lookupByKey = function _lookupByKey(table, key, value, last) {
+    return _lookup(table, value, last ? function (index) {
+      return table[index][key] <= value;
+    } : function (index) {
+      return table[index][key] < value;
+    });
+  };
+
+  var _rlookupByKey = function _rlookupByKey(table, key, value) {
+    return _lookup(table, value, function (index) {
+      return table[index][key] >= value;
+    });
+  };
+
+  function _filterBetween(values, min, max) {
+    var start = 0;
+    var end = values.length;
+
+    while (start < end && values[start] < min) {
+      start++;
+    }
+
+    while (end > start && values[end - 1] > max) {
+      end--;
+    }
+
+    return start > 0 || end < values.length ? values.slice(start, end) : values;
+  }
+
+  var arrayEvents = ['push', 'pop', 'shift', 'splice', 'unshift'];
+
+  function listenArrayEvents(array, listener) {
+    if (array._chartjs) {
+      array._chartjs.listeners.push(listener);
+
+      return;
+    }
+
+    Object.defineProperty(array, '_chartjs', {
+      configurable: true,
+      enumerable: false,
+      value: {
+        listeners: [listener]
+      }
+    });
+    arrayEvents.forEach(function (key) {
+      var method = '_onData' + _capitalize(key);
+
+      var base = array[key];
+      Object.defineProperty(array, key, {
+        configurable: true,
+        enumerable: false,
+        value: function value() {
+          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+          }
+
+          var res = base.apply(this, args);
+
+          array._chartjs.listeners.forEach(function (object) {
+            if (typeof object[method] === 'function') {
+              object[method].apply(object, args);
+            }
+          });
+
+          return res;
+        }
+      });
+    });
+  }
+
+  function unlistenArrayEvents(array, listener) {
+    var stub = array._chartjs;
+
+    if (!stub) {
+      return;
+    }
+
+    var listeners = stub.listeners;
+    var index = listeners.indexOf(listener);
+
+    if (index !== -1) {
+      listeners.splice(index, 1);
+    }
+
+    if (listeners.length > 0) {
+      return;
+    }
+
+    arrayEvents.forEach(function (key) {
+      delete array[key];
+    });
+    delete array._chartjs;
+  }
+
+  function _arrayUnique(items) {
+    var set = new Set();
+    var i, ilen;
+
+    for (i = 0, ilen = items.length; i < ilen; ++i) {
+      set.add(items[i]);
+    }
+
+    if (set.size === ilen) {
+      return items;
+    }
+
+    return Array.from(set);
+  }
+
+  var requestAnimFrame = function () {
+    if (typeof window === 'undefined') {
+      return function (callback) {
+        return callback();
+      };
+    }
+
+    return window.requestAnimationFrame;
+  }();
+
+  function throttled(fn, thisArg, updateFn) {
+    var updateArgs = updateFn || function (args) {
+      return Array.prototype.slice.call(args);
+    };
+
+    var ticking = false;
+    var args = [];
+    return function () {
+      for (var _len2 = arguments.length, rest = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        rest[_key2] = arguments[_key2];
+      }
+
+      args = updateArgs(rest);
+
+      if (!ticking) {
+        ticking = true;
+        requestAnimFrame.call(window, function () {
+          ticking = false;
+          fn.apply(thisArg, args);
+        });
+      }
+    };
+  }
+
+  function debounce(fn, delay) {
+    var timeout;
+    return function () {
+      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
+      }
+
+      if (delay) {
+        clearTimeout(timeout);
+        timeout = setTimeout(fn, delay, args);
+      } else {
+        fn.apply(this, args);
+      }
+
+      return delay;
+    };
+  }
+
+  var _toLeftRightCenter = function _toLeftRightCenter(align) {
+    return align === 'start' ? 'left' : align === 'end' ? 'right' : 'center';
+  };
+
+  var _alignStartEnd = function _alignStartEnd(align, start, end) {
+    return align === 'start' ? start : align === 'end' ? end : (start + end) / 2;
+  };
+
+  var _textX = function _textX(align, left, right, rtl) {
+    var check = rtl ? 'left' : 'right';
+    return align === check ? right : align === 'center' ? (left + right) / 2 : left;
+  };
+
+  function _getStartAndCountOfVisiblePoints(meta, points, animationsDisabled) {
+    var pointCount = points.length;
+    var start = 0;
+    var count = pointCount;
+
+    if (meta._sorted) {
+      var iScale = meta.iScale,
+          _parsed = meta._parsed;
+      var axis = iScale.axis;
+
+      var _iScale$getUserBounds = iScale.getUserBounds(),
+          min = _iScale$getUserBounds.min,
+          max = _iScale$getUserBounds.max,
+          minDefined = _iScale$getUserBounds.minDefined,
+          maxDefined = _iScale$getUserBounds.maxDefined;
+
+      if (minDefined) {
+        start = _limitValue(Math.min(_lookupByKey(_parsed, iScale.axis, min).lo, animationsDisabled ? pointCount : _lookupByKey(points, axis, iScale.getPixelForValue(min)).lo), 0, pointCount - 1);
+      }
+
+      if (maxDefined) {
+        count = _limitValue(Math.max(_lookupByKey(_parsed, iScale.axis, max, true).hi + 1, animationsDisabled ? 0 : _lookupByKey(points, axis, iScale.getPixelForValue(max), true).hi + 1), start, pointCount) - start;
+      } else {
+        count = pointCount - start;
+      }
+    }
+
+    return {
+      start: start,
+      count: count
+    };
+  }
+
+  function _scaleRangesChanged(meta) {
+    var xScale = meta.xScale,
+        yScale = meta.yScale,
+        _scaleRanges = meta._scaleRanges;
+    var newRanges = {
+      xmin: xScale.min,
+      xmax: xScale.max,
+      ymin: yScale.min,
+      ymax: yScale.max
+    };
+
+    if (!_scaleRanges) {
+      meta._scaleRanges = newRanges;
+      return true;
+    }
+
+    var changed = _scaleRanges.xmin !== xScale.min || _scaleRanges.xmax !== xScale.max || _scaleRanges.ymin !== yScale.min || _scaleRanges.ymax !== yScale.max;
+    Object.assign(_scaleRanges, newRanges);
+    return changed;
   }
 
   var atEdge = function atEdge(t) {
@@ -1824,10 +2068,10 @@
         var scopeObject = getScope$1(this, scope);
         var targetScopeObject = getScope$1(this, targetScope);
         var privateName = '_' + name;
-        Object.defineProperties(scopeObject, (_Object$definePropert = {}, _defineProperty(_Object$definePropert, privateName, {
+        Object.defineProperties(scopeObject, (_Object$definePropert = {}, _defineProperty$x(_Object$definePropert, privateName, {
           value: scopeObject[name],
           writable: true
-        }), _defineProperty(_Object$definePropert, name, {
+        }), _defineProperty$x(_Object$definePropert, name, {
           enumerable: true,
           get: function get() {
             var local = this[privateName];
@@ -1950,7 +2194,11 @@
   }
 
   function drawPoint(ctx, options, x, y) {
-    var type, xOffset, yOffset, size, cornerRadius;
+    drawPointLegend(ctx, options, x, y, null);
+  }
+
+  function drawPointLegend(ctx, options, x, y, w) {
+    var type, xOffset, yOffset, size, cornerRadius, width;
     var style = options.pointStyle;
     var rotation = options.rotation;
     var radius = options.radius;
@@ -1977,7 +2225,12 @@
 
     switch (style) {
       default:
-        ctx.arc(x, y, radius, 0, TAU);
+        if (w) {
+          ctx.ellipse(x, y, w / 2, radius, 0, 0, TAU);
+        } else {
+          ctx.arc(x, y, radius, 0, TAU);
+        }
+
         ctx.closePath();
         break;
 
@@ -2005,7 +2258,8 @@
       case 'rect':
         if (!rotation) {
           size = Math.SQRT1_2 * radius;
-          ctx.rect(x - size, y - size, 2 * size, 2 * size);
+          width = w ? w / 2 : size;
+          ctx.rect(x - width, y - size, 2 * width, 2 * size);
           break;
         }
 
@@ -2050,7 +2304,7 @@
         break;
 
       case 'line':
-        xOffset = Math.cos(rad) * radius;
+        xOffset = w ? w / 2 : Math.cos(rad) * radius;
         yOffset = Math.sin(rad) * radius;
         ctx.moveTo(x - xOffset, y - yOffset);
         ctx.lineTo(x + xOffset, y + yOffset);
@@ -2238,18 +2492,18 @@
       return value;
     };
 
-    var _iterator2 = _createForOfIteratorHelper(keys),
-        _step2;
+    var _iterator4 = _createForOfIteratorHelper(keys),
+        _step4;
 
     try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var prop = _step2.value;
+      for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+        var prop = _step4.value;
         ret[prop] = numberOrZero(read(prop));
       }
     } catch (err) {
-      _iterator2.e(err);
+      _iterator4.e(err);
     } finally {
-      _iterator2.f();
+      _iterator4.f();
     }
 
     return ret;
@@ -2353,139 +2607,6 @@
     return Object.assign(Object.create(parentContext), context);
   }
 
-  function _lookup(table, value, cmp) {
-    cmp = cmp || function (index) {
-      return table[index] < value;
-    };
-
-    var hi = table.length - 1;
-    var lo = 0;
-    var mid;
-
-    while (hi - lo > 1) {
-      mid = lo + hi >> 1;
-
-      if (cmp(mid)) {
-        lo = mid;
-      } else {
-        hi = mid;
-      }
-    }
-
-    return {
-      lo: lo,
-      hi: hi
-    };
-  }
-
-  var _lookupByKey = function _lookupByKey(table, key, value) {
-    return _lookup(table, value, function (index) {
-      return table[index][key] < value;
-    });
-  };
-
-  var _rlookupByKey = function _rlookupByKey(table, key, value) {
-    return _lookup(table, value, function (index) {
-      return table[index][key] >= value;
-    });
-  };
-
-  function _filterBetween(values, min, max) {
-    var start = 0;
-    var end = values.length;
-
-    while (start < end && values[start] < min) {
-      start++;
-    }
-
-    while (end > start && values[end - 1] > max) {
-      end--;
-    }
-
-    return start > 0 || end < values.length ? values.slice(start, end) : values;
-  }
-
-  var arrayEvents = ['push', 'pop', 'shift', 'splice', 'unshift'];
-
-  function listenArrayEvents(array, listener) {
-    if (array._chartjs) {
-      array._chartjs.listeners.push(listener);
-
-      return;
-    }
-
-    Object.defineProperty(array, '_chartjs', {
-      configurable: true,
-      enumerable: false,
-      value: {
-        listeners: [listener]
-      }
-    });
-    arrayEvents.forEach(function (key) {
-      var method = '_onData' + _capitalize(key);
-
-      var base = array[key];
-      Object.defineProperty(array, key, {
-        configurable: true,
-        enumerable: false,
-        value: function value() {
-          for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            args[_key3] = arguments[_key3];
-          }
-
-          var res = base.apply(this, args);
-
-          array._chartjs.listeners.forEach(function (object) {
-            if (typeof object[method] === 'function') {
-              object[method].apply(object, args);
-            }
-          });
-
-          return res;
-        }
-      });
-    });
-  }
-
-  function unlistenArrayEvents(array, listener) {
-    var stub = array._chartjs;
-
-    if (!stub) {
-      return;
-    }
-
-    var listeners = stub.listeners;
-    var index = listeners.indexOf(listener);
-
-    if (index !== -1) {
-      listeners.splice(index, 1);
-    }
-
-    if (listeners.length > 0) {
-      return;
-    }
-
-    arrayEvents.forEach(function (key) {
-      delete array[key];
-    });
-    delete array._chartjs;
-  }
-
-  function _arrayUnique(items) {
-    var set = new Set();
-    var i, ilen;
-
-    for (i = 0, ilen = items.length; i < ilen; ++i) {
-      set.add(items[i]);
-    }
-
-    if (set.size === ilen) {
-      return items;
-    }
-
-    return Array.from(set);
-  }
-
   function _createResolver(scopes) {
     var _cache;
 
@@ -2500,7 +2621,7 @@
       fallback = _resolve('_fallback', scopes);
     }
 
-    var cache = (_cache = {}, _defineProperty(_cache, Symbol.toStringTag, 'Object'), _defineProperty(_cache, "_cacheable", true), _defineProperty(_cache, "_scopes", scopes), _defineProperty(_cache, "_rootScopes", rootScopes), _defineProperty(_cache, "_fallback", fallback), _defineProperty(_cache, "_getTarget", getTarget), _defineProperty(_cache, "override", function override(scope) {
+    var cache = (_cache = {}, _defineProperty$x(_cache, Symbol.toStringTag, 'Object'), _defineProperty$x(_cache, "_cacheable", true), _defineProperty$x(_cache, "_scopes", scopes), _defineProperty$x(_cache, "_rootScopes", rootScopes), _defineProperty$x(_cache, "_fallback", fallback), _defineProperty$x(_cache, "_getTarget", getTarget), _defineProperty$x(_cache, "override", function override(scope) {
       return _createResolver([scope].concat(_toConsumableArray(scopes)), prefixes, rootScopes, fallback);
     }), _cache);
     return new Proxy(cache, {
@@ -2691,19 +2812,19 @@
 
       value = [];
 
-      var _iterator3 = _createForOfIteratorHelper(arr),
-          _step3;
+      var _iterator5 = _createForOfIteratorHelper(arr),
+          _step5;
 
       try {
-        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var item = _step3.value;
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var item = _step5.value;
           var resolver = createSubResolver(scopes, _proxy, prop, item);
           value.push(_attachContext(resolver, _context, _subProxy && _subProxy[prop], descriptors));
         }
       } catch (err) {
-        _iterator3.e(err);
+        _iterator5.e(err);
       } finally {
-        _iterator3.f();
+        _iterator5.f();
       }
     }
 
@@ -2719,12 +2840,12 @@
   };
 
   function addScopes(set, parentScopes, key, parentFallback, value) {
-    var _iterator4 = _createForOfIteratorHelper(parentScopes),
-        _step4;
+    var _iterator6 = _createForOfIteratorHelper(parentScopes),
+        _step6;
 
     try {
-      for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-        var parent = _step4.value;
+      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+        var parent = _step6.value;
         var scope = getScope(key, parent);
 
         if (scope) {
@@ -2739,9 +2860,9 @@
         }
       }
     } catch (err) {
-      _iterator4.e(err);
+      _iterator6.e(err);
     } finally {
-      _iterator4.f();
+      _iterator6.f();
     }
 
     return false;
@@ -2799,12 +2920,12 @@
   function _resolveWithPrefixes(prop, prefixes, scopes, proxy) {
     var value;
 
-    var _iterator5 = _createForOfIteratorHelper(prefixes),
-        _step5;
+    var _iterator7 = _createForOfIteratorHelper(prefixes),
+        _step7;
 
     try {
-      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-        var prefix = _step5.value;
+      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+        var prefix = _step7.value;
         value = _resolve(readKey(prefix, prop), scopes);
 
         if (defined(value)) {
@@ -2812,19 +2933,19 @@
         }
       }
     } catch (err) {
-      _iterator5.e(err);
+      _iterator7.e(err);
     } finally {
-      _iterator5.f();
+      _iterator7.f();
     }
   }
 
   function _resolve(key, scopes) {
-    var _iterator6 = _createForOfIteratorHelper(scopes),
-        _step6;
+    var _iterator8 = _createForOfIteratorHelper(scopes),
+        _step8;
 
     try {
-      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-        var scope = _step6.value;
+      for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+        var scope = _step8.value;
 
         if (!scope) {
           continue;
@@ -2837,9 +2958,9 @@
         }
       }
     } catch (err) {
-      _iterator6.e(err);
+      _iterator8.e(err);
     } finally {
-      _iterator6.f();
+      _iterator8.f();
     }
   }
 
@@ -2856,33 +2977,33 @@
   function resolveKeysFromAllScopes(scopes) {
     var set = new Set();
 
-    var _iterator7 = _createForOfIteratorHelper(scopes),
-        _step7;
+    var _iterator9 = _createForOfIteratorHelper(scopes),
+        _step9;
 
     try {
-      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-        var scope = _step7.value;
+      for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+        var scope = _step9.value;
 
-        var _iterator8 = _createForOfIteratorHelper(Object.keys(scope).filter(function (k) {
+        var _iterator10 = _createForOfIteratorHelper(Object.keys(scope).filter(function (k) {
           return !k.startsWith('_');
         })),
-            _step8;
+            _step10;
 
         try {
-          for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-            var key = _step8.value;
+          for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+            var key = _step10.value;
             set.add(key);
           }
         } catch (err) {
-          _iterator8.e(err);
+          _iterator10.e(err);
         } finally {
-          _iterator8.f();
+          _iterator10.f();
         }
       }
     } catch (err) {
-      _iterator7.e(err);
+      _iterator9.e(err);
     } finally {
-      _iterator7.f();
+      _iterator9.f();
     }
 
     return Array.from(set);
@@ -3777,12 +3898,12 @@
       }
     }
 
-    var _iterator9 = _createForOfIteratorHelper(segments),
-        _step9;
+    var _iterator11 = _createForOfIteratorHelper(segments),
+        _step11;
 
     try {
-      for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-        var segment = _step9.value;
+      for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+        var segment = _step11.value;
         start = spanGaps ? start : segment.start;
         var prev = points[start % count];
         var style = void 0;
@@ -3811,9 +3932,9 @@
         }
       }
     } catch (err) {
-      _iterator9.e(err);
+      _iterator11.e(err);
     } finally {
-      _iterator9.f();
+      _iterator11.f();
     }
 
     return result;
@@ -4904,7 +5025,7 @@
           var _parsed$i;
 
           index = i + start;
-          parsed[i] = (_parsed$i = {}, _defineProperty(_parsed$i, iAxis, singleScale || iScale.parse(labels[index], index)), _defineProperty(_parsed$i, vAxis, vScale.parse(data[index], index)), _parsed$i);
+          parsed[i] = (_parsed$i = {}, _defineProperty$x(_parsed$i, iAxis, singleScale || iScale.parse(labels[index], index)), _defineProperty$x(_parsed$i, vAxis, vScale.parse(data[index], index)), _parsed$i);
         }
 
         return parsed;
@@ -5240,6 +5361,19 @@
       key: "includeOptions",
       value: function includeOptions(mode, sharedOptions) {
         return !sharedOptions || isDirectUpdateMode(mode) || this.chart._animationsDisabled;
+      }
+    }, {
+      key: "_getSharedOptions",
+      value: function _getSharedOptions(start, mode) {
+        var firstOpts = this.resolveDataElementOptions(start, mode);
+        var previouslySharedOptions = this._sharedOptions;
+        var sharedOptions = this.getSharedOptions(firstOpts);
+        var includeOptions = this.includeOptions(mode, sharedOptions) || sharedOptions !== previouslySharedOptions;
+        this.updateSharedOptions(sharedOptions, mode, firstOpts);
+        return {
+          sharedOptions: sharedOptions,
+          includeOptions: includeOptions
+        };
       }
     }, {
       key: "updateElement",
@@ -5641,6 +5775,16 @@
       return;
     }
 
+    if (edge === true) {
+      properties.borderSkipped = {
+        top: true,
+        right: true,
+        bottom: true,
+        left: true
+      };
+      return;
+    }
+
     var _borderProps = borderProps(properties),
         start = _borderProps.start,
         end = _borderProps.end,
@@ -5792,10 +5936,9 @@
 
         var ruler = this._getRuler();
 
-        var firstOpts = this.resolveDataElementOptions(start, mode);
-        var sharedOptions = this.getSharedOptions(firstOpts);
-        var includeOptions = this.includeOptions(mode, sharedOptions);
-        this.updateSharedOptions(sharedOptions, mode, firstOpts);
+        var _this$_getSharedOptio = this._getSharedOptions(start, mode),
+            sharedOptions = _this$_getSharedOptio.sharedOptions,
+            includeOptions = _this$_getSharedOptio.includeOptions;
 
         for (var i = start; i < start + count; i++) {
           var parsed = this.getParsed(i);
@@ -5830,36 +5973,45 @@
     }, {
       key: "_getStacks",
       value: function _getStacks(last, dataIndex) {
-        var meta = this._cachedMeta;
-        var iScale = meta.iScale;
-        var metasets = iScale.getMatchingVisibleMetas(this._type);
+        var iScale = this._cachedMeta.iScale;
+        var metasets = iScale.getMatchingVisibleMetas(this._type).filter(function (meta) {
+          return meta.controller.options.grouped;
+        });
         var stacked = iScale.options.stacked;
-        var ilen = metasets.length;
         var stacks = [];
-        var i, item;
 
-        for (i = 0; i < ilen; ++i) {
-          item = metasets[i];
+        var skipNull = function skipNull(meta) {
+          var parsed = meta.controller.getParsed(dataIndex);
+          var val = parsed && parsed[meta.vScale.axis];
 
-          if (!item.controller.options.grouped) {
-            continue;
+          if (isNullOrUndef(val) || isNaN(val)) {
+            return true;
           }
+        };
 
-          if (typeof dataIndex !== 'undefined') {
-            var val = item.controller.getParsed(dataIndex)[item.controller._cachedMeta.vScale.axis];
+        var _iterator5 = _createForOfIteratorHelper(metasets),
+            _step5;
 
-            if (isNullOrUndef(val) || isNaN(val)) {
+        try {
+          for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+            var meta = _step5.value;
+
+            if (dataIndex !== undefined && skipNull(meta)) {
               continue;
             }
-          }
 
-          if (stacked === false || stacks.indexOf(item.stack) === -1 || stacked === undefined && item.stack === undefined) {
-            stacks.push(item.stack);
-          }
+            if (stacked === false || stacks.indexOf(meta.stack) === -1 || stacked === undefined && meta.stack === undefined) {
+              stacks.push(meta.stack);
+            }
 
-          if (item.index === last) {
-            break;
+            if (meta.index === last) {
+              break;
+            }
           }
+        } catch (err) {
+          _iterator5.e(err);
+        } finally {
+          _iterator5.f();
         }
 
         if (!stacks.length) {
@@ -6152,9 +6304,11 @@
         var _this$_cachedMeta2 = this._cachedMeta,
             iScale = _this$_cachedMeta2.iScale,
             vScale = _this$_cachedMeta2.vScale;
-        var firstOpts = this.resolveDataElementOptions(start, mode);
-        var sharedOptions = this.getSharedOptions(firstOpts);
-        var includeOptions = this.includeOptions(mode, sharedOptions);
+
+        var _this$_getSharedOptio2 = this._getSharedOptions(start, mode),
+            sharedOptions = _this$_getSharedOptio2.sharedOptions,
+            includeOptions = _this$_getSharedOptio2.includeOptions;
+
         var iAxis = iScale.axis;
         var vAxis = vScale.axis;
 
@@ -6167,7 +6321,7 @@
           properties.skip = isNaN(iPixel) || isNaN(vPixel);
 
           if (includeOptions) {
-            properties.options = this.resolveDataElementOptions(i, point.active ? 'active' : mode);
+            properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? 'active' : mode);
 
             if (reset) {
               properties.options.radius = 0;
@@ -6176,8 +6330,6 @@
 
           this.updateElement(point, i, properties, mode);
         }
-
-        this.updateSharedOptions(sharedOptions, mode, firstOpts);
       }
     }, {
       key: "resolveDataElementOptions",
@@ -6427,9 +6579,10 @@
         var animateScale = reset && animationOpts.animateScale;
         var innerRadius = animateScale ? 0 : this.innerRadius;
         var outerRadius = animateScale ? 0 : this.outerRadius;
-        var firstOpts = this.resolveDataElementOptions(start, mode);
-        var sharedOptions = this.getSharedOptions(firstOpts);
-        var includeOptions = this.includeOptions(mode, sharedOptions);
+
+        var _this$_getSharedOptio3 = this._getSharedOptions(start, mode),
+            sharedOptions = _this$_getSharedOptio3.sharedOptions,
+            includeOptions = _this$_getSharedOptio3.includeOptions;
 
         var startAngle = this._getRotation();
 
@@ -6460,8 +6613,6 @@
           startAngle += circumference;
           this.updateElement(arc, i, properties, mode);
         }
-
-        this.updateSharedOptions(sharedOptions, mode, firstOpts);
       }
     }, {
       key: "calculateTotal",
@@ -6690,14 +6841,14 @@
             _dataset = meta._dataset;
         var animationsDisabled = this.chart._animationsDisabled;
 
-        var _getStartAndCountOfVi = getStartAndCountOfVisiblePoints(meta, points, animationsDisabled),
+        var _getStartAndCountOfVi = _getStartAndCountOfVisiblePoints(meta, points, animationsDisabled),
             start = _getStartAndCountOfVi.start,
             count = _getStartAndCountOfVi.count;
 
         this._drawStart = start;
         this._drawCount = count;
 
-        if (scaleRangesChanged(meta)) {
+        if (_scaleRangesChanged(meta)) {
           start = 0;
           count = points.length;
         }
@@ -6728,9 +6879,11 @@
             vScale = _this$_cachedMeta3.vScale,
             _stacked = _this$_cachedMeta3._stacked,
             _dataset = _this$_cachedMeta3._dataset;
-        var firstOpts = this.resolveDataElementOptions(start, mode);
-        var sharedOptions = this.getSharedOptions(firstOpts);
-        var includeOptions = this.includeOptions(mode, sharedOptions);
+
+        var _this$_getSharedOptio4 = this._getSharedOptions(start, mode),
+            sharedOptions = _this$_getSharedOptio4.sharedOptions,
+            includeOptions = _this$_getSharedOptio4.includeOptions;
+
         var iAxis = iScale.axis;
         var vAxis = vScale.axis;
         var _this$options2 = this.options,
@@ -6765,8 +6918,6 @@
 
           prevParsed = parsed;
         }
-
-        this.updateSharedOptions(sharedOptions, mode, firstOpts);
       }
     }, {
       key: "getMaxOverflow",
@@ -6814,60 +6965,6 @@
       }
     }
   };
-
-  function getStartAndCountOfVisiblePoints(meta, points, animationsDisabled) {
-    var pointCount = points.length;
-    var start = 0;
-    var count = pointCount;
-
-    if (meta._sorted) {
-      var iScale = meta.iScale,
-          _parsed = meta._parsed;
-      var axis = iScale.axis;
-
-      var _iScale$getUserBounds = iScale.getUserBounds(),
-          min = _iScale$getUserBounds.min,
-          max = _iScale$getUserBounds.max,
-          minDefined = _iScale$getUserBounds.minDefined,
-          maxDefined = _iScale$getUserBounds.maxDefined;
-
-      if (minDefined) {
-        start = _limitValue(Math.min(_lookupByKey(_parsed, iScale.axis, min).lo, animationsDisabled ? pointCount : _lookupByKey(points, axis, iScale.getPixelForValue(min)).lo), 0, pointCount - 1);
-      }
-
-      if (maxDefined) {
-        count = _limitValue(Math.max(_lookupByKey(_parsed, iScale.axis, max).hi + 1, animationsDisabled ? 0 : _lookupByKey(points, axis, iScale.getPixelForValue(max)).hi + 1), start, pointCount) - start;
-      } else {
-        count = pointCount - start;
-      }
-    }
-
-    return {
-      start: start,
-      count: count
-    };
-  }
-
-  function scaleRangesChanged(meta) {
-    var xScale = meta.xScale,
-        yScale = meta.yScale,
-        _scaleRanges = meta._scaleRanges;
-    var newRanges = {
-      xmin: xScale.min,
-      xmax: xScale.max,
-      ymin: yScale.min,
-      ymax: yScale.max
-    };
-
-    if (!_scaleRanges) {
-      meta._scaleRanges = newRanges;
-      return true;
-    }
-
-    var changed = _scaleRanges.xmin !== xScale.min || _scaleRanges.xmax !== xScale.max || _scaleRanges.ymin !== yScale.min || _scaleRanges.ymax !== yScale.max;
-    Object.assign(_scaleRanges, newRanges);
-    return changed;
-  }
 
   var PolarAreaController = /*#__PURE__*/function (_DatasetController5) {
     _inherits(PolarAreaController, _DatasetController5);
@@ -7222,1248 +7319,6 @@
       }
     }
   };
-
-  var ScatterController = /*#__PURE__*/function (_LineController) {
-    _inherits(ScatterController, _LineController);
-
-    var _super8 = _createSuper(ScatterController);
-
-    function ScatterController() {
-      _classCallCheck(this, ScatterController);
-
-      return _super8.apply(this, arguments);
-    }
-
-    return _createClass(ScatterController);
-  }(LineController);
-
-  ScatterController.id = 'scatter';
-  ScatterController.defaults = {
-    showLine: false,
-    fill: false
-  };
-  ScatterController.overrides = {
-    interaction: {
-      mode: 'point'
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          title: function title() {
-            return '';
-          },
-          label: function label(item) {
-            return '(' + item.label + ', ' + item.formattedValue + ')';
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        type: 'linear'
-      },
-      y: {
-        type: 'linear'
-      }
-    }
-  };
-  var controllers = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    BarController: BarController,
-    BubbleController: BubbleController,
-    DoughnutController: DoughnutController,
-    LineController: LineController,
-    PolarAreaController: PolarAreaController,
-    PieController: PieController,
-    RadarController: RadarController,
-    ScatterController: ScatterController
-  });
-
-  function abstract() {
-    throw new Error('This method is not implemented: Check that a complete date adapter is provided.');
-  }
-
-  var DateAdapter = /*#__PURE__*/function () {
-    function DateAdapter(options) {
-      _classCallCheck(this, DateAdapter);
-
-      this.options = options || {};
-    }
-
-    _createClass(DateAdapter, [{
-      key: "formats",
-      value: function formats() {
-        return abstract();
-      }
-    }, {
-      key: "parse",
-      value: function parse(value, format) {
-        return abstract();
-      }
-    }, {
-      key: "format",
-      value: function format(timestamp, _format) {
-        return abstract();
-      }
-    }, {
-      key: "add",
-      value: function add(timestamp, amount, unit) {
-        return abstract();
-      }
-    }, {
-      key: "diff",
-      value: function diff(a, b, unit) {
-        return abstract();
-      }
-    }, {
-      key: "startOf",
-      value: function startOf(timestamp, unit, weekday) {
-        return abstract();
-      }
-    }, {
-      key: "endOf",
-      value: function endOf(timestamp, unit) {
-        return abstract();
-      }
-    }]);
-
-    return DateAdapter;
-  }();
-
-  DateAdapter.override = function (members) {
-    Object.assign(DateAdapter.prototype, members);
-  };
-
-  var adapters = {
-    _date: DateAdapter
-  };
-
-  function binarySearch(metaset, axis, value, intersect) {
-    var controller = metaset.controller,
-        data = metaset.data,
-        _sorted = metaset._sorted;
-    var iScale = controller._cachedMeta.iScale;
-
-    if (iScale && axis === iScale.axis && axis !== 'r' && _sorted && data.length) {
-      var lookupMethod = iScale._reversePixels ? _rlookupByKey : _lookupByKey;
-
-      if (!intersect) {
-        return lookupMethod(data, axis, value);
-      } else if (controller._sharedOptions) {
-        var el = data[0];
-        var range = typeof el.getRange === 'function' && el.getRange(axis);
-
-        if (range) {
-          var start = lookupMethod(data, axis, value - range);
-          var end = lookupMethod(data, axis, value + range);
-          return {
-            lo: start.lo,
-            hi: end.hi
-          };
-        }
-      }
-    }
-
-    return {
-      lo: 0,
-      hi: data.length - 1
-    };
-  }
-
-  function evaluateInteractionItems(chart, axis, position, handler, intersect) {
-    var metasets = chart.getSortedVisibleDatasetMetas();
-    var value = position[axis];
-
-    for (var i = 0, ilen = metasets.length; i < ilen; ++i) {
-      var _metasets$i = metasets[i],
-          _index2 = _metasets$i.index,
-          data = _metasets$i.data;
-
-      var _binarySearch = binarySearch(metasets[i], axis, value, intersect),
-          lo = _binarySearch.lo,
-          hi = _binarySearch.hi;
-
-      for (var j = lo; j <= hi; ++j) {
-        var element = data[j];
-
-        if (!element.skip) {
-          handler(element, _index2, j);
-        }
-      }
-    }
-  }
-
-  function getDistanceMetricForAxis(axis) {
-    var useX = axis.indexOf('x') !== -1;
-    var useY = axis.indexOf('y') !== -1;
-    return function (pt1, pt2) {
-      var deltaX = useX ? Math.abs(pt1.x - pt2.x) : 0;
-      var deltaY = useY ? Math.abs(pt1.y - pt2.y) : 0;
-      return Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
-    };
-  }
-
-  function getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) {
-    var items = [];
-
-    if (!includeInvisible && !chart.isPointInArea(position)) {
-      return items;
-    }
-
-    var evaluationFunc = function evaluationFunc(element, datasetIndex, index) {
-      if (!includeInvisible && !_isPointInArea(element, chart.chartArea, 0)) {
-        return;
-      }
-
-      if (element.inRange(position.x, position.y, useFinalPosition)) {
-        items.push({
-          element: element,
-          datasetIndex: datasetIndex,
-          index: index
-        });
-      }
-    };
-
-    evaluateInteractionItems(chart, axis, position, evaluationFunc, true);
-    return items;
-  }
-
-  function getNearestRadialItems(chart, position, axis, useFinalPosition) {
-    var items = [];
-
-    function evaluationFunc(element, datasetIndex, index) {
-      var _element$getProps = element.getProps(['startAngle', 'endAngle'], useFinalPosition),
-          startAngle = _element$getProps.startAngle,
-          endAngle = _element$getProps.endAngle;
-
-      var _getAngleFromPoint = getAngleFromPoint(element, {
-        x: position.x,
-        y: position.y
-      }),
-          angle = _getAngleFromPoint.angle;
-
-      if (_angleBetween(angle, startAngle, endAngle)) {
-        items.push({
-          element: element,
-          datasetIndex: datasetIndex,
-          index: index
-        });
-      }
-    }
-
-    evaluateInteractionItems(chart, axis, position, evaluationFunc);
-    return items;
-  }
-
-  function getNearestCartesianItems(chart, position, axis, intersect, useFinalPosition, includeInvisible) {
-    var items = [];
-    var distanceMetric = getDistanceMetricForAxis(axis);
-    var minDistance = Number.POSITIVE_INFINITY;
-
-    function evaluationFunc(element, datasetIndex, index) {
-      var inRange = element.inRange(position.x, position.y, useFinalPosition);
-
-      if (intersect && !inRange) {
-        return;
-      }
-
-      var center = element.getCenterPoint(useFinalPosition);
-      var pointInArea = !!includeInvisible || chart.isPointInArea(center);
-
-      if (!pointInArea && !inRange) {
-        return;
-      }
-
-      var distance = distanceMetric(position, center);
-
-      if (distance < minDistance) {
-        items = [{
-          element: element,
-          datasetIndex: datasetIndex,
-          index: index
-        }];
-        minDistance = distance;
-      } else if (distance === minDistance) {
-        items.push({
-          element: element,
-          datasetIndex: datasetIndex,
-          index: index
-        });
-      }
-    }
-
-    evaluateInteractionItems(chart, axis, position, evaluationFunc);
-    return items;
-  }
-
-  function getNearestItems(chart, position, axis, intersect, useFinalPosition, includeInvisible) {
-    if (!includeInvisible && !chart.isPointInArea(position)) {
-      return [];
-    }
-
-    return axis === 'r' && !intersect ? getNearestRadialItems(chart, position, axis, useFinalPosition) : getNearestCartesianItems(chart, position, axis, intersect, useFinalPosition, includeInvisible);
-  }
-
-  function getAxisItems(chart, position, axis, intersect, useFinalPosition) {
-    var items = [];
-    var rangeMethod = axis === 'x' ? 'inXRange' : 'inYRange';
-    var intersectsItem = false;
-    evaluateInteractionItems(chart, axis, position, function (element, datasetIndex, index) {
-      if (element[rangeMethod](position[axis], useFinalPosition)) {
-        items.push({
-          element: element,
-          datasetIndex: datasetIndex,
-          index: index
-        });
-        intersectsItem = intersectsItem || element.inRange(position.x, position.y, useFinalPosition);
-      }
-    });
-
-    if (intersect && !intersectsItem) {
-      return [];
-    }
-
-    return items;
-  }
-
-  var Interaction = {
-    evaluateInteractionItems: evaluateInteractionItems,
-    modes: {
-      index: function index(chart, e, options, useFinalPosition) {
-        var position = getRelativePosition(e, chart);
-        var axis = options.axis || 'x';
-        var includeInvisible = options.includeInvisible || false;
-        var items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
-        var elements = [];
-
-        if (!items.length) {
-          return [];
-        }
-
-        chart.getSortedVisibleDatasetMetas().forEach(function (meta) {
-          var index = items[0].index;
-          var element = meta.data[index];
-
-          if (element && !element.skip) {
-            elements.push({
-              element: element,
-              datasetIndex: meta.index,
-              index: index
-            });
-          }
-        });
-        return elements;
-      },
-      dataset: function dataset(chart, e, options, useFinalPosition) {
-        var position = getRelativePosition(e, chart);
-        var axis = options.axis || 'xy';
-        var includeInvisible = options.includeInvisible || false;
-        var items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
-
-        if (items.length > 0) {
-          var datasetIndex = items[0].datasetIndex;
-          var data = chart.getDatasetMeta(datasetIndex).data;
-          items = [];
-
-          for (var i = 0; i < data.length; ++i) {
-            items.push({
-              element: data[i],
-              datasetIndex: datasetIndex,
-              index: i
-            });
-          }
-        }
-
-        return items;
-      },
-      point: function point(chart, e, options, useFinalPosition) {
-        var position = getRelativePosition(e, chart);
-        var axis = options.axis || 'xy';
-        var includeInvisible = options.includeInvisible || false;
-        return getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible);
-      },
-      nearest: function nearest(chart, e, options, useFinalPosition) {
-        var position = getRelativePosition(e, chart);
-        var axis = options.axis || 'xy';
-        var includeInvisible = options.includeInvisible || false;
-        return getNearestItems(chart, position, axis, options.intersect, useFinalPosition, includeInvisible);
-      },
-      x: function x(chart, e, options, useFinalPosition) {
-        var position = getRelativePosition(e, chart);
-        return getAxisItems(chart, position, 'x', options.intersect, useFinalPosition);
-      },
-      y: function y(chart, e, options, useFinalPosition) {
-        var position = getRelativePosition(e, chart);
-        return getAxisItems(chart, position, 'y', options.intersect, useFinalPosition);
-      }
-    }
-  };
-  var STATIC_POSITIONS = ['left', 'top', 'right', 'bottom'];
-
-  function filterByPosition(array, position) {
-    return array.filter(function (v) {
-      return v.pos === position;
-    });
-  }
-
-  function filterDynamicPositionByAxis(array, axis) {
-    return array.filter(function (v) {
-      return STATIC_POSITIONS.indexOf(v.pos) === -1 && v.box.axis === axis;
-    });
-  }
-
-  function sortByWeight(array, reverse) {
-    return array.sort(function (a, b) {
-      var v0 = reverse ? b : a;
-      var v1 = reverse ? a : b;
-      return v0.weight === v1.weight ? v0.index - v1.index : v0.weight - v1.weight;
-    });
-  }
-
-  function wrapBoxes(boxes) {
-    var layoutBoxes = [];
-    var i, ilen, box, pos, stack, stackWeight;
-
-    for (i = 0, ilen = (boxes || []).length; i < ilen; ++i) {
-      box = boxes[i];
-      var _box = box;
-      pos = _box.position;
-      var _box$options = _box.options;
-      stack = _box$options.stack;
-      var _box$options$stackWei = _box$options.stackWeight;
-      stackWeight = _box$options$stackWei === void 0 ? 1 : _box$options$stackWei;
-      layoutBoxes.push({
-        index: i,
-        box: box,
-        pos: pos,
-        horizontal: box.isHorizontal(),
-        weight: box.weight,
-        stack: stack && pos + stack,
-        stackWeight: stackWeight
-      });
-    }
-
-    return layoutBoxes;
-  }
-
-  function buildStacks(layouts) {
-    var stacks = {};
-
-    var _iterator5 = _createForOfIteratorHelper(layouts),
-        _step5;
-
-    try {
-      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-        var wrap = _step5.value;
-        var stack = wrap.stack,
-            pos = wrap.pos,
-            stackWeight = wrap.stackWeight;
-
-        if (!stack || !STATIC_POSITIONS.includes(pos)) {
-          continue;
-        }
-
-        var _stack = stacks[stack] || (stacks[stack] = {
-          count: 0,
-          placed: 0,
-          weight: 0,
-          size: 0
-        });
-
-        _stack.count++;
-        _stack.weight += stackWeight;
-      }
-    } catch (err) {
-      _iterator5.e(err);
-    } finally {
-      _iterator5.f();
-    }
-
-    return stacks;
-  }
-
-  function setLayoutDims(layouts, params) {
-    var stacks = buildStacks(layouts);
-    var vBoxMaxWidth = params.vBoxMaxWidth,
-        hBoxMaxHeight = params.hBoxMaxHeight;
-    var i, ilen, layout;
-
-    for (i = 0, ilen = layouts.length; i < ilen; ++i) {
-      layout = layouts[i];
-      var fullSize = layout.box.fullSize;
-      var stack = stacks[layout.stack];
-      var factor = stack && layout.stackWeight / stack.weight;
-
-      if (layout.horizontal) {
-        layout.width = factor ? factor * vBoxMaxWidth : fullSize && params.availableWidth;
-        layout.height = hBoxMaxHeight;
-      } else {
-        layout.width = vBoxMaxWidth;
-        layout.height = factor ? factor * hBoxMaxHeight : fullSize && params.availableHeight;
-      }
-    }
-
-    return stacks;
-  }
-
-  function buildLayoutBoxes(boxes) {
-    var layoutBoxes = wrapBoxes(boxes);
-    var fullSize = sortByWeight(layoutBoxes.filter(function (wrap) {
-      return wrap.box.fullSize;
-    }), true);
-    var left = sortByWeight(filterByPosition(layoutBoxes, 'left'), true);
-    var right = sortByWeight(filterByPosition(layoutBoxes, 'right'));
-    var top = sortByWeight(filterByPosition(layoutBoxes, 'top'), true);
-    var bottom = sortByWeight(filterByPosition(layoutBoxes, 'bottom'));
-    var centerHorizontal = filterDynamicPositionByAxis(layoutBoxes, 'x');
-    var centerVertical = filterDynamicPositionByAxis(layoutBoxes, 'y');
-    return {
-      fullSize: fullSize,
-      leftAndTop: left.concat(top),
-      rightAndBottom: right.concat(centerVertical).concat(bottom).concat(centerHorizontal),
-      chartArea: filterByPosition(layoutBoxes, 'chartArea'),
-      vertical: left.concat(right).concat(centerVertical),
-      horizontal: top.concat(bottom).concat(centerHorizontal)
-    };
-  }
-
-  function getCombinedMax(maxPadding, chartArea, a, b) {
-    return Math.max(maxPadding[a], chartArea[a]) + Math.max(maxPadding[b], chartArea[b]);
-  }
-
-  function updateMaxPadding(maxPadding, boxPadding) {
-    maxPadding.top = Math.max(maxPadding.top, boxPadding.top);
-    maxPadding.left = Math.max(maxPadding.left, boxPadding.left);
-    maxPadding.bottom = Math.max(maxPadding.bottom, boxPadding.bottom);
-    maxPadding.right = Math.max(maxPadding.right, boxPadding.right);
-  }
-
-  function updateDims(chartArea, params, layout, stacks) {
-    var pos = layout.pos,
-        box = layout.box;
-    var maxPadding = chartArea.maxPadding;
-
-    if (!isObject(pos)) {
-      if (layout.size) {
-        chartArea[pos] -= layout.size;
-      }
-
-      var stack = stacks[layout.stack] || {
-        size: 0,
-        count: 1
-      };
-      stack.size = Math.max(stack.size, layout.horizontal ? box.height : box.width);
-      layout.size = stack.size / stack.count;
-      chartArea[pos] += layout.size;
-    }
-
-    if (box.getPadding) {
-      updateMaxPadding(maxPadding, box.getPadding());
-    }
-
-    var newWidth = Math.max(0, params.outerWidth - getCombinedMax(maxPadding, chartArea, 'left', 'right'));
-    var newHeight = Math.max(0, params.outerHeight - getCombinedMax(maxPadding, chartArea, 'top', 'bottom'));
-    var widthChanged = newWidth !== chartArea.w;
-    var heightChanged = newHeight !== chartArea.h;
-    chartArea.w = newWidth;
-    chartArea.h = newHeight;
-    return layout.horizontal ? {
-      same: widthChanged,
-      other: heightChanged
-    } : {
-      same: heightChanged,
-      other: widthChanged
-    };
-  }
-
-  function handleMaxPadding(chartArea) {
-    var maxPadding = chartArea.maxPadding;
-
-    function updatePos(pos) {
-      var change = Math.max(maxPadding[pos] - chartArea[pos], 0);
-      chartArea[pos] += change;
-      return change;
-    }
-
-    chartArea.y += updatePos('top');
-    chartArea.x += updatePos('left');
-    updatePos('right');
-    updatePos('bottom');
-  }
-
-  function getMargins(horizontal, chartArea) {
-    var maxPadding = chartArea.maxPadding;
-
-    function marginForPositions(positions) {
-      var margin = {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0
-      };
-      positions.forEach(function (pos) {
-        margin[pos] = Math.max(chartArea[pos], maxPadding[pos]);
-      });
-      return margin;
-    }
-
-    return horizontal ? marginForPositions(['left', 'right']) : marginForPositions(['top', 'bottom']);
-  }
-
-  function fitBoxes(boxes, chartArea, params, stacks) {
-    var refitBoxes = [];
-    var i, ilen, layout, box, refit, changed;
-
-    for (i = 0, ilen = boxes.length, refit = 0; i < ilen; ++i) {
-      layout = boxes[i];
-      box = layout.box;
-      box.update(layout.width || chartArea.w, layout.height || chartArea.h, getMargins(layout.horizontal, chartArea));
-
-      var _updateDims = updateDims(chartArea, params, layout, stacks),
-          same = _updateDims.same,
-          other = _updateDims.other;
-
-      refit |= same && refitBoxes.length;
-      changed = changed || other;
-
-      if (!box.fullSize) {
-        refitBoxes.push(layout);
-      }
-    }
-
-    return refit && fitBoxes(refitBoxes, chartArea, params, stacks) || changed;
-  }
-
-  function setBoxDims(box, left, top, width, height) {
-    box.top = top;
-    box.left = left;
-    box.right = left + width;
-    box.bottom = top + height;
-    box.width = width;
-    box.height = height;
-  }
-
-  function placeBoxes(boxes, chartArea, params, stacks) {
-    var userPadding = params.padding;
-    var x = chartArea.x,
-        y = chartArea.y;
-
-    var _iterator6 = _createForOfIteratorHelper(boxes),
-        _step6;
-
-    try {
-      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-        var layout = _step6.value;
-        var box = layout.box;
-        var stack = stacks[layout.stack] || {
-          count: 1,
-          placed: 0,
-          weight: 1
-        };
-        var weight = layout.stackWeight / stack.weight || 1;
-
-        if (layout.horizontal) {
-          var width = chartArea.w * weight;
-          var height = stack.size || box.height;
-
-          if (defined(stack.start)) {
-            y = stack.start;
-          }
-
-          if (box.fullSize) {
-            setBoxDims(box, userPadding.left, y, params.outerWidth - userPadding.right - userPadding.left, height);
-          } else {
-            setBoxDims(box, chartArea.left + stack.placed, y, width, height);
-          }
-
-          stack.start = y;
-          stack.placed += width;
-          y = box.bottom;
-        } else {
-          var _height = chartArea.h * weight;
-
-          var _width = stack.size || box.width;
-
-          if (defined(stack.start)) {
-            x = stack.start;
-          }
-
-          if (box.fullSize) {
-            setBoxDims(box, x, userPadding.top, _width, params.outerHeight - userPadding.bottom - userPadding.top);
-          } else {
-            setBoxDims(box, x, chartArea.top + stack.placed, _width, _height);
-          }
-
-          stack.start = x;
-          stack.placed += _height;
-          x = box.right;
-        }
-      }
-    } catch (err) {
-      _iterator6.e(err);
-    } finally {
-      _iterator6.f();
-    }
-
-    chartArea.x = x;
-    chartArea.y = y;
-  }
-
-  defaults.set('layout', {
-    autoPadding: true,
-    padding: {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0
-    }
-  });
-  var layouts = {
-    addBox: function addBox(chart, item) {
-      if (!chart.boxes) {
-        chart.boxes = [];
-      }
-
-      item.fullSize = item.fullSize || false;
-      item.position = item.position || 'top';
-      item.weight = item.weight || 0;
-
-      item._layers = item._layers || function () {
-        return [{
-          z: 0,
-          draw: function draw(chartArea) {
-            item.draw(chartArea);
-          }
-        }];
-      };
-
-      chart.boxes.push(item);
-    },
-    removeBox: function removeBox(chart, layoutItem) {
-      var index = chart.boxes ? chart.boxes.indexOf(layoutItem) : -1;
-
-      if (index !== -1) {
-        chart.boxes.splice(index, 1);
-      }
-    },
-    configure: function configure(chart, item, options) {
-      item.fullSize = options.fullSize;
-      item.position = options.position;
-      item.weight = options.weight;
-    },
-    update: function update(chart, width, height, minPadding) {
-      if (!chart) {
-        return;
-      }
-
-      var padding = toPadding(chart.options.layout.padding);
-      var availableWidth = Math.max(width - padding.width, 0);
-      var availableHeight = Math.max(height - padding.height, 0);
-      var boxes = buildLayoutBoxes(chart.boxes);
-      var verticalBoxes = boxes.vertical;
-      var horizontalBoxes = boxes.horizontal;
-      each(chart.boxes, function (box) {
-        if (typeof box.beforeLayout === 'function') {
-          box.beforeLayout();
-        }
-      });
-      var visibleVerticalBoxCount = verticalBoxes.reduce(function (total, wrap) {
-        return wrap.box.options && wrap.box.options.display === false ? total : total + 1;
-      }, 0) || 1;
-      var params = Object.freeze({
-        outerWidth: width,
-        outerHeight: height,
-        padding: padding,
-        availableWidth: availableWidth,
-        availableHeight: availableHeight,
-        vBoxMaxWidth: availableWidth / 2 / visibleVerticalBoxCount,
-        hBoxMaxHeight: availableHeight / 2
-      });
-      var maxPadding = Object.assign({}, padding);
-      updateMaxPadding(maxPadding, toPadding(minPadding));
-      var chartArea = Object.assign({
-        maxPadding: maxPadding,
-        w: availableWidth,
-        h: availableHeight,
-        x: padding.left,
-        y: padding.top
-      }, padding);
-      var stacks = setLayoutDims(verticalBoxes.concat(horizontalBoxes), params);
-      fitBoxes(boxes.fullSize, chartArea, params, stacks);
-      fitBoxes(verticalBoxes, chartArea, params, stacks);
-
-      if (fitBoxes(horizontalBoxes, chartArea, params, stacks)) {
-        fitBoxes(verticalBoxes, chartArea, params, stacks);
-      }
-
-      handleMaxPadding(chartArea);
-      placeBoxes(boxes.leftAndTop, chartArea, params, stacks);
-      chartArea.x += chartArea.w;
-      chartArea.y += chartArea.h;
-      placeBoxes(boxes.rightAndBottom, chartArea, params, stacks);
-      chart.chartArea = {
-        left: chartArea.left,
-        top: chartArea.top,
-        right: chartArea.left + chartArea.w,
-        bottom: chartArea.top + chartArea.h,
-        height: chartArea.h,
-        width: chartArea.w
-      };
-      each(boxes.chartArea, function (layout) {
-        var box = layout.box;
-        Object.assign(box, chart.chartArea);
-        box.update(chartArea.w, chartArea.h, {
-          left: 0,
-          top: 0,
-          right: 0,
-          bottom: 0
-        });
-      });
-    }
-  };
-
-  var BasePlatform = /*#__PURE__*/function () {
-    function BasePlatform() {
-      _classCallCheck(this, BasePlatform);
-    }
-
-    _createClass(BasePlatform, [{
-      key: "acquireContext",
-      value: function acquireContext(canvas, aspectRatio) {}
-    }, {
-      key: "releaseContext",
-      value: function releaseContext(context) {
-        return false;
-      }
-    }, {
-      key: "addEventListener",
-      value: function addEventListener(chart, type, listener) {}
-    }, {
-      key: "removeEventListener",
-      value: function removeEventListener(chart, type, listener) {}
-    }, {
-      key: "getDevicePixelRatio",
-      value: function getDevicePixelRatio() {
-        return 1;
-      }
-    }, {
-      key: "getMaximumSize",
-      value: function getMaximumSize(element, width, height, aspectRatio) {
-        width = Math.max(0, width || element.width);
-        height = height || element.height;
-        return {
-          width: width,
-          height: Math.max(0, aspectRatio ? Math.floor(width / aspectRatio) : height)
-        };
-      }
-    }, {
-      key: "isAttached",
-      value: function isAttached(canvas) {
-        return true;
-      }
-    }, {
-      key: "updateConfig",
-      value: function updateConfig(config) {}
-    }]);
-
-    return BasePlatform;
-  }();
-
-  var BasicPlatform = /*#__PURE__*/function (_BasePlatform) {
-    _inherits(BasicPlatform, _BasePlatform);
-
-    var _super9 = _createSuper(BasicPlatform);
-
-    function BasicPlatform() {
-      _classCallCheck(this, BasicPlatform);
-
-      return _super9.apply(this, arguments);
-    }
-
-    _createClass(BasicPlatform, [{
-      key: "acquireContext",
-      value: function acquireContext(item) {
-        return item && item.getContext && item.getContext('2d') || null;
-      }
-    }, {
-      key: "updateConfig",
-      value: function updateConfig(config) {
-        config.options.animation = false;
-      }
-    }]);
-
-    return BasicPlatform;
-  }(BasePlatform);
-
-  var EXPANDO_KEY = '$chartjs';
-  var EVENT_TYPES = {
-    touchstart: 'mousedown',
-    touchmove: 'mousemove',
-    touchend: 'mouseup',
-    pointerenter: 'mouseenter',
-    pointerdown: 'mousedown',
-    pointermove: 'mousemove',
-    pointerup: 'mouseup',
-    pointerleave: 'mouseout',
-    pointerout: 'mouseout'
-  };
-
-  var isNullOrEmpty = function isNullOrEmpty(value) {
-    return value === null || value === '';
-  };
-
-  function initCanvas(canvas, aspectRatio) {
-    var style = canvas.style;
-    var renderHeight = canvas.getAttribute('height');
-    var renderWidth = canvas.getAttribute('width');
-    canvas[EXPANDO_KEY] = {
-      initial: {
-        height: renderHeight,
-        width: renderWidth,
-        style: {
-          display: style.display,
-          height: style.height,
-          width: style.width
-        }
-      }
-    };
-    style.display = style.display || 'block';
-    style.boxSizing = style.boxSizing || 'border-box';
-
-    if (isNullOrEmpty(renderWidth)) {
-      var displayWidth = readUsedSize(canvas, 'width');
-
-      if (displayWidth !== undefined) {
-        canvas.width = displayWidth;
-      }
-    }
-
-    if (isNullOrEmpty(renderHeight)) {
-      if (canvas.style.height === '') {
-        canvas.height = canvas.width / (aspectRatio || 2);
-      } else {
-        var displayHeight = readUsedSize(canvas, 'height');
-
-        if (displayHeight !== undefined) {
-          canvas.height = displayHeight;
-        }
-      }
-    }
-
-    return canvas;
-  }
-
-  var eventListenerOptions = supportsEventListenerOptions ? {
-    passive: true
-  } : false;
-
-  function addListener(node, type, listener) {
-    node.addEventListener(type, listener, eventListenerOptions);
-  }
-
-  function removeListener(chart, type, listener) {
-    chart.canvas.removeEventListener(type, listener, eventListenerOptions);
-  }
-
-  function fromNativeEvent(event, chart) {
-    var type = EVENT_TYPES[event.type] || event.type;
-
-    var _getRelativePosition = getRelativePosition(event, chart),
-        x = _getRelativePosition.x,
-        y = _getRelativePosition.y;
-
-    return {
-      type: type,
-      chart: chart,
-      native: event,
-      x: x !== undefined ? x : null,
-      y: y !== undefined ? y : null
-    };
-  }
-
-  function nodeListContains(nodeList, canvas) {
-    var _iterator7 = _createForOfIteratorHelper(nodeList),
-        _step7;
-
-    try {
-      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-        var node = _step7.value;
-
-        if (node === canvas || node.contains(canvas)) {
-          return true;
-        }
-      }
-    } catch (err) {
-      _iterator7.e(err);
-    } finally {
-      _iterator7.f();
-    }
-  }
-
-  function createAttachObserver(chart, type, listener) {
-    var canvas = chart.canvas;
-    var observer = new MutationObserver(function (entries) {
-      var trigger = false;
-
-      var _iterator8 = _createForOfIteratorHelper(entries),
-          _step8;
-
-      try {
-        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-          var entry = _step8.value;
-          trigger = trigger || nodeListContains(entry.addedNodes, canvas);
-          trigger = trigger && !nodeListContains(entry.removedNodes, canvas);
-        }
-      } catch (err) {
-        _iterator8.e(err);
-      } finally {
-        _iterator8.f();
-      }
-
-      if (trigger) {
-        listener();
-      }
-    });
-    observer.observe(document, {
-      childList: true,
-      subtree: true
-    });
-    return observer;
-  }
-
-  function createDetachObserver(chart, type, listener) {
-    var canvas = chart.canvas;
-    var observer = new MutationObserver(function (entries) {
-      var trigger = false;
-
-      var _iterator9 = _createForOfIteratorHelper(entries),
-          _step9;
-
-      try {
-        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-          var entry = _step9.value;
-          trigger = trigger || nodeListContains(entry.removedNodes, canvas);
-          trigger = trigger && !nodeListContains(entry.addedNodes, canvas);
-        }
-      } catch (err) {
-        _iterator9.e(err);
-      } finally {
-        _iterator9.f();
-      }
-
-      if (trigger) {
-        listener();
-      }
-    });
-    observer.observe(document, {
-      childList: true,
-      subtree: true
-    });
-    return observer;
-  }
-
-  var drpListeningCharts = new Map();
-  var oldDevicePixelRatio = 0;
-
-  function onWindowResize() {
-    var dpr = window.devicePixelRatio;
-
-    if (dpr === oldDevicePixelRatio) {
-      return;
-    }
-
-    oldDevicePixelRatio = dpr;
-    drpListeningCharts.forEach(function (resize, chart) {
-      if (chart.currentDevicePixelRatio !== dpr) {
-        resize();
-      }
-    });
-  }
-
-  function listenDevicePixelRatioChanges(chart, resize) {
-    if (!drpListeningCharts.size) {
-      window.addEventListener('resize', onWindowResize);
-    }
-
-    drpListeningCharts.set(chart, resize);
-  }
-
-  function unlistenDevicePixelRatioChanges(chart) {
-    drpListeningCharts.delete(chart);
-
-    if (!drpListeningCharts.size) {
-      window.removeEventListener('resize', onWindowResize);
-    }
-  }
-
-  function createResizeObserver(chart, type, listener) {
-    var canvas = chart.canvas;
-
-    var container = canvas && _getParentNode(canvas);
-
-    if (!container) {
-      return;
-    }
-
-    var resize = throttled(function (width, height) {
-      var w = container.clientWidth;
-      listener(width, height);
-
-      if (w < container.clientWidth) {
-        listener();
-      }
-    }, window);
-    var observer = new ResizeObserver(function (entries) {
-      var entry = entries[0];
-      var width = entry.contentRect.width;
-      var height = entry.contentRect.height;
-
-      if (width === 0 && height === 0) {
-        return;
-      }
-
-      resize(width, height);
-    });
-    observer.observe(container);
-    listenDevicePixelRatioChanges(chart, resize);
-    return observer;
-  }
-
-  function releaseObserver(chart, type, observer) {
-    if (observer) {
-      observer.disconnect();
-    }
-
-    if (type === 'resize') {
-      unlistenDevicePixelRatioChanges(chart);
-    }
-  }
-
-  function createProxyAndListen(chart, type, listener) {
-    var canvas = chart.canvas;
-    var proxy = throttled(function (event) {
-      if (chart.ctx !== null) {
-        listener(fromNativeEvent(event, chart));
-      }
-    }, chart, function (args) {
-      var event = args[0];
-      return [event, event.offsetX, event.offsetY];
-    });
-    addListener(canvas, type, proxy);
-    return proxy;
-  }
-
-  var DomPlatform = /*#__PURE__*/function (_BasePlatform2) {
-    _inherits(DomPlatform, _BasePlatform2);
-
-    var _super10 = _createSuper(DomPlatform);
-
-    function DomPlatform() {
-      _classCallCheck(this, DomPlatform);
-
-      return _super10.apply(this, arguments);
-    }
-
-    _createClass(DomPlatform, [{
-      key: "acquireContext",
-      value: function acquireContext(canvas, aspectRatio) {
-        var context = canvas && canvas.getContext && canvas.getContext('2d');
-
-        if (context && context.canvas === canvas) {
-          initCanvas(canvas, aspectRatio);
-          return context;
-        }
-
-        return null;
-      }
-    }, {
-      key: "releaseContext",
-      value: function releaseContext(context) {
-        var canvas = context.canvas;
-
-        if (!canvas[EXPANDO_KEY]) {
-          return false;
-        }
-
-        var initial = canvas[EXPANDO_KEY].initial;
-        ['height', 'width'].forEach(function (prop) {
-          var value = initial[prop];
-
-          if (isNullOrUndef(value)) {
-            canvas.removeAttribute(prop);
-          } else {
-            canvas.setAttribute(prop, value);
-          }
-        });
-        var style = initial.style || {};
-        Object.keys(style).forEach(function (key) {
-          canvas.style[key] = style[key];
-        });
-        canvas.width = canvas.width;
-        delete canvas[EXPANDO_KEY];
-        return true;
-      }
-    }, {
-      key: "addEventListener",
-      value: function addEventListener(chart, type, listener) {
-        this.removeEventListener(chart, type);
-        var proxies = chart.$proxies || (chart.$proxies = {});
-        var handlers = {
-          attach: createAttachObserver,
-          detach: createDetachObserver,
-          resize: createResizeObserver
-        };
-        var handler = handlers[type] || createProxyAndListen;
-        proxies[type] = handler(chart, type, listener);
-      }
-    }, {
-      key: "removeEventListener",
-      value: function removeEventListener(chart, type) {
-        var proxies = chart.$proxies || (chart.$proxies = {});
-        var proxy = proxies[type];
-
-        if (!proxy) {
-          return;
-        }
-
-        var handlers = {
-          attach: releaseObserver,
-          detach: releaseObserver,
-          resize: releaseObserver
-        };
-        var handler = handlers[type] || removeListener;
-        handler(chart, type, proxy);
-        proxies[type] = undefined;
-      }
-    }, {
-      key: "getDevicePixelRatio",
-      value: function getDevicePixelRatio() {
-        return window.devicePixelRatio;
-      }
-    }, {
-      key: "getMaximumSize",
-      value: function getMaximumSize$1(canvas, width, height, aspectRatio) {
-        return getMaximumSize(canvas, width, height, aspectRatio);
-      }
-    }, {
-      key: "isAttached",
-      value: function isAttached(canvas) {
-        var container = _getParentNode(canvas);
-
-        return !!(container && container.isConnected);
-      }
-    }]);
-
-    return DomPlatform;
-  }(BasePlatform);
-
-  function _detectPlatform(canvas) {
-    if (!_isDomSupported() || typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas) {
-      return BasicPlatform;
-    }
-
-    return DomPlatform;
-  }
 
   var Element = /*#__PURE__*/function () {
     function Element() {
@@ -8952,14 +7807,14 @@
   var Scale = /*#__PURE__*/function (_Element) {
     _inherits(Scale, _Element);
 
-    var _super11 = _createSuper(Scale);
+    var _super8 = _createSuper(Scale);
 
     function Scale(cfg) {
       var _this9;
 
       _classCallCheck(this, Scale);
 
-      _this9 = _super11.call(this);
+      _this9 = _super8.call(this);
       _this9.id = cfg.id;
       _this9.type = cfg.type;
       _this9.options = undefined;
@@ -9750,7 +8605,7 @@
           var optsAtIndex = grid.setContext(this.getContext(i));
           var lineWidth = optsAtIndex.lineWidth;
           var lineColor = optsAtIndex.color;
-          var borderDash = grid.borderDash || [];
+          var borderDash = optsAtIndex.borderDash || [];
           var borderDashOffset = optsAtIndex.borderDashOffset;
           var tickWidth = optsAtIndex.tickWidth;
           var tickColor = optsAtIndex.tickColor;
@@ -10687,6 +9542,1379 @@
 
   var registry = new Registry();
 
+  var ScatterController = /*#__PURE__*/function (_DatasetController7) {
+    _inherits(ScatterController, _DatasetController7);
+
+    var _super9 = _createSuper(ScatterController);
+
+    function ScatterController() {
+      _classCallCheck(this, ScatterController);
+
+      return _super9.apply(this, arguments);
+    }
+
+    _createClass(ScatterController, [{
+      key: "update",
+      value: function update(mode) {
+        var meta = this._cachedMeta;
+        var _meta$data2 = meta.data,
+            points = _meta$data2 === void 0 ? [] : _meta$data2;
+        var animationsDisabled = this.chart._animationsDisabled;
+
+        var _getStartAndCountOfVi2 = _getStartAndCountOfVisiblePoints(meta, points, animationsDisabled),
+            start = _getStartAndCountOfVi2.start,
+            count = _getStartAndCountOfVi2.count;
+
+        this._drawStart = start;
+        this._drawCount = count;
+
+        if (_scaleRangesChanged(meta)) {
+          start = 0;
+          count = points.length;
+        }
+
+        if (this.options.showLine) {
+          var line = meta.dataset,
+              _dataset = meta._dataset;
+          line._chart = this.chart;
+          line._datasetIndex = this.index;
+          line._decimated = !!_dataset._decimated;
+          line.points = points;
+          var options = this.resolveDatasetElementOptions(mode);
+          options.segment = this.options.segment;
+          this.updateElement(line, undefined, {
+            animated: !animationsDisabled,
+            options: options
+          }, mode);
+        }
+
+        this.updateElements(points, start, count, mode);
+      }
+    }, {
+      key: "addElements",
+      value: function addElements() {
+        var showLine = this.options.showLine;
+
+        if (!this.datasetElementType && showLine) {
+          this.datasetElementType = registry.getElement('line');
+        }
+
+        _get(_getPrototypeOf(ScatterController.prototype), "addElements", this).call(this);
+      }
+    }, {
+      key: "updateElements",
+      value: function updateElements(points, start, count, mode) {
+        var reset = mode === 'reset';
+        var _this$_cachedMeta4 = this._cachedMeta,
+            iScale = _this$_cachedMeta4.iScale,
+            vScale = _this$_cachedMeta4.vScale,
+            _stacked = _this$_cachedMeta4._stacked,
+            _dataset = _this$_cachedMeta4._dataset;
+        var firstOpts = this.resolveDataElementOptions(start, mode);
+        var sharedOptions = this.getSharedOptions(firstOpts);
+        var includeOptions = this.includeOptions(mode, sharedOptions);
+        var iAxis = iScale.axis;
+        var vAxis = vScale.axis;
+        var _this$options10 = this.options,
+            spanGaps = _this$options10.spanGaps,
+            segment = _this$options10.segment;
+        var maxGapLength = isNumber(spanGaps) ? spanGaps : Number.POSITIVE_INFINITY;
+        var directUpdate = this.chart._animationsDisabled || reset || mode === 'none';
+        var prevParsed = start > 0 && this.getParsed(start - 1);
+
+        for (var i = start; i < start + count; ++i) {
+          var point = points[i];
+          var parsed = this.getParsed(i);
+          var properties = directUpdate ? point : {};
+          var nullData = isNullOrUndef(parsed[vAxis]);
+          var iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i);
+          var vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i);
+          properties.skip = isNaN(iPixel) || isNaN(vPixel) || nullData;
+          properties.stop = i > 0 && Math.abs(parsed[iAxis] - prevParsed[iAxis]) > maxGapLength;
+
+          if (segment) {
+            properties.parsed = parsed;
+            properties.raw = _dataset.data[i];
+          }
+
+          if (includeOptions) {
+            properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? 'active' : mode);
+          }
+
+          if (!directUpdate) {
+            this.updateElement(point, i, properties, mode);
+          }
+
+          prevParsed = parsed;
+        }
+
+        this.updateSharedOptions(sharedOptions, mode, firstOpts);
+      }
+    }, {
+      key: "getMaxOverflow",
+      value: function getMaxOverflow() {
+        var meta = this._cachedMeta;
+        var data = meta.data || [];
+
+        if (!this.options.showLine) {
+          var max = 0;
+
+          for (var i = data.length - 1; i >= 0; --i) {
+            max = Math.max(max, data[i].size(this.resolveDataElementOptions(i)) / 2);
+          }
+
+          return max > 0 && max;
+        }
+
+        var dataset = meta.dataset;
+        var border = dataset.options && dataset.options.borderWidth || 0;
+
+        if (!data.length) {
+          return border;
+        }
+
+        var firstPoint = data[0].size(this.resolveDataElementOptions(0));
+        var lastPoint = data[data.length - 1].size(this.resolveDataElementOptions(data.length - 1));
+        return Math.max(border, firstPoint, lastPoint) / 2;
+      }
+    }]);
+
+    return ScatterController;
+  }(DatasetController);
+
+  ScatterController.id = 'scatter';
+  ScatterController.defaults = {
+    datasetElementType: false,
+    dataElementType: 'point',
+    showLine: false,
+    fill: false
+  };
+  ScatterController.overrides = {
+    interaction: {
+      mode: 'point'
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          title: function title() {
+            return '';
+          },
+          label: function label(item) {
+            return '(' + item.label + ', ' + item.formattedValue + ')';
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'linear'
+      },
+      y: {
+        type: 'linear'
+      }
+    }
+  };
+  var controllers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    BarController: BarController,
+    BubbleController: BubbleController,
+    DoughnutController: DoughnutController,
+    LineController: LineController,
+    PolarAreaController: PolarAreaController,
+    PieController: PieController,
+    RadarController: RadarController,
+    ScatterController: ScatterController
+  });
+
+  function abstract() {
+    throw new Error('This method is not implemented: Check that a complete date adapter is provided.');
+  }
+
+  var DateAdapter = /*#__PURE__*/function () {
+    function DateAdapter(options) {
+      _classCallCheck(this, DateAdapter);
+
+      this.options = options || {};
+    }
+
+    _createClass(DateAdapter, [{
+      key: "init",
+      value: function init(chartOptions) {}
+    }, {
+      key: "formats",
+      value: function formats() {
+        return abstract();
+      }
+    }, {
+      key: "parse",
+      value: function parse(value, format) {
+        return abstract();
+      }
+    }, {
+      key: "format",
+      value: function format(timestamp, _format) {
+        return abstract();
+      }
+    }, {
+      key: "add",
+      value: function add(timestamp, amount, unit) {
+        return abstract();
+      }
+    }, {
+      key: "diff",
+      value: function diff(a, b, unit) {
+        return abstract();
+      }
+    }, {
+      key: "startOf",
+      value: function startOf(timestamp, unit, weekday) {
+        return abstract();
+      }
+    }, {
+      key: "endOf",
+      value: function endOf(timestamp, unit) {
+        return abstract();
+      }
+    }]);
+
+    return DateAdapter;
+  }();
+
+  DateAdapter.override = function (members) {
+    Object.assign(DateAdapter.prototype, members);
+  };
+
+  var adapters = {
+    _date: DateAdapter
+  };
+
+  function binarySearch(metaset, axis, value, intersect) {
+    var controller = metaset.controller,
+        data = metaset.data,
+        _sorted = metaset._sorted;
+    var iScale = controller._cachedMeta.iScale;
+
+    if (iScale && axis === iScale.axis && axis !== 'r' && _sorted && data.length) {
+      var lookupMethod = iScale._reversePixels ? _rlookupByKey : _lookupByKey;
+
+      if (!intersect) {
+        return lookupMethod(data, axis, value);
+      } else if (controller._sharedOptions) {
+        var el = data[0];
+        var range = typeof el.getRange === 'function' && el.getRange(axis);
+
+        if (range) {
+          var start = lookupMethod(data, axis, value - range);
+          var end = lookupMethod(data, axis, value + range);
+          return {
+            lo: start.lo,
+            hi: end.hi
+          };
+        }
+      }
+    }
+
+    return {
+      lo: 0,
+      hi: data.length - 1
+    };
+  }
+
+  function evaluateInteractionItems(chart, axis, position, handler, intersect) {
+    var metasets = chart.getSortedVisibleDatasetMetas();
+    var value = position[axis];
+
+    for (var i = 0, ilen = metasets.length; i < ilen; ++i) {
+      var _metasets$i = metasets[i],
+          _index2 = _metasets$i.index,
+          data = _metasets$i.data;
+
+      var _binarySearch = binarySearch(metasets[i], axis, value, intersect),
+          lo = _binarySearch.lo,
+          hi = _binarySearch.hi;
+
+      for (var j = lo; j <= hi; ++j) {
+        var element = data[j];
+
+        if (!element.skip) {
+          handler(element, _index2, j);
+        }
+      }
+    }
+  }
+
+  function getDistanceMetricForAxis(axis) {
+    var useX = axis.indexOf('x') !== -1;
+    var useY = axis.indexOf('y') !== -1;
+    return function (pt1, pt2) {
+      var deltaX = useX ? Math.abs(pt1.x - pt2.x) : 0;
+      var deltaY = useY ? Math.abs(pt1.y - pt2.y) : 0;
+      return Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+    };
+  }
+
+  function getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) {
+    var items = [];
+
+    if (!includeInvisible && !chart.isPointInArea(position)) {
+      return items;
+    }
+
+    var evaluationFunc = function evaluationFunc(element, datasetIndex, index) {
+      if (!includeInvisible && !_isPointInArea(element, chart.chartArea, 0)) {
+        return;
+      }
+
+      if (element.inRange(position.x, position.y, useFinalPosition)) {
+        items.push({
+          element: element,
+          datasetIndex: datasetIndex,
+          index: index
+        });
+      }
+    };
+
+    evaluateInteractionItems(chart, axis, position, evaluationFunc, true);
+    return items;
+  }
+
+  function getNearestRadialItems(chart, position, axis, useFinalPosition) {
+    var items = [];
+
+    function evaluationFunc(element, datasetIndex, index) {
+      var _element$getProps = element.getProps(['startAngle', 'endAngle'], useFinalPosition),
+          startAngle = _element$getProps.startAngle,
+          endAngle = _element$getProps.endAngle;
+
+      var _getAngleFromPoint = getAngleFromPoint(element, {
+        x: position.x,
+        y: position.y
+      }),
+          angle = _getAngleFromPoint.angle;
+
+      if (_angleBetween(angle, startAngle, endAngle)) {
+        items.push({
+          element: element,
+          datasetIndex: datasetIndex,
+          index: index
+        });
+      }
+    }
+
+    evaluateInteractionItems(chart, axis, position, evaluationFunc);
+    return items;
+  }
+
+  function getNearestCartesianItems(chart, position, axis, intersect, useFinalPosition, includeInvisible) {
+    var items = [];
+    var distanceMetric = getDistanceMetricForAxis(axis);
+    var minDistance = Number.POSITIVE_INFINITY;
+
+    function evaluationFunc(element, datasetIndex, index) {
+      var inRange = element.inRange(position.x, position.y, useFinalPosition);
+
+      if (intersect && !inRange) {
+        return;
+      }
+
+      var center = element.getCenterPoint(useFinalPosition);
+      var pointInArea = !!includeInvisible || chart.isPointInArea(center);
+
+      if (!pointInArea && !inRange) {
+        return;
+      }
+
+      var distance = distanceMetric(position, center);
+
+      if (distance < minDistance) {
+        items = [{
+          element: element,
+          datasetIndex: datasetIndex,
+          index: index
+        }];
+        minDistance = distance;
+      } else if (distance === minDistance) {
+        items.push({
+          element: element,
+          datasetIndex: datasetIndex,
+          index: index
+        });
+      }
+    }
+
+    evaluateInteractionItems(chart, axis, position, evaluationFunc);
+    return items;
+  }
+
+  function getNearestItems(chart, position, axis, intersect, useFinalPosition, includeInvisible) {
+    if (!includeInvisible && !chart.isPointInArea(position)) {
+      return [];
+    }
+
+    return axis === 'r' && !intersect ? getNearestRadialItems(chart, position, axis, useFinalPosition) : getNearestCartesianItems(chart, position, axis, intersect, useFinalPosition, includeInvisible);
+  }
+
+  function getAxisItems(chart, position, axis, intersect, useFinalPosition) {
+    var items = [];
+    var rangeMethod = axis === 'x' ? 'inXRange' : 'inYRange';
+    var intersectsItem = false;
+    evaluateInteractionItems(chart, axis, position, function (element, datasetIndex, index) {
+      if (element[rangeMethod](position[axis], useFinalPosition)) {
+        items.push({
+          element: element,
+          datasetIndex: datasetIndex,
+          index: index
+        });
+        intersectsItem = intersectsItem || element.inRange(position.x, position.y, useFinalPosition);
+      }
+    });
+
+    if (intersect && !intersectsItem) {
+      return [];
+    }
+
+    return items;
+  }
+
+  var Interaction = {
+    evaluateInteractionItems: evaluateInteractionItems,
+    modes: {
+      index: function index(chart, e, options, useFinalPosition) {
+        var position = getRelativePosition(e, chart);
+        var axis = options.axis || 'x';
+        var includeInvisible = options.includeInvisible || false;
+        var items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
+        var elements = [];
+
+        if (!items.length) {
+          return [];
+        }
+
+        chart.getSortedVisibleDatasetMetas().forEach(function (meta) {
+          var index = items[0].index;
+          var element = meta.data[index];
+
+          if (element && !element.skip) {
+            elements.push({
+              element: element,
+              datasetIndex: meta.index,
+              index: index
+            });
+          }
+        });
+        return elements;
+      },
+      dataset: function dataset(chart, e, options, useFinalPosition) {
+        var position = getRelativePosition(e, chart);
+        var axis = options.axis || 'xy';
+        var includeInvisible = options.includeInvisible || false;
+        var items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
+
+        if (items.length > 0) {
+          var datasetIndex = items[0].datasetIndex;
+          var data = chart.getDatasetMeta(datasetIndex).data;
+          items = [];
+
+          for (var i = 0; i < data.length; ++i) {
+            items.push({
+              element: data[i],
+              datasetIndex: datasetIndex,
+              index: i
+            });
+          }
+        }
+
+        return items;
+      },
+      point: function point(chart, e, options, useFinalPosition) {
+        var position = getRelativePosition(e, chart);
+        var axis = options.axis || 'xy';
+        var includeInvisible = options.includeInvisible || false;
+        return getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible);
+      },
+      nearest: function nearest(chart, e, options, useFinalPosition) {
+        var position = getRelativePosition(e, chart);
+        var axis = options.axis || 'xy';
+        var includeInvisible = options.includeInvisible || false;
+        return getNearestItems(chart, position, axis, options.intersect, useFinalPosition, includeInvisible);
+      },
+      x: function x(chart, e, options, useFinalPosition) {
+        var position = getRelativePosition(e, chart);
+        return getAxisItems(chart, position, 'x', options.intersect, useFinalPosition);
+      },
+      y: function y(chart, e, options, useFinalPosition) {
+        var position = getRelativePosition(e, chart);
+        return getAxisItems(chart, position, 'y', options.intersect, useFinalPosition);
+      }
+    }
+  };
+  var STATIC_POSITIONS = ['left', 'top', 'right', 'bottom'];
+
+  function filterByPosition(array, position) {
+    return array.filter(function (v) {
+      return v.pos === position;
+    });
+  }
+
+  function filterDynamicPositionByAxis(array, axis) {
+    return array.filter(function (v) {
+      return STATIC_POSITIONS.indexOf(v.pos) === -1 && v.box.axis === axis;
+    });
+  }
+
+  function sortByWeight(array, reverse) {
+    return array.sort(function (a, b) {
+      var v0 = reverse ? b : a;
+      var v1 = reverse ? a : b;
+      return v0.weight === v1.weight ? v0.index - v1.index : v0.weight - v1.weight;
+    });
+  }
+
+  function wrapBoxes(boxes) {
+    var layoutBoxes = [];
+    var i, ilen, box, pos, stack, stackWeight;
+
+    for (i = 0, ilen = (boxes || []).length; i < ilen; ++i) {
+      box = boxes[i];
+      var _box = box;
+      pos = _box.position;
+      var _box$options = _box.options;
+      stack = _box$options.stack;
+      var _box$options$stackWei = _box$options.stackWeight;
+      stackWeight = _box$options$stackWei === void 0 ? 1 : _box$options$stackWei;
+      layoutBoxes.push({
+        index: i,
+        box: box,
+        pos: pos,
+        horizontal: box.isHorizontal(),
+        weight: box.weight,
+        stack: stack && pos + stack,
+        stackWeight: stackWeight
+      });
+    }
+
+    return layoutBoxes;
+  }
+
+  function buildStacks(layouts) {
+    var stacks = {};
+
+    var _iterator6 = _createForOfIteratorHelper(layouts),
+        _step6;
+
+    try {
+      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+        var wrap = _step6.value;
+        var stack = wrap.stack,
+            pos = wrap.pos,
+            stackWeight = wrap.stackWeight;
+
+        if (!stack || !STATIC_POSITIONS.includes(pos)) {
+          continue;
+        }
+
+        var _stack = stacks[stack] || (stacks[stack] = {
+          count: 0,
+          placed: 0,
+          weight: 0,
+          size: 0
+        });
+
+        _stack.count++;
+        _stack.weight += stackWeight;
+      }
+    } catch (err) {
+      _iterator6.e(err);
+    } finally {
+      _iterator6.f();
+    }
+
+    return stacks;
+  }
+
+  function setLayoutDims(layouts, params) {
+    var stacks = buildStacks(layouts);
+    var vBoxMaxWidth = params.vBoxMaxWidth,
+        hBoxMaxHeight = params.hBoxMaxHeight;
+    var i, ilen, layout;
+
+    for (i = 0, ilen = layouts.length; i < ilen; ++i) {
+      layout = layouts[i];
+      var fullSize = layout.box.fullSize;
+      var stack = stacks[layout.stack];
+      var factor = stack && layout.stackWeight / stack.weight;
+
+      if (layout.horizontal) {
+        layout.width = factor ? factor * vBoxMaxWidth : fullSize && params.availableWidth;
+        layout.height = hBoxMaxHeight;
+      } else {
+        layout.width = vBoxMaxWidth;
+        layout.height = factor ? factor * hBoxMaxHeight : fullSize && params.availableHeight;
+      }
+    }
+
+    return stacks;
+  }
+
+  function buildLayoutBoxes(boxes) {
+    var layoutBoxes = wrapBoxes(boxes);
+    var fullSize = sortByWeight(layoutBoxes.filter(function (wrap) {
+      return wrap.box.fullSize;
+    }), true);
+    var left = sortByWeight(filterByPosition(layoutBoxes, 'left'), true);
+    var right = sortByWeight(filterByPosition(layoutBoxes, 'right'));
+    var top = sortByWeight(filterByPosition(layoutBoxes, 'top'), true);
+    var bottom = sortByWeight(filterByPosition(layoutBoxes, 'bottom'));
+    var centerHorizontal = filterDynamicPositionByAxis(layoutBoxes, 'x');
+    var centerVertical = filterDynamicPositionByAxis(layoutBoxes, 'y');
+    return {
+      fullSize: fullSize,
+      leftAndTop: left.concat(top),
+      rightAndBottom: right.concat(centerVertical).concat(bottom).concat(centerHorizontal),
+      chartArea: filterByPosition(layoutBoxes, 'chartArea'),
+      vertical: left.concat(right).concat(centerVertical),
+      horizontal: top.concat(bottom).concat(centerHorizontal)
+    };
+  }
+
+  function getCombinedMax(maxPadding, chartArea, a, b) {
+    return Math.max(maxPadding[a], chartArea[a]) + Math.max(maxPadding[b], chartArea[b]);
+  }
+
+  function updateMaxPadding(maxPadding, boxPadding) {
+    maxPadding.top = Math.max(maxPadding.top, boxPadding.top);
+    maxPadding.left = Math.max(maxPadding.left, boxPadding.left);
+    maxPadding.bottom = Math.max(maxPadding.bottom, boxPadding.bottom);
+    maxPadding.right = Math.max(maxPadding.right, boxPadding.right);
+  }
+
+  function updateDims(chartArea, params, layout, stacks) {
+    var pos = layout.pos,
+        box = layout.box;
+    var maxPadding = chartArea.maxPadding;
+
+    if (!isObject(pos)) {
+      if (layout.size) {
+        chartArea[pos] -= layout.size;
+      }
+
+      var stack = stacks[layout.stack] || {
+        size: 0,
+        count: 1
+      };
+      stack.size = Math.max(stack.size, layout.horizontal ? box.height : box.width);
+      layout.size = stack.size / stack.count;
+      chartArea[pos] += layout.size;
+    }
+
+    if (box.getPadding) {
+      updateMaxPadding(maxPadding, box.getPadding());
+    }
+
+    var newWidth = Math.max(0, params.outerWidth - getCombinedMax(maxPadding, chartArea, 'left', 'right'));
+    var newHeight = Math.max(0, params.outerHeight - getCombinedMax(maxPadding, chartArea, 'top', 'bottom'));
+    var widthChanged = newWidth !== chartArea.w;
+    var heightChanged = newHeight !== chartArea.h;
+    chartArea.w = newWidth;
+    chartArea.h = newHeight;
+    return layout.horizontal ? {
+      same: widthChanged,
+      other: heightChanged
+    } : {
+      same: heightChanged,
+      other: widthChanged
+    };
+  }
+
+  function handleMaxPadding(chartArea) {
+    var maxPadding = chartArea.maxPadding;
+
+    function updatePos(pos) {
+      var change = Math.max(maxPadding[pos] - chartArea[pos], 0);
+      chartArea[pos] += change;
+      return change;
+    }
+
+    chartArea.y += updatePos('top');
+    chartArea.x += updatePos('left');
+    updatePos('right');
+    updatePos('bottom');
+  }
+
+  function getMargins(horizontal, chartArea) {
+    var maxPadding = chartArea.maxPadding;
+
+    function marginForPositions(positions) {
+      var margin = {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0
+      };
+      positions.forEach(function (pos) {
+        margin[pos] = Math.max(chartArea[pos], maxPadding[pos]);
+      });
+      return margin;
+    }
+
+    return horizontal ? marginForPositions(['left', 'right']) : marginForPositions(['top', 'bottom']);
+  }
+
+  function fitBoxes(boxes, chartArea, params, stacks) {
+    var refitBoxes = [];
+    var i, ilen, layout, box, refit, changed;
+
+    for (i = 0, ilen = boxes.length, refit = 0; i < ilen; ++i) {
+      layout = boxes[i];
+      box = layout.box;
+      box.update(layout.width || chartArea.w, layout.height || chartArea.h, getMargins(layout.horizontal, chartArea));
+
+      var _updateDims = updateDims(chartArea, params, layout, stacks),
+          same = _updateDims.same,
+          other = _updateDims.other;
+
+      refit |= same && refitBoxes.length;
+      changed = changed || other;
+
+      if (!box.fullSize) {
+        refitBoxes.push(layout);
+      }
+    }
+
+    return refit && fitBoxes(refitBoxes, chartArea, params, stacks) || changed;
+  }
+
+  function setBoxDims(box, left, top, width, height) {
+    box.top = top;
+    box.left = left;
+    box.right = left + width;
+    box.bottom = top + height;
+    box.width = width;
+    box.height = height;
+  }
+
+  function placeBoxes(boxes, chartArea, params, stacks) {
+    var userPadding = params.padding;
+    var x = chartArea.x,
+        y = chartArea.y;
+
+    var _iterator7 = _createForOfIteratorHelper(boxes),
+        _step7;
+
+    try {
+      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+        var layout = _step7.value;
+        var box = layout.box;
+        var stack = stacks[layout.stack] || {
+          count: 1,
+          placed: 0,
+          weight: 1
+        };
+        var weight = layout.stackWeight / stack.weight || 1;
+
+        if (layout.horizontal) {
+          var width = chartArea.w * weight;
+          var height = stack.size || box.height;
+
+          if (defined(stack.start)) {
+            y = stack.start;
+          }
+
+          if (box.fullSize) {
+            setBoxDims(box, userPadding.left, y, params.outerWidth - userPadding.right - userPadding.left, height);
+          } else {
+            setBoxDims(box, chartArea.left + stack.placed, y, width, height);
+          }
+
+          stack.start = y;
+          stack.placed += width;
+          y = box.bottom;
+        } else {
+          var _height = chartArea.h * weight;
+
+          var _width = stack.size || box.width;
+
+          if (defined(stack.start)) {
+            x = stack.start;
+          }
+
+          if (box.fullSize) {
+            setBoxDims(box, x, userPadding.top, _width, params.outerHeight - userPadding.bottom - userPadding.top);
+          } else {
+            setBoxDims(box, x, chartArea.top + stack.placed, _width, _height);
+          }
+
+          stack.start = x;
+          stack.placed += _height;
+          x = box.right;
+        }
+      }
+    } catch (err) {
+      _iterator7.e(err);
+    } finally {
+      _iterator7.f();
+    }
+
+    chartArea.x = x;
+    chartArea.y = y;
+  }
+
+  defaults.set('layout', {
+    autoPadding: true,
+    padding: {
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0
+    }
+  });
+  var layouts = {
+    addBox: function addBox(chart, item) {
+      if (!chart.boxes) {
+        chart.boxes = [];
+      }
+
+      item.fullSize = item.fullSize || false;
+      item.position = item.position || 'top';
+      item.weight = item.weight || 0;
+
+      item._layers = item._layers || function () {
+        return [{
+          z: 0,
+          draw: function draw(chartArea) {
+            item.draw(chartArea);
+          }
+        }];
+      };
+
+      chart.boxes.push(item);
+    },
+    removeBox: function removeBox(chart, layoutItem) {
+      var index = chart.boxes ? chart.boxes.indexOf(layoutItem) : -1;
+
+      if (index !== -1) {
+        chart.boxes.splice(index, 1);
+      }
+    },
+    configure: function configure(chart, item, options) {
+      item.fullSize = options.fullSize;
+      item.position = options.position;
+      item.weight = options.weight;
+    },
+    update: function update(chart, width, height, minPadding) {
+      if (!chart) {
+        return;
+      }
+
+      var padding = toPadding(chart.options.layout.padding);
+      var availableWidth = Math.max(width - padding.width, 0);
+      var availableHeight = Math.max(height - padding.height, 0);
+      var boxes = buildLayoutBoxes(chart.boxes);
+      var verticalBoxes = boxes.vertical;
+      var horizontalBoxes = boxes.horizontal;
+      each(chart.boxes, function (box) {
+        if (typeof box.beforeLayout === 'function') {
+          box.beforeLayout();
+        }
+      });
+      var visibleVerticalBoxCount = verticalBoxes.reduce(function (total, wrap) {
+        return wrap.box.options && wrap.box.options.display === false ? total : total + 1;
+      }, 0) || 1;
+      var params = Object.freeze({
+        outerWidth: width,
+        outerHeight: height,
+        padding: padding,
+        availableWidth: availableWidth,
+        availableHeight: availableHeight,
+        vBoxMaxWidth: availableWidth / 2 / visibleVerticalBoxCount,
+        hBoxMaxHeight: availableHeight / 2
+      });
+      var maxPadding = Object.assign({}, padding);
+      updateMaxPadding(maxPadding, toPadding(minPadding));
+      var chartArea = Object.assign({
+        maxPadding: maxPadding,
+        w: availableWidth,
+        h: availableHeight,
+        x: padding.left,
+        y: padding.top
+      }, padding);
+      var stacks = setLayoutDims(verticalBoxes.concat(horizontalBoxes), params);
+      fitBoxes(boxes.fullSize, chartArea, params, stacks);
+      fitBoxes(verticalBoxes, chartArea, params, stacks);
+
+      if (fitBoxes(horizontalBoxes, chartArea, params, stacks)) {
+        fitBoxes(verticalBoxes, chartArea, params, stacks);
+      }
+
+      handleMaxPadding(chartArea);
+      placeBoxes(boxes.leftAndTop, chartArea, params, stacks);
+      chartArea.x += chartArea.w;
+      chartArea.y += chartArea.h;
+      placeBoxes(boxes.rightAndBottom, chartArea, params, stacks);
+      chart.chartArea = {
+        left: chartArea.left,
+        top: chartArea.top,
+        right: chartArea.left + chartArea.w,
+        bottom: chartArea.top + chartArea.h,
+        height: chartArea.h,
+        width: chartArea.w
+      };
+      each(boxes.chartArea, function (layout) {
+        var box = layout.box;
+        Object.assign(box, chart.chartArea);
+        box.update(chartArea.w, chartArea.h, {
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0
+        });
+      });
+    }
+  };
+
+  var BasePlatform = /*#__PURE__*/function () {
+    function BasePlatform() {
+      _classCallCheck(this, BasePlatform);
+    }
+
+    _createClass(BasePlatform, [{
+      key: "acquireContext",
+      value: function acquireContext(canvas, aspectRatio) {}
+    }, {
+      key: "releaseContext",
+      value: function releaseContext(context) {
+        return false;
+      }
+    }, {
+      key: "addEventListener",
+      value: function addEventListener(chart, type, listener) {}
+    }, {
+      key: "removeEventListener",
+      value: function removeEventListener(chart, type, listener) {}
+    }, {
+      key: "getDevicePixelRatio",
+      value: function getDevicePixelRatio() {
+        return 1;
+      }
+    }, {
+      key: "getMaximumSize",
+      value: function getMaximumSize(element, width, height, aspectRatio) {
+        width = Math.max(0, width || element.width);
+        height = height || element.height;
+        return {
+          width: width,
+          height: Math.max(0, aspectRatio ? Math.floor(width / aspectRatio) : height)
+        };
+      }
+    }, {
+      key: "isAttached",
+      value: function isAttached(canvas) {
+        return true;
+      }
+    }, {
+      key: "updateConfig",
+      value: function updateConfig(config) {}
+    }]);
+
+    return BasePlatform;
+  }();
+
+  var BasicPlatform = /*#__PURE__*/function (_BasePlatform) {
+    _inherits(BasicPlatform, _BasePlatform);
+
+    var _super10 = _createSuper(BasicPlatform);
+
+    function BasicPlatform() {
+      _classCallCheck(this, BasicPlatform);
+
+      return _super10.apply(this, arguments);
+    }
+
+    _createClass(BasicPlatform, [{
+      key: "acquireContext",
+      value: function acquireContext(item) {
+        return item && item.getContext && item.getContext('2d') || null;
+      }
+    }, {
+      key: "updateConfig",
+      value: function updateConfig(config) {
+        config.options.animation = false;
+      }
+    }]);
+
+    return BasicPlatform;
+  }(BasePlatform);
+
+  var EXPANDO_KEY = '$chartjs';
+  var EVENT_TYPES = {
+    touchstart: 'mousedown',
+    touchmove: 'mousemove',
+    touchend: 'mouseup',
+    pointerenter: 'mouseenter',
+    pointerdown: 'mousedown',
+    pointermove: 'mousemove',
+    pointerup: 'mouseup',
+    pointerleave: 'mouseout',
+    pointerout: 'mouseout'
+  };
+
+  var isNullOrEmpty = function isNullOrEmpty(value) {
+    return value === null || value === '';
+  };
+
+  function initCanvas(canvas, aspectRatio) {
+    var style = canvas.style;
+    var renderHeight = canvas.getAttribute('height');
+    var renderWidth = canvas.getAttribute('width');
+    canvas[EXPANDO_KEY] = {
+      initial: {
+        height: renderHeight,
+        width: renderWidth,
+        style: {
+          display: style.display,
+          height: style.height,
+          width: style.width
+        }
+      }
+    };
+    style.display = style.display || 'block';
+    style.boxSizing = style.boxSizing || 'border-box';
+
+    if (isNullOrEmpty(renderWidth)) {
+      var displayWidth = readUsedSize(canvas, 'width');
+
+      if (displayWidth !== undefined) {
+        canvas.width = displayWidth;
+      }
+    }
+
+    if (isNullOrEmpty(renderHeight)) {
+      if (canvas.style.height === '') {
+        canvas.height = canvas.width / (aspectRatio || 2);
+      } else {
+        var displayHeight = readUsedSize(canvas, 'height');
+
+        if (displayHeight !== undefined) {
+          canvas.height = displayHeight;
+        }
+      }
+    }
+
+    return canvas;
+  }
+
+  var eventListenerOptions = supportsEventListenerOptions ? {
+    passive: true
+  } : false;
+
+  function addListener(node, type, listener) {
+    node.addEventListener(type, listener, eventListenerOptions);
+  }
+
+  function removeListener(chart, type, listener) {
+    chart.canvas.removeEventListener(type, listener, eventListenerOptions);
+  }
+
+  function fromNativeEvent(event, chart) {
+    var type = EVENT_TYPES[event.type] || event.type;
+
+    var _getRelativePosition = getRelativePosition(event, chart),
+        x = _getRelativePosition.x,
+        y = _getRelativePosition.y;
+
+    return {
+      type: type,
+      chart: chart,
+      native: event,
+      x: x !== undefined ? x : null,
+      y: y !== undefined ? y : null
+    };
+  }
+
+  function nodeListContains(nodeList, canvas) {
+    var _iterator8 = _createForOfIteratorHelper(nodeList),
+        _step8;
+
+    try {
+      for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+        var node = _step8.value;
+
+        if (node === canvas || node.contains(canvas)) {
+          return true;
+        }
+      }
+    } catch (err) {
+      _iterator8.e(err);
+    } finally {
+      _iterator8.f();
+    }
+  }
+
+  function createAttachObserver(chart, type, listener) {
+    var canvas = chart.canvas;
+    var observer = new MutationObserver(function (entries) {
+      var trigger = false;
+
+      var _iterator9 = _createForOfIteratorHelper(entries),
+          _step9;
+
+      try {
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var entry = _step9.value;
+          trigger = trigger || nodeListContains(entry.addedNodes, canvas);
+          trigger = trigger && !nodeListContains(entry.removedNodes, canvas);
+        }
+      } catch (err) {
+        _iterator9.e(err);
+      } finally {
+        _iterator9.f();
+      }
+
+      if (trigger) {
+        listener();
+      }
+    });
+    observer.observe(document, {
+      childList: true,
+      subtree: true
+    });
+    return observer;
+  }
+
+  function createDetachObserver(chart, type, listener) {
+    var canvas = chart.canvas;
+    var observer = new MutationObserver(function (entries) {
+      var trigger = false;
+
+      var _iterator10 = _createForOfIteratorHelper(entries),
+          _step10;
+
+      try {
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var entry = _step10.value;
+          trigger = trigger || nodeListContains(entry.removedNodes, canvas);
+          trigger = trigger && !nodeListContains(entry.addedNodes, canvas);
+        }
+      } catch (err) {
+        _iterator10.e(err);
+      } finally {
+        _iterator10.f();
+      }
+
+      if (trigger) {
+        listener();
+      }
+    });
+    observer.observe(document, {
+      childList: true,
+      subtree: true
+    });
+    return observer;
+  }
+
+  var drpListeningCharts = new Map();
+  var oldDevicePixelRatio = 0;
+
+  function onWindowResize() {
+    var dpr = window.devicePixelRatio;
+
+    if (dpr === oldDevicePixelRatio) {
+      return;
+    }
+
+    oldDevicePixelRatio = dpr;
+    drpListeningCharts.forEach(function (resize, chart) {
+      if (chart.currentDevicePixelRatio !== dpr) {
+        resize();
+      }
+    });
+  }
+
+  function listenDevicePixelRatioChanges(chart, resize) {
+    if (!drpListeningCharts.size) {
+      window.addEventListener('resize', onWindowResize);
+    }
+
+    drpListeningCharts.set(chart, resize);
+  }
+
+  function unlistenDevicePixelRatioChanges(chart) {
+    drpListeningCharts.delete(chart);
+
+    if (!drpListeningCharts.size) {
+      window.removeEventListener('resize', onWindowResize);
+    }
+  }
+
+  function createResizeObserver(chart, type, listener) {
+    var canvas = chart.canvas;
+
+    var container = canvas && _getParentNode(canvas);
+
+    if (!container) {
+      return;
+    }
+
+    var resize = throttled(function (width, height) {
+      var w = container.clientWidth;
+      listener(width, height);
+
+      if (w < container.clientWidth) {
+        listener();
+      }
+    }, window);
+    var observer = new ResizeObserver(function (entries) {
+      var entry = entries[0];
+      var width = entry.contentRect.width;
+      var height = entry.contentRect.height;
+
+      if (width === 0 && height === 0) {
+        return;
+      }
+
+      resize(width, height);
+    });
+    observer.observe(container);
+    listenDevicePixelRatioChanges(chart, resize);
+    return observer;
+  }
+
+  function releaseObserver(chart, type, observer) {
+    if (observer) {
+      observer.disconnect();
+    }
+
+    if (type === 'resize') {
+      unlistenDevicePixelRatioChanges(chart);
+    }
+  }
+
+  function createProxyAndListen(chart, type, listener) {
+    var canvas = chart.canvas;
+    var proxy = throttled(function (event) {
+      if (chart.ctx !== null) {
+        listener(fromNativeEvent(event, chart));
+      }
+    }, chart, function (args) {
+      var event = args[0];
+      return [event, event.offsetX, event.offsetY];
+    });
+    addListener(canvas, type, proxy);
+    return proxy;
+  }
+
+  var DomPlatform = /*#__PURE__*/function (_BasePlatform2) {
+    _inherits(DomPlatform, _BasePlatform2);
+
+    var _super11 = _createSuper(DomPlatform);
+
+    function DomPlatform() {
+      _classCallCheck(this, DomPlatform);
+
+      return _super11.apply(this, arguments);
+    }
+
+    _createClass(DomPlatform, [{
+      key: "acquireContext",
+      value: function acquireContext(canvas, aspectRatio) {
+        var context = canvas && canvas.getContext && canvas.getContext('2d');
+
+        if (context && context.canvas === canvas) {
+          initCanvas(canvas, aspectRatio);
+          return context;
+        }
+
+        return null;
+      }
+    }, {
+      key: "releaseContext",
+      value: function releaseContext(context) {
+        var canvas = context.canvas;
+
+        if (!canvas[EXPANDO_KEY]) {
+          return false;
+        }
+
+        var initial = canvas[EXPANDO_KEY].initial;
+        ['height', 'width'].forEach(function (prop) {
+          var value = initial[prop];
+
+          if (isNullOrUndef(value)) {
+            canvas.removeAttribute(prop);
+          } else {
+            canvas.setAttribute(prop, value);
+          }
+        });
+        var style = initial.style || {};
+        Object.keys(style).forEach(function (key) {
+          canvas.style[key] = style[key];
+        });
+        canvas.width = canvas.width;
+        delete canvas[EXPANDO_KEY];
+        return true;
+      }
+    }, {
+      key: "addEventListener",
+      value: function addEventListener(chart, type, listener) {
+        this.removeEventListener(chart, type);
+        var proxies = chart.$proxies || (chart.$proxies = {});
+        var handlers = {
+          attach: createAttachObserver,
+          detach: createDetachObserver,
+          resize: createResizeObserver
+        };
+        var handler = handlers[type] || createProxyAndListen;
+        proxies[type] = handler(chart, type, listener);
+      }
+    }, {
+      key: "removeEventListener",
+      value: function removeEventListener(chart, type) {
+        var proxies = chart.$proxies || (chart.$proxies = {});
+        var proxy = proxies[type];
+
+        if (!proxy) {
+          return;
+        }
+
+        var handlers = {
+          attach: releaseObserver,
+          detach: releaseObserver,
+          resize: releaseObserver
+        };
+        var handler = handlers[type] || removeListener;
+        handler(chart, type, proxy);
+        proxies[type] = undefined;
+      }
+    }, {
+      key: "getDevicePixelRatio",
+      value: function getDevicePixelRatio() {
+        return window.devicePixelRatio;
+      }
+    }, {
+      key: "getMaximumSize",
+      value: function getMaximumSize$1(canvas, width, height, aspectRatio) {
+        return getMaximumSize(canvas, width, height, aspectRatio);
+      }
+    }, {
+      key: "isAttached",
+      value: function isAttached(canvas) {
+        var container = _getParentNode(canvas);
+
+        return !!(container && container.isConnected);
+      }
+    }]);
+
+    return DomPlatform;
+  }(BasePlatform);
+
+  function _detectPlatform(canvas) {
+    if (!_isDomSupported() || typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas) {
+      return BasicPlatform;
+    }
+
+    return DomPlatform;
+  }
+
   var PluginService = /*#__PURE__*/function () {
     function PluginService() {
       _classCallCheck(this, PluginService);
@@ -10720,12 +10948,12 @@
       value: function _notify(descriptors, chart, hook, args) {
         args = args || {};
 
-        var _iterator10 = _createForOfIteratorHelper(descriptors),
-            _step10;
+        var _iterator11 = _createForOfIteratorHelper(descriptors),
+            _step11;
 
         try {
-          for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-            var descriptor = _step10.value;
+          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+            var descriptor = _step11.value;
             var plugin = descriptor.plugin;
             var method = plugin[hook];
             var params = [chart, args, descriptor.options];
@@ -10735,9 +10963,9 @@
             }
           }
         } catch (err) {
-          _iterator10.e(err);
+          _iterator11.e(err);
         } finally {
-          _iterator10.f();
+          _iterator11.f();
         }
 
         return true;
@@ -10795,6 +11023,7 @@
   }();
 
   function allPlugins(config) {
+    var localIds = {};
     var plugins = [];
     var keys = Object.keys(registry.plugins.items);
 
@@ -10809,10 +11038,14 @@
 
       if (plugins.indexOf(plugin) === -1) {
         plugins.push(plugin);
+        localIds[plugin.id] = true;
       }
     }
 
-    return plugins;
+    return {
+      plugins: plugins,
+      localIds: localIds
+    };
   }
 
   function getOpts(options, all) {
@@ -10827,31 +11060,52 @@
     return options;
   }
 
-  function createDescriptors(chart, plugins, options, all) {
+  function createDescriptors(chart, _ref2, options, all) {
+    var plugins = _ref2.plugins,
+        localIds = _ref2.localIds;
     var result = [];
     var context = chart.getContext();
 
-    for (var i = 0; i < plugins.length; i++) {
-      var plugin = plugins[i];
-      var id = plugin.id;
-      var opts = getOpts(options[id], all);
+    var _iterator12 = _createForOfIteratorHelper(plugins),
+        _step12;
 
-      if (opts === null) {
-        continue;
+    try {
+      for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+        var plugin = _step12.value;
+        var id = plugin.id;
+        var opts = getOpts(options[id], all);
+
+        if (opts === null) {
+          continue;
+        }
+
+        result.push({
+          plugin: plugin,
+          options: pluginOpts(chart.config, {
+            plugin: plugin,
+            local: localIds[id]
+          }, opts, context)
+        });
       }
-
-      result.push({
-        plugin: plugin,
-        options: pluginOpts(chart.config, plugin, opts, context)
-      });
+    } catch (err) {
+      _iterator12.e(err);
+    } finally {
+      _iterator12.f();
     }
 
     return result;
   }
 
-  function pluginOpts(config, plugin, opts, context) {
+  function pluginOpts(config, _ref3, opts, context) {
+    var plugin = _ref3.plugin,
+        local = _ref3.local;
     var keys = config.pluginScopeKeys(plugin);
     var scopes = config.getOptionScopes(opts, keys);
+
+    if (local && plugin.defaults) {
+      scopes.push(plugin.defaults);
+    }
+
     return config.createResolver(scopes, context, [''], {
       scriptable: false,
       indexable: false,
@@ -11170,18 +11424,18 @@
           options = _attachContext(resolver, context, subResolver);
         }
 
-        var _iterator11 = _createForOfIteratorHelper(names),
-            _step11;
+        var _iterator13 = _createForOfIteratorHelper(names),
+            _step13;
 
         try {
-          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-            var prop = _step11.value;
+          for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+            var prop = _step13.value;
             result[prop] = options[prop];
           }
         } catch (err) {
-          _iterator11.e(err);
+          _iterator13.e(err);
         } finally {
-          _iterator11.f();
+          _iterator13.f();
         }
 
         return result;
@@ -11239,12 +11493,12 @@
         isScriptable = _descriptors2.isScriptable,
         isIndexable = _descriptors2.isIndexable;
 
-    var _iterator12 = _createForOfIteratorHelper(names),
-        _step12;
+    var _iterator14 = _createForOfIteratorHelper(names),
+        _step14;
 
     try {
-      for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-        var prop = _step12.value;
+      for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+        var prop = _step14.value;
         var scriptable = isScriptable(prop);
         var indexable = isIndexable(prop);
         var value = (indexable || scriptable) && proxy[prop];
@@ -11254,15 +11508,15 @@
         }
       }
     } catch (err) {
-      _iterator12.e(err);
+      _iterator14.e(err);
     } finally {
-      _iterator12.f();
+      _iterator14.f();
     }
 
     return false;
   }
 
-  var version = "3.8.0";
+  var version = "3.9.0";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
 
   function positionIsHorizontal(position, axis) {
@@ -11352,7 +11606,7 @@
       var existingChart = getChart(initialCanvas);
 
       if (existingChart) {
-        throw new Error('Canvas is already in use. Chart with ID \'' + existingChart.id + '\'' + ' must be destroyed before the canvas can be reused.');
+        throw new Error('Canvas is already in use. Chart with ID \'' + existingChart.id + '\'' + ' must be destroyed before the canvas with ID \'' + existingChart.canvas.id + '\' can be reused.');
       }
 
       var options = config.createResolver(config.chartOptionScopes(), this.getContext());
@@ -11411,9 +11665,9 @@
     _createClass(Chart, [{
       key: "aspectRatio",
       get: function get() {
-        var _this$options10 = this.options,
-            aspectRatio = _this$options10.aspectRatio,
-            maintainAspectRatio = _this$options10.maintainAspectRatio,
+        var _this$options11 = this.options,
+            aspectRatio = _this$options11.aspectRatio,
+            maintainAspectRatio = _this$options11.maintainAspectRatio,
             width = this.width,
             height = this.height,
             _aspectRatio = this._aspectRatio;
@@ -11784,22 +12038,22 @@
         var _hiddenIndices = this._hiddenIndices;
         var changes = this._getUniformDataChanges() || [];
 
-        var _iterator13 = _createForOfIteratorHelper(changes),
-            _step13;
+        var _iterator15 = _createForOfIteratorHelper(changes),
+            _step15;
 
         try {
-          for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-            var _step13$value = _step13.value,
-                method = _step13$value.method,
-                start = _step13$value.start,
-                count = _step13$value.count;
+          for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+            var _step15$value = _step15.value,
+                method = _step15$value.method,
+                start = _step15$value.start,
+                count = _step15$value.count;
             var move = method === '_removeElements' ? -count : count;
             moveNumericKeys(_hiddenIndices, start, move);
           }
         } catch (err) {
-          _iterator13.e(err);
+          _iterator15.e(err);
         } finally {
-          _iterator13.f();
+          _iterator15.f();
         }
       }
     }, {
@@ -12365,9 +12619,9 @@
         var _this21 = this;
 
         var lastActive = this._active || [];
-        var active = activeElements.map(function (_ref2) {
-          var datasetIndex = _ref2.datasetIndex,
-              index = _ref2.index;
+        var active = activeElements.map(function (_ref4) {
+          var datasetIndex = _ref4.datasetIndex,
+              index = _ref4.index;
 
           var meta = _this21.getDatasetMeta(datasetIndex);
 
@@ -12602,7 +12856,7 @@
     };
   }
 
-  function pathArc(ctx, element, offset, spacing, end) {
+  function pathArc(ctx, element, offset, spacing, end, circular) {
     var x = element.x,
         y = element.y,
         start = element.startAngle,
@@ -12641,50 +12895,61 @@
     var innerStartAdjustedAngle = startAngle + innerStart / innerStartAdjustedRadius;
     var innerEndAdjustedAngle = endAngle - innerEnd / innerEndAdjustedRadius;
     ctx.beginPath();
-    ctx.arc(x, y, outerRadius, outerStartAdjustedAngle, outerEndAdjustedAngle);
 
-    if (outerEnd > 0) {
-      var pCenter = rThetaToXY(outerEndAdjustedRadius, outerEndAdjustedAngle, x, y);
-      ctx.arc(pCenter.x, pCenter.y, outerEnd, outerEndAdjustedAngle, endAngle + HALF_PI);
-    }
+    if (circular) {
+      ctx.arc(x, y, outerRadius, outerStartAdjustedAngle, outerEndAdjustedAngle);
 
-    var p4 = rThetaToXY(innerEndAdjustedRadius, endAngle, x, y);
-    ctx.lineTo(p4.x, p4.y);
+      if (outerEnd > 0) {
+        var pCenter = rThetaToXY(outerEndAdjustedRadius, outerEndAdjustedAngle, x, y);
+        ctx.arc(pCenter.x, pCenter.y, outerEnd, outerEndAdjustedAngle, endAngle + HALF_PI);
+      }
 
-    if (innerEnd > 0) {
-      var _pCenter = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x, y);
+      var p4 = rThetaToXY(innerEndAdjustedRadius, endAngle, x, y);
+      ctx.lineTo(p4.x, p4.y);
 
-      ctx.arc(_pCenter.x, _pCenter.y, innerEnd, endAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
-    }
+      if (innerEnd > 0) {
+        var _pCenter = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x, y);
 
-    ctx.arc(x, y, innerRadius, endAngle - innerEnd / innerRadius, startAngle + innerStart / innerRadius, true);
+        ctx.arc(_pCenter.x, _pCenter.y, innerEnd, endAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
+      }
 
-    if (innerStart > 0) {
-      var _pCenter2 = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x, y);
+      ctx.arc(x, y, innerRadius, endAngle - innerEnd / innerRadius, startAngle + innerStart / innerRadius, true);
 
-      ctx.arc(_pCenter2.x, _pCenter2.y, innerStart, innerStartAdjustedAngle + Math.PI, startAngle - HALF_PI);
-    }
+      if (innerStart > 0) {
+        var _pCenter2 = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x, y);
 
-    var p8 = rThetaToXY(outerStartAdjustedRadius, startAngle, x, y);
-    ctx.lineTo(p8.x, p8.y);
+        ctx.arc(_pCenter2.x, _pCenter2.y, innerStart, innerStartAdjustedAngle + Math.PI, startAngle - HALF_PI);
+      }
 
-    if (outerStart > 0) {
-      var _pCenter3 = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x, y);
+      var p8 = rThetaToXY(outerStartAdjustedRadius, startAngle, x, y);
+      ctx.lineTo(p8.x, p8.y);
 
-      ctx.arc(_pCenter3.x, _pCenter3.y, outerStart, startAngle - HALF_PI, outerStartAdjustedAngle);
+      if (outerStart > 0) {
+        var _pCenter3 = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x, y);
+
+        ctx.arc(_pCenter3.x, _pCenter3.y, outerStart, startAngle - HALF_PI, outerStartAdjustedAngle);
+      }
+    } else {
+      ctx.moveTo(x, y);
+      var outerStartX = Math.cos(outerStartAdjustedAngle) * outerRadius + x;
+      var outerStartY = Math.sin(outerStartAdjustedAngle) * outerRadius + y;
+      ctx.lineTo(outerStartX, outerStartY);
+      var outerEndX = Math.cos(outerEndAdjustedAngle) * outerRadius + x;
+      var outerEndY = Math.sin(outerEndAdjustedAngle) * outerRadius + y;
+      ctx.lineTo(outerEndX, outerEndY);
     }
 
     ctx.closePath();
   }
 
-  function drawArc(ctx, element, offset, spacing) {
+  function drawArc(ctx, element, offset, spacing, circular) {
     var fullCircles = element.fullCircles,
         startAngle = element.startAngle,
         circumference = element.circumference;
     var endAngle = element.endAngle;
 
     if (fullCircles) {
-      pathArc(ctx, element, offset, spacing, startAngle + TAU);
+      pathArc(ctx, element, offset, spacing, startAngle + TAU, circular);
 
       for (var i = 0; i < fullCircles; ++i) {
         ctx.fill();
@@ -12699,7 +12964,7 @@
       }
     }
 
-    pathArc(ctx, element, offset, spacing, endAngle);
+    pathArc(ctx, element, offset, spacing, endAngle, circular);
     ctx.fill();
     return endAngle;
   }
@@ -12733,7 +12998,7 @@
     }
   }
 
-  function drawBorder(ctx, element, offset, spacing, endAngle) {
+  function drawBorder(ctx, element, offset, spacing, endAngle, circular) {
     var options = element.options;
     var borderWidth = options.borderWidth,
         borderJoinStyle = options.borderJoinStyle;
@@ -12759,7 +13024,7 @@
       clipArc(ctx, element, endAngle);
     }
 
-    pathArc(ctx, element, offset, spacing, endAngle);
+    pathArc(ctx, element, offset, spacing, endAngle, circular);
     ctx.stroke();
   }
 
@@ -12830,9 +13095,9 @@
             innerRadius = _this$getProps3.innerRadius,
             outerRadius = _this$getProps3.outerRadius;
 
-        var _this$options11 = this.options,
-            offset = _this$options11.offset,
-            spacing = _this$options11.spacing;
+        var _this$options12 = this.options,
+            offset = _this$options12.offset,
+            spacing = _this$options12.spacing;
         var halfAngle = (startAngle + endAngle) / 2;
         var halfRadius = (innerRadius + outerRadius + spacing + offset) / 2;
         return {
@@ -12852,6 +13117,7 @@
             circumference = this.circumference;
         var offset = (options.offset || 0) / 2;
         var spacing = (options.spacing || 0) / 2;
+        var circular = options.circular;
         this.pixelMargin = options.borderAlign === 'inner' ? 0.33 : 0;
         this.fullCircles = circumference > TAU ? Math.floor(circumference / TAU) : 0;
 
@@ -12874,8 +13140,8 @@
 
         ctx.fillStyle = options.backgroundColor;
         ctx.strokeStyle = options.borderColor;
-        var endAngle = drawArc(ctx, this, radiusOffset, spacing);
-        drawBorder(ctx, this, radiusOffset, spacing, endAngle);
+        var endAngle = drawArc(ctx, this, radiusOffset, spacing, circular);
+        drawBorder(ctx, this, radiusOffset, spacing, endAngle, circular);
         ctx.restore();
       }
     }]);
@@ -12892,7 +13158,8 @@
     borderWidth: 2,
     offset: 0,
     spacing: 0,
-    angle: undefined
+    angle: undefined,
+    circular: true
   };
   ArcElement.defaultRoutes = {
     backgroundColor: 'backgroundColor'
@@ -12956,10 +13223,10 @@
 
     var lineMethod = getLineMethod(options);
 
-    var _ref3 = params || {},
-        _ref3$move = _ref3.move,
-        move = _ref3$move === void 0 ? true : _ref3$move,
-        reverse = _ref3.reverse;
+    var _ref5 = params || {},
+        _ref5$move = _ref5.move,
+        move = _ref5$move === void 0 ? true : _ref5$move,
+        reverse = _ref5.reverse;
 
     var i, point, prev;
 
@@ -12994,10 +13261,10 @@
         start = _pathVars2.start,
         ilen = _pathVars2.ilen;
 
-    var _ref4 = params || {},
-        _ref4$move = _ref4.move,
-        move = _ref4$move === void 0 ? true : _ref4$move,
-        reverse = _ref4.reverse;
+    var _ref6 = params || {},
+        _ref6$move = _ref6.move,
+        move = _ref6$move === void 0 ? true : _ref6$move,
+        reverse = _ref6.reverse;
 
     var avgX = 0;
     var countX = 0;
@@ -13093,12 +13360,12 @@
 
     var segmentMethod = _getSegmentMethod(line);
 
-    var _iterator14 = _createForOfIteratorHelper(segments),
-        _step14;
+    var _iterator16 = _createForOfIteratorHelper(segments),
+        _step16;
 
     try {
-      for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-        var segment = _step14.value;
+      for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+        var segment = _step16.value;
         setStyle(ctx, options, segment.style);
         ctx.beginPath();
 
@@ -13112,9 +13379,9 @@
         ctx.stroke();
       }
     } catch (err) {
-      _iterator14.e(err);
+      _iterator16.e(err);
     } finally {
-      _iterator14.f();
+      _iterator16.f();
     }
   }
 
@@ -13265,21 +13532,21 @@
         start = start || 0;
         count = count || this.points.length - start;
 
-        var _iterator15 = _createForOfIteratorHelper(segments),
-            _step15;
+        var _iterator17 = _createForOfIteratorHelper(segments),
+            _step17;
 
         try {
-          for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-            var segment = _step15.value;
+          for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+            var segment = _step17.value;
             loop &= segmentMethod(ctx, this, segment, {
               start: start,
               end: start + count - 1
             });
           }
         } catch (err) {
-          _iterator15.e(err);
+          _iterator17.e(err);
         } finally {
-          _iterator15.f();
+          _iterator17.f();
         }
 
         return !!loop;
@@ -13601,9 +13868,9 @@
       key: "draw",
       value: function draw(ctx) {
         var inflateAmount = this.inflateAmount,
-            _this$options12 = this.options,
-            borderColor = _this$options12.borderColor,
-            backgroundColor = _this$options12.backgroundColor;
+            _this$options13 = this.options,
+            borderColor = _this$options13.borderColor,
+            backgroundColor = _this$options13.backgroundColor;
 
         var _boundingRects = boundingRects(this),
             inner = _boundingRects.inner,
@@ -13825,11 +14092,11 @@
     var count;
     var iScale = meta.iScale;
 
-    var _iScale$getUserBounds2 = iScale.getUserBounds(),
-        min = _iScale$getUserBounds2.min,
-        max = _iScale$getUserBounds2.max,
-        minDefined = _iScale$getUserBounds2.minDefined,
-        maxDefined = _iScale$getUserBounds2.maxDefined;
+    var _iScale$getUserBounds = iScale.getUserBounds(),
+        min = _iScale$getUserBounds.min,
+        max = _iScale$getUserBounds.max,
+        minDefined = _iScale$getUserBounds.minDefined,
+        maxDefined = _iScale$getUserBounds.maxDefined;
 
     if (minDefined) {
       start = _limitValue(_lookupByKey(points, iScale.axis, min).lo, 0, pointCount - 1);
@@ -13884,9 +14151,9 @@
           return;
         }
 
-        var _getStartAndCountOfVi2 = getStartAndCountOfVisiblePointsSimplified(meta, data),
-            start = _getStartAndCountOfVi2.start,
-            count = _getStartAndCountOfVi2.count;
+        var _getStartAndCountOfVi3 = getStartAndCountOfVisiblePointsSimplified(meta, data),
+            start = _getStartAndCountOfVi3.start,
+            count = _getStartAndCountOfVi3.count;
 
         var threshold = options.threshold || 4 * availableWidth;
 
@@ -13939,12 +14206,12 @@
     var tpoints = target.points;
     var parts = [];
 
-    var _iterator16 = _createForOfIteratorHelper(segments),
-        _step16;
+    var _iterator18 = _createForOfIteratorHelper(segments),
+        _step18;
 
     try {
-      for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-        var segment = _step16.value;
+      for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+        var segment = _step18.value;
         var start = segment.start,
             end = segment.end;
         end = _findSegmentEnd(start, end, points);
@@ -13963,46 +14230,46 @@
 
         var targetSegments = _boundSegments(target, bounds);
 
-        var _iterator17 = _createForOfIteratorHelper(targetSegments),
-            _step17;
+        var _iterator19 = _createForOfIteratorHelper(targetSegments),
+            _step19;
 
         try {
-          for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
-            var tgt = _step17.value;
+          for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+            var tgt = _step19.value;
 
             var subBounds = _getBounds(property, tpoints[tgt.start], tpoints[tgt.end], tgt.loop);
 
             var fillSources = _boundSegment(segment, points, subBounds);
 
-            var _iterator18 = _createForOfIteratorHelper(fillSources),
-                _step18;
+            var _iterator20 = _createForOfIteratorHelper(fillSources),
+                _step20;
 
             try {
-              for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
-                var fillSource = _step18.value;
+              for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
+                var fillSource = _step20.value;
                 parts.push({
                   source: fillSource,
                   target: tgt,
-                  start: _defineProperty({}, property, _getEdge(bounds, subBounds, 'start', Math.max)),
-                  end: _defineProperty({}, property, _getEdge(bounds, subBounds, 'end', Math.min))
+                  start: _defineProperty$x({}, property, _getEdge(bounds, subBounds, 'start', Math.max)),
+                  end: _defineProperty$x({}, property, _getEdge(bounds, subBounds, 'end', Math.min))
                 });
               }
             } catch (err) {
-              _iterator18.e(err);
+              _iterator20.e(err);
             } finally {
-              _iterator18.f();
+              _iterator20.f();
             }
           }
         } catch (err) {
-          _iterator17.e(err);
+          _iterator19.e(err);
         } finally {
-          _iterator17.f();
+          _iterator19.f();
         }
       }
     } catch (err) {
-      _iterator16.e(err);
+      _iterator18.e(err);
     } finally {
-      _iterator16.f();
+      _iterator18.f();
     }
 
     return parts;
@@ -14029,17 +14296,17 @@
   }
 
   function _pointsFromSegments(boundary, line) {
-    var _ref5 = boundary || {},
-        _ref5$x = _ref5.x,
-        x = _ref5$x === void 0 ? null : _ref5$x,
-        _ref5$y = _ref5.y,
-        y = _ref5$y === void 0 ? null : _ref5$y;
+    var _ref7 = boundary || {},
+        _ref7$x = _ref7.x,
+        x = _ref7$x === void 0 ? null : _ref7$x,
+        _ref7$y = _ref7.y,
+        y = _ref7$y === void 0 ? null : _ref7$y;
 
     var linePoints = line.points;
     var points = [];
-    line.segments.forEach(function (_ref6) {
-      var start = _ref6.start,
-          end = _ref6.end;
+    line.segments.forEach(function (_ref8) {
+      var start = _ref8.start,
+          end = _ref8.end;
       end = _findSegmentEnd(start, end, linePoints);
       var first = linePoints[start];
       var last = linePoints[end];
@@ -14106,6 +14373,10 @@
       _loop: _loop,
       _fullLoop: _loop
     }) : null;
+  }
+
+  function _shouldApplyFill(source) {
+    return source && source.fill !== false;
   }
 
   function _resolveTarget(sources, index, propagate) {
@@ -14464,11 +14735,11 @@
     var fillOption = lineOpts.fill;
     var color = lineOpts.backgroundColor;
 
-    var _ref7 = fillOption || {},
-        _ref7$above = _ref7.above,
-        above = _ref7$above === void 0 ? color : _ref7$above,
-        _ref7$below = _ref7.below,
-        below = _ref7$below === void 0 ? color : _ref7$below;
+    var _ref9 = fillOption || {},
+        _ref9$above = _ref9.above,
+        above = _ref9$above === void 0 ? color : _ref9$above,
+        _ref9$below = _ref9.below,
+        below = _ref9$below === void 0 ? color : _ref9$below;
 
     if (target && line.points.length) {
       clipArea(ctx, area);
@@ -14526,12 +14797,12 @@
     var lineLoop = false;
     ctx.beginPath();
 
-    var _iterator19 = _createForOfIteratorHelper(segments),
-        _step19;
+    var _iterator21 = _createForOfIteratorHelper(segments),
+        _step21;
 
     try {
-      for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
-        var segment = _step19.value;
+      for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
+        var segment = _step21.value;
         var start = segment.start,
             end = segment.end;
         var firstPoint = points[start];
@@ -14557,9 +14828,9 @@
         }
       }
     } catch (err) {
-      _iterator19.e(err);
+      _iterator21.e(err);
     } finally {
-      _iterator19.f();
+      _iterator21.f();
     }
 
     ctx.lineTo(target.first().x, clipY);
@@ -14576,16 +14847,16 @@
 
     var segments = _segments(line, target, property);
 
-    var _iterator20 = _createForOfIteratorHelper(segments),
-        _step20;
+    var _iterator22 = _createForOfIteratorHelper(segments),
+        _step22;
 
     try {
-      for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
-        var _step20$value = _step20.value,
-            src = _step20$value.source,
-            tgt = _step20$value.target,
-            start = _step20$value.start,
-            end = _step20$value.end;
+      for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
+        var _step22$value = _step22.value,
+            src = _step22$value.source,
+            tgt = _step22$value.target,
+            start = _step22$value.start,
+            end = _step22$value.end;
         var _src$style = src.style;
         _src$style = _src$style === void 0 ? {} : _src$style;
         var _src$style$background = _src$style.backgroundColor,
@@ -14621,9 +14892,9 @@
         ctx.restore();
       }
     } catch (err) {
-      _iterator20.e(err);
+      _iterator22.e(err);
     } finally {
-      _iterator20.f();
+      _iterator22.f();
     }
   }
 
@@ -14632,10 +14903,10 @@
         top = _scale$chart$chartAre.top,
         bottom = _scale$chart$chartAre.bottom;
 
-    var _ref8 = bounds || {},
-        property = _ref8.property,
-        start = _ref8.start,
-        end = _ref8.end;
+    var _ref10 = bounds || {},
+        property = _ref10.property,
+        start = _ref10.start,
+        end = _ref10.end;
 
     if (property === 'x') {
       ctx.beginPath();
@@ -14704,7 +14975,7 @@
 
         source.line.updateControlPoints(area, source.axis);
 
-        if (draw) {
+        if (draw && source.fill) {
           _drawfill(chart.ctx, source, area);
         }
       }
@@ -14719,7 +14990,7 @@
       for (var i = metasets.length - 1; i >= 0; --i) {
         var source = metasets[i].$filler;
 
-        if (source) {
+        if (_shouldApplyFill(source)) {
           _drawfill(chart.ctx, source, chart.chartArea);
         }
       }
@@ -14727,7 +14998,7 @@
     beforeDatasetDraw: function beforeDatasetDraw(chart, args, options) {
       var source = args.meta.$filler;
 
-      if (!source || source.fill === false || options.drawTime !== 'beforeDatasetDraw') {
+      if (!_shouldApplyFill(source) || options.drawTime !== 'beforeDatasetDraw') {
         return;
       }
 
@@ -14747,7 +15018,7 @@
 
     if (labelOpts.usePointStyle) {
       boxHeight = Math.min(boxHeight, fontSize);
-      boxWidth = Math.min(boxWidth, fontSize);
+      boxWidth = labelOpts.pointStyleWidth || Math.min(boxWidth, fontSize);
     }
 
     return {
@@ -14971,10 +15242,10 @@
         var titleHeight = this._computeTitleHeight();
 
         var hitboxes = this.legendHitBoxes,
-            _this$options13 = this.options,
-            align = _this$options13.align,
-            padding = _this$options13.labels.padding,
-            rtl = _this$options13.rtl;
+            _this$options14 = this.options,
+            align = _this$options14.align,
+            padding = _this$options14.labels.padding,
+            rtl = _this$options14.rtl;
         var rtlHelper = getRtlAdapter(rtl, this.left, this.width);
 
         if (this.isHorizontal()) {
@@ -14982,12 +15253,12 @@
 
           var left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
 
-          var _iterator21 = _createForOfIteratorHelper(hitboxes),
-              _step21;
+          var _iterator23 = _createForOfIteratorHelper(hitboxes),
+              _step23;
 
           try {
-            for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
-              var hitbox = _step21.value;
+            for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
+              var hitbox = _step23.value;
 
               if (row !== hitbox.row) {
                 row = hitbox.row;
@@ -14999,21 +15270,21 @@
               left += hitbox.width + padding;
             }
           } catch (err) {
-            _iterator21.e(err);
+            _iterator23.e(err);
           } finally {
-            _iterator21.f();
+            _iterator23.f();
           }
         } else {
           var col = 0;
 
           var top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
 
-          var _iterator22 = _createForOfIteratorHelper(hitboxes),
-              _step22;
+          var _iterator24 = _createForOfIteratorHelper(hitboxes),
+              _step24;
 
           try {
-            for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
-              var _hitbox = _step22.value;
+            for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+              var _hitbox = _step24.value;
 
               if (_hitbox.col !== col) {
                 col = _hitbox.col;
@@ -15026,9 +15297,9 @@
               top += _hitbox.height + padding;
             }
           } catch (err) {
-            _iterator22.e(err);
+            _iterator24.e(err);
           } finally {
-            _iterator22.f();
+            _iterator24.f();
           }
         }
       }
@@ -15096,14 +15367,14 @@
 
           if (labelOpts.usePointStyle) {
             var drawOptions = {
-              radius: boxWidth * Math.SQRT2 / 2,
+              radius: boxHeight * Math.SQRT2 / 2,
               pointStyle: legendItem.pointStyle,
               rotation: legendItem.rotation,
               borderWidth: lineWidth
             };
             var centerX = rtlHelper.xPlus(x, boxWidth / 2);
             var centerY = y + halfFontSize;
-            drawPoint(ctx, drawOptions, centerX, centerY);
+            drawPointLegend(ctx, drawOptions, centerX, centerY, labelOpts.pointStyleWidth && boxWidth);
           } else {
             var yBoxTop = y + Math.max((fontSize - boxHeight) / 2, 0);
             var xBoxLeft = rtlHelper.leftForLtr(x, boxWidth);
@@ -16309,7 +16580,7 @@
           ctx.fillStyle = labelColors.backgroundColor;
           drawPoint(ctx, drawOptions, centerX, centerY);
         } else {
-          ctx.lineWidth = labelColors.borderWidth || 1;
+          ctx.lineWidth = isObject(labelColors.borderWidth) ? Math.max.apply(Math, _toConsumableArray(Object.values(labelColors.borderWidth))) : labelColors.borderWidth || 1;
           ctx.strokeStyle = labelColors.borderColor;
           ctx.setLineDash(labelColors.borderDash || []);
           ctx.lineDashOffset = labelColors.borderDashOffset || 0;
@@ -16572,9 +16843,9 @@
         var _this34 = this;
 
         var lastActive = this._active;
-        var active = activeElements.map(function (_ref9) {
-          var datasetIndex = _ref9.datasetIndex,
-              index = _ref9.index;
+        var active = activeElements.map(function (_ref11) {
+          var datasetIndex = _ref11.datasetIndex,
+              index = _ref11.index;
 
           var meta = _this34.chart.getDatasetMeta(datasetIndex);
 
@@ -16925,23 +17196,23 @@
         if (added.length) {
           var labels = this.getLabels();
 
-          var _iterator23 = _createForOfIteratorHelper(added),
-              _step23;
+          var _iterator25 = _createForOfIteratorHelper(added),
+              _step25;
 
           try {
-            for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
-              var _step23$value = _step23.value,
-                  _index3 = _step23$value.index,
-                  label = _step23$value.label;
+            for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+              var _step25$value = _step25.value,
+                  _index3 = _step25$value.index,
+                  label = _step25$value.label;
 
               if (labels[_index3] === label) {
                 labels.splice(_index3, 1);
               }
             }
           } catch (err) {
-            _iterator23.e(err);
+            _iterator25.e(err);
           } finally {
-            _iterator23.f();
+            _iterator25.f();
           }
 
           this._addedLabels = [];
@@ -17183,9 +17454,9 @@
     return ticks;
   }
 
-  function relativeLabelSize(value, minSpacing, _ref10) {
-    var horizontal = _ref10.horizontal,
-        minRotation = _ref10.minRotation;
+  function relativeLabelSize(value, minSpacing, _ref12) {
+    var horizontal = _ref12.horizontal,
+        minRotation = _ref12.minRotation;
     var rad = toRadians(minRotation);
     var ratio = (horizontal ? Math.sin(rad) : Math.cos(rad)) || 0.001;
     var length = 0.75 * minSpacing * ('' + value).length;
@@ -18039,9 +18310,9 @@
     }, {
       key: "drawBackground",
       value: function drawBackground() {
-        var _this$options14 = this.options,
-            backgroundColor = _this$options14.backgroundColor,
-            circular = _this$options14.grid.circular;
+        var _this$options15 = this.options,
+            backgroundColor = _this$options15.backgroundColor,
+            circular = _this$options15.grid.circular;
 
         if (backgroundColor) {
           var ctx = this.ctx;
@@ -18399,6 +18670,7 @@
       value: function init(scaleOpts, opts) {
         var time = scaleOpts.time || (scaleOpts.time = {});
         var adapter = this._adapter = new adapters._date(scaleOpts.adapters.date);
+        adapter.init(opts);
         mergeIf(time.displayFormats, adapter.formats());
         this._parseOpts = {
           parser: time.parser,
@@ -18979,7 +19251,7 @@
     } else {
       if ((typeof argument === 'string' || argStr === '[object String]') && typeof console !== 'undefined') {
         // eslint-disable-next-line no-console
-        console.warn("Starting with v2.0.0-beta.1 date-fns doesn't accept strings as date arguments. Please use `parseISO` to parse strings. See: https://git.io/fjule"); // eslint-disable-next-line no-console
+        console.warn("Starting with v2.0.0-beta.1 date-fns doesn't accept strings as date arguments. Please use `parseISO` to parse strings. See: https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#string-arguments"); // eslint-disable-next-line no-console
 
         console.warn(new Error().stack);
       }
@@ -18995,10 +19267,6 @@
    *
    * @description
    * Add the specified number of days to the given date.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of days to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
@@ -19036,10 +19304,6 @@
    *
    * @description
    * Add the specified number of months to the given date.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of months to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
@@ -19104,10 +19368,6 @@
    * @description
    * Add the specified number of milliseconds to the given date.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of milliseconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
    * @returns {Date} the new date with the milliseconds added
@@ -19126,7 +19386,7 @@
     return new Date(timestamp + amount);
   }
 
-  var MILLISECONDS_IN_HOUR$1 = 3600000;
+  var MILLISECONDS_IN_HOUR = 3600000;
   /**
    * @name addHours
    * @category Hour Helpers
@@ -19134,10 +19394,6 @@
    *
    * @description
    * Add the specified number of hours to the given date.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of hours to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
@@ -19153,7 +19409,12 @@
   function addHours(dirtyDate, dirtyAmount) {
     requiredArgs(2, arguments);
     var amount = toInteger(dirtyAmount);
-    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_HOUR$1);
+    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_HOUR);
+  }
+
+  var defaultOptions = {};
+  function getDefaultOptions() {
+    return defaultOptions;
   }
 
   /**
@@ -19164,10 +19425,6 @@
    * @description
    * Return the start of a week for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @param {Object} [options] - an object with options.
@@ -19188,13 +19445,12 @@
    * //=> Mon Sep 01 2014 00:00:00
    */
 
-  function startOfWeek(dirtyDate, dirtyOptions) {
+  function startOfWeek(dirtyDate, options) {
+    var _ref, _ref2, _ref3, _options$weekStartsOn, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
+
     requiredArgs(1, arguments);
-    var options = dirtyOptions || {};
-    var locale = options.locale;
-    var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-    var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : toInteger(localeWeekStartsOn);
-    var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : toInteger(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+    var defaultOptions = getDefaultOptions();
+    var weekStartsOn = toInteger((_ref = (_ref2 = (_ref3 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.weekStartsOn) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.weekStartsOn) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.weekStartsOn) !== null && _ref !== void 0 ? _ref : 0); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
 
     if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
       throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
@@ -19234,10 +19490,6 @@
    * Return the start of a day for the given date.
    * The result will be in the local timezone.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the original date
    * @returns {Date} the start of a day
    * @throws {TypeError} 1 argument required
@@ -19264,10 +19516,6 @@
    * @description
    * Get the number of calendar days between the given dates. This means that the times are removed
    * from the dates and then the difference in days is calculated.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
@@ -19303,7 +19551,7 @@
     return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_DAY$1);
   }
 
-  var MILLISECONDS_IN_MINUTE$1 = 60000;
+  var MILLISECONDS_IN_MINUTE = 60000;
   /**
    * @name addMinutes
    * @category Minute Helpers
@@ -19311,10 +19559,6 @@
    *
    * @description
    * Add the specified number of minutes to the given date.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of minutes to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
@@ -19330,7 +19574,7 @@
   function addMinutes(dirtyDate, dirtyAmount) {
     requiredArgs(2, arguments);
     var amount = toInteger(dirtyAmount);
-    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_MINUTE$1);
+    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_MINUTE);
   }
 
   /**
@@ -19340,10 +19584,6 @@
    *
    * @description
    * Add the specified number of year quarters to the given date.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of quarters to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
@@ -19371,10 +19611,6 @@
    * @description
    * Add the specified number of seconds to the given date.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of seconds to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
    * @returns {Date} the new date with the seconds added
@@ -19399,10 +19635,6 @@
    *
    * @description
    * Add the specified number of week to the given date.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of weeks to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
@@ -19430,10 +19662,6 @@
    * @description
    * Add the specified number of years to the given date.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of years to be added. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
    * @returns {Date} the new date with the years added
@@ -19459,10 +19687,6 @@
    * @description
    * Compare the two dates and return 1 if the first date is after the second,
    * -1 if the first date is before the second or 0 if dates are equal.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} dateLeft - the first date to compare
    * @param {Date|Number} dateRight - the second date to compare
@@ -19531,6 +19755,16 @@
    */
 
   var millisecondsInHour = 3600000;
+  /**
+   * Milliseconds in 1 second
+   *
+   * @name millisecondsInSecond
+   * @constant
+   * @type {number}
+   * @default
+   */
+
+  var millisecondsInSecond = 1000;
 
   /**
    * @name isDate
@@ -19539,10 +19773,6 @@
    *
    * @description
    * Returns true if the given value is an instance of Date. The function works for dates transferred across iframes.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {*} value - the value to check
    * @returns {boolean} true if the given value is a date
@@ -19586,32 +19816,6 @@
    *
    * Time value of Date: http://es5.github.io/#x15.9.1.1
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
-   * - Now `isValid` doesn't throw an exception
-   *   if the first argument is not an instance of Date.
-   *   Instead, argument is converted beforehand using `toDate`.
-   *
-   *   Examples:
-   *
-   *   | `isValid` argument        | Before v2.0.0 | v2.0.0 onward |
-   *   |---------------------------|---------------|---------------|
-   *   | `new Date()`              | `true`        | `true`        |
-   *   | `new Date('2016-01-01')`  | `true`        | `true`        |
-   *   | `new Date('')`            | `false`       | `false`       |
-   *   | `new Date(1488370835081)` | `true`        | `true`        |
-   *   | `new Date(NaN)`           | `false`       | `false`       |
-   *   | `'2016-01-01'`            | `TypeError`   | `false`       |
-   *   | `''`                      | `TypeError`   | `false`       |
-   *   | `1488370835081`           | `TypeError`   | `true`        |
-   *   | `NaN`                     | `TypeError`   | `false`       |
-   *
-   *   We introduce this change to make *date-fns* consistent with ECMAScript behavior
-   *   that try to coerce arguments to the expected type
-   *   (which is also the case with other *date-fns* functions).
-   *
    * @param {*} date - the date to check
    * @returns {Boolean} the date is valid
    * @throws {TypeError} 1 argument required
@@ -19651,10 +19855,6 @@
    * @description
    * Get the number of calendar months between the given dates.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
    * @returns {Number} the number of calendar months
@@ -19662,7 +19862,7 @@
    *
    * @example
    * // How many calendar months are between 31 January 2014 and 1 September 2014?
-   * var result = differenceInCalendarMonths(
+   * const result = differenceInCalendarMonths(
    *   new Date(2014, 8, 1),
    *   new Date(2014, 0, 31)
    * )
@@ -19685,10 +19885,6 @@
    *
    * @description
    * Get the number of calendar years between the given dates.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
@@ -19742,10 +19938,6 @@
    * To ignore DST and only measure exact 24-hour periods, use this instead:
    * `Math.floor(differenceInHours(dateLeft, dateRight)/24)|0`.
    *
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
@@ -19804,10 +19996,6 @@
    * @description
    * Get the number of milliseconds between the given dates.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
    * @returns {Number} the number of milliseconds
@@ -19850,10 +20038,6 @@
    * @description
    * Get the number of hours between the given dates.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
    * @param {Object} [options] - an object with options.
@@ -19883,10 +20067,6 @@
    *
    * @description
    * Get the signed number of full (rounded towards 0) minutes between the given dates.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
@@ -19927,10 +20107,6 @@
    * Return the end of a day for the given date.
    * The result will be in the local timezone.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the original date
    * @returns {Date} the end of a day
    * @throws {TypeError} 1 argument required
@@ -19956,10 +20132,6 @@
    * @description
    * Return the end of a month for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the end of a month
@@ -19988,17 +20160,13 @@
    * @description
    * Is the given date the last day of a month?
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the date to check
    * @returns {Boolean} the date is the last day of a month
    * @throws {TypeError} 1 argument required
    *
    * @example
    * // Is 28 February 2014 the last day of a month?
-   * var result = isLastDayOfMonth(new Date(2014, 1, 28))
+   * const result = isLastDayOfMonth(new Date(2014, 1, 28))
    * //=> true
    */
 
@@ -20015,10 +20183,6 @@
    *
    * @description
    * Get the number of full months between the given dates using trunc as a default rounding method.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
@@ -20072,10 +20236,6 @@
    * @description
    * Get the number of quarters between the given dates.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
    * @param {Object} [options] - an object with options.
@@ -20102,10 +20262,6 @@
    *
    * @description
    * Get the number of seconds between the given dates.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
@@ -20147,10 +20303,6 @@
    * `Math.floor(differenceInHours(dateLeft, dateRight)/(7*24))|0`.
    *
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
    * @param {Object} [options] - an object with options.
@@ -20190,10 +20342,6 @@
    * @description
    * Get the number of full years between the given dates.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} dateLeft - the later date
    * @param {Date|Number} dateRight - the earlier date
    * @returns {Number} the number of full years
@@ -20232,10 +20380,6 @@
    * Return the start of a minute for the given date.
    * The result will be in the local timezone.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the original date
    * @returns {Date} the start of a minute
    * @throws {TypeError} 1 argument required
@@ -20261,10 +20405,6 @@
    * @description
    * Return the start of a year quarter for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the start of a quarter
@@ -20295,10 +20435,6 @@
    * Return the start of a month for the given date.
    * The result will be in the local timezone.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the original date
    * @returns {Date} the start of a month
    * @throws {TypeError} 1 argument required
@@ -20318,6 +20454,34 @@
   }
 
   /**
+   * @name endOfYear
+   * @category Year Helpers
+   * @summary Return the end of a year for the given date.
+   *
+   * @description
+   * Return the end of a year for the given date.
+   * The result will be in the local timezone.
+   *
+   * @param {Date|Number} date - the original date
+   * @returns {Date} the end of a year
+   * @throws {TypeError} 1 argument required
+   *
+   * @example
+   * // The end of a year for 2 September 2014 11:55:00:
+   * const result = endOfYear(new Date(2014, 8, 2, 11, 55, 00))
+   * //=> Wed Dec 31 2014 23:59:59.999
+   */
+
+  function endOfYear(dirtyDate) {
+    requiredArgs(1, arguments);
+    var date = toDate(dirtyDate);
+    var year = date.getFullYear();
+    date.setFullYear(year + 1, 0, 0);
+    date.setHours(23, 59, 59, 999);
+    return date;
+  }
+
+  /**
    * @name startOfYear
    * @category Year Helpers
    * @summary Return the start of a year for the given date.
@@ -20325,10 +20489,6 @@
    * @description
    * Return the start of a year for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the start of a year
@@ -20350,38 +20510,6 @@
   }
 
   /**
-   * @name endOfYear
-   * @category Year Helpers
-   * @summary Return the end of a year for the given date.
-   *
-   * @description
-   * Return the end of a year for the given date.
-   * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
-   * @param {Date|Number} date - the original date
-   * @returns {Date} the end of a year
-   * @throws {TypeError} 1 argument required
-   *
-   * @example
-   * // The end of a year for 2 September 2014 11:55:00:
-   * var result = endOfYear(new Date(2014, 8, 2, 11, 55, 00))
-   * //=> Wed Dec 31 2014 23:59:59.999
-   */
-
-  function endOfYear(dirtyDate) {
-    requiredArgs(1, arguments);
-    var date = toDate(dirtyDate);
-    var year = date.getFullYear();
-    date.setFullYear(year + 1, 0, 0);
-    date.setHours(23, 59, 59, 999);
-    return date;
-  }
-
-  /**
    * @name endOfHour
    * @category Hour Helpers
    * @summary Return the end of an hour for the given date.
@@ -20389,10 +20517,6 @@
    * @description
    * Return the end of an hour for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the end of an hour
@@ -20420,10 +20544,6 @@
    * Return the end of a week for the given date.
    * The result will be in the local timezone.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the original date
    * @param {Object} [options] - an object with options.
    * @param {Locale} [options.locale=defaultLocale] - the locale object. See [Locale]{@link https://date-fns.org/docs/Locale}
@@ -20443,13 +20563,12 @@
    * //=> Sun Sep 07 2014 23:59:59.999
    */
 
-  function endOfWeek(dirtyDate, dirtyOptions) {
+  function endOfWeek(dirtyDate, options) {
+    var _ref, _ref2, _ref3, _options$weekStartsOn, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
+
     requiredArgs(1, arguments);
-    var options = dirtyOptions || {};
-    var locale = options.locale;
-    var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-    var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : toInteger(localeWeekStartsOn);
-    var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : toInteger(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+    var defaultOptions = getDefaultOptions();
+    var weekStartsOn = toInteger((_ref = (_ref2 = (_ref3 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.weekStartsOn) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.weekStartsOn) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.weekStartsOn) !== null && _ref !== void 0 ? _ref : 0); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
 
     if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
       throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
@@ -20471,10 +20590,6 @@
    * @description
    * Return the end of a minute for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the end of a minute
@@ -20501,10 +20616,6 @@
    * @description
    * Return the end of a year quarter for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the end of a quarter
@@ -20535,10 +20646,6 @@
    * Return the end of a second for the given date.
    * The result will be in the local timezone.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
    * @param {Date|Number} date - the original date
    * @returns {Date} the end of a second
    * @throws {TypeError} 1 argument required
@@ -20556,514 +20663,6 @@
     return date;
   }
 
-  var formatDistanceLocale = {
-    lessThanXSeconds: {
-      one: 'less than a second',
-      other: 'less than {{count}} seconds'
-    },
-    xSeconds: {
-      one: '1 second',
-      other: '{{count}} seconds'
-    },
-    halfAMinute: 'half a minute',
-    lessThanXMinutes: {
-      one: 'less than a minute',
-      other: 'less than {{count}} minutes'
-    },
-    xMinutes: {
-      one: '1 minute',
-      other: '{{count}} minutes'
-    },
-    aboutXHours: {
-      one: 'about 1 hour',
-      other: 'about {{count}} hours'
-    },
-    xHours: {
-      one: '1 hour',
-      other: '{{count}} hours'
-    },
-    xDays: {
-      one: '1 day',
-      other: '{{count}} days'
-    },
-    aboutXWeeks: {
-      one: 'about 1 week',
-      other: 'about {{count}} weeks'
-    },
-    xWeeks: {
-      one: '1 week',
-      other: '{{count}} weeks'
-    },
-    aboutXMonths: {
-      one: 'about 1 month',
-      other: 'about {{count}} months'
-    },
-    xMonths: {
-      one: '1 month',
-      other: '{{count}} months'
-    },
-    aboutXYears: {
-      one: 'about 1 year',
-      other: 'about {{count}} years'
-    },
-    xYears: {
-      one: '1 year',
-      other: '{{count}} years'
-    },
-    overXYears: {
-      one: 'over 1 year',
-      other: 'over {{count}} years'
-    },
-    almostXYears: {
-      one: 'almost 1 year',
-      other: 'almost {{count}} years'
-    }
-  };
-
-  var formatDistance = function formatDistance(token, count, options) {
-    var result;
-    var tokenValue = formatDistanceLocale[token];
-
-    if (typeof tokenValue === 'string') {
-      result = tokenValue;
-    } else if (count === 1) {
-      result = tokenValue.one;
-    } else {
-      result = tokenValue.other.replace('{{count}}', count.toString());
-    }
-
-    if (options !== null && options !== void 0 && options.addSuffix) {
-      if (options.comparison && options.comparison > 0) {
-        return 'in ' + result;
-      } else {
-        return result + ' ago';
-      }
-    }
-
-    return result;
-  };
-
-  var formatDistance$1 = formatDistance;
-
-  function buildFormatLongFn(args) {
-    return function () {
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {}; // TODO: Remove String()
-
-      var width = options.width ? String(options.width) : args.defaultWidth;
-      var format = args.formats[width] || args.formats[args.defaultWidth];
-      return format;
-    };
-  }
-
-  var dateFormats = {
-    full: 'EEEE, MMMM do, y',
-    long: 'MMMM do, y',
-    medium: 'MMM d, y',
-    short: 'MM/dd/yyyy'
-  };
-  var timeFormats = {
-    full: 'h:mm:ss a zzzz',
-    long: 'h:mm:ss a z',
-    medium: 'h:mm:ss a',
-    short: 'h:mm a'
-  };
-  var dateTimeFormats = {
-    full: "{{date}} 'at' {{time}}",
-    long: "{{date}} 'at' {{time}}",
-    medium: '{{date}}, {{time}}',
-    short: '{{date}}, {{time}}'
-  };
-  var formatLong = {
-    date: buildFormatLongFn({
-      formats: dateFormats,
-      defaultWidth: 'full'
-    }),
-    time: buildFormatLongFn({
-      formats: timeFormats,
-      defaultWidth: 'full'
-    }),
-    dateTime: buildFormatLongFn({
-      formats: dateTimeFormats,
-      defaultWidth: 'full'
-    })
-  };
-  var formatLong$1 = formatLong;
-
-  var formatRelativeLocale = {
-    lastWeek: "'last' eeee 'at' p",
-    yesterday: "'yesterday at' p",
-    today: "'today at' p",
-    tomorrow: "'tomorrow at' p",
-    nextWeek: "eeee 'at' p",
-    other: 'P'
-  };
-
-  var formatRelative = function formatRelative(token, _date, _baseDate, _options) {
-    return formatRelativeLocale[token];
-  };
-
-  var formatRelative$1 = formatRelative;
-
-  function buildLocalizeFn(args) {
-    return function (dirtyIndex, dirtyOptions) {
-      var options = dirtyOptions || {};
-      var context = options.context ? String(options.context) : 'standalone';
-      var valuesArray;
-
-      if (context === 'formatting' && args.formattingValues) {
-        var defaultWidth = args.defaultFormattingWidth || args.defaultWidth;
-        var width = options.width ? String(options.width) : defaultWidth;
-        valuesArray = args.formattingValues[width] || args.formattingValues[defaultWidth];
-      } else {
-        var _defaultWidth = args.defaultWidth;
-
-        var _width = options.width ? String(options.width) : args.defaultWidth;
-
-        valuesArray = args.values[_width] || args.values[_defaultWidth];
-      }
-
-      var index = args.argumentCallback ? args.argumentCallback(dirtyIndex) : dirtyIndex; // @ts-ignore: For some reason TypeScript just don't want to match it, no matter how hard we try. I challenge you to try to remove it!
-
-      return valuesArray[index];
-    };
-  }
-
-  var eraValues = {
-    narrow: ['B', 'A'],
-    abbreviated: ['BC', 'AD'],
-    wide: ['Before Christ', 'Anno Domini']
-  };
-  var quarterValues = {
-    narrow: ['1', '2', '3', '4'],
-    abbreviated: ['Q1', 'Q2', 'Q3', 'Q4'],
-    wide: ['1st quarter', '2nd quarter', '3rd quarter', '4th quarter']
-  }; // Note: in English, the names of days of the week and months are capitalized.
-  // If you are making a new locale based on this one, check if the same is true for the language you're working on.
-  // Generally, formatted dates should look like they are in the middle of a sentence,
-  // e.g. in Spanish language the weekdays and months should be in the lowercase.
-
-  var monthValues = {
-    narrow: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
-    abbreviated: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    wide: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  };
-  var dayValues = {
-    narrow: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
-    short: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
-    abbreviated: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    wide: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  };
-  var dayPeriodValues = {
-    narrow: {
-      am: 'a',
-      pm: 'p',
-      midnight: 'mi',
-      noon: 'n',
-      morning: 'morning',
-      afternoon: 'afternoon',
-      evening: 'evening',
-      night: 'night'
-    },
-    abbreviated: {
-      am: 'AM',
-      pm: 'PM',
-      midnight: 'midnight',
-      noon: 'noon',
-      morning: 'morning',
-      afternoon: 'afternoon',
-      evening: 'evening',
-      night: 'night'
-    },
-    wide: {
-      am: 'a.m.',
-      pm: 'p.m.',
-      midnight: 'midnight',
-      noon: 'noon',
-      morning: 'morning',
-      afternoon: 'afternoon',
-      evening: 'evening',
-      night: 'night'
-    }
-  };
-  var formattingDayPeriodValues = {
-    narrow: {
-      am: 'a',
-      pm: 'p',
-      midnight: 'mi',
-      noon: 'n',
-      morning: 'in the morning',
-      afternoon: 'in the afternoon',
-      evening: 'in the evening',
-      night: 'at night'
-    },
-    abbreviated: {
-      am: 'AM',
-      pm: 'PM',
-      midnight: 'midnight',
-      noon: 'noon',
-      morning: 'in the morning',
-      afternoon: 'in the afternoon',
-      evening: 'in the evening',
-      night: 'at night'
-    },
-    wide: {
-      am: 'a.m.',
-      pm: 'p.m.',
-      midnight: 'midnight',
-      noon: 'noon',
-      morning: 'in the morning',
-      afternoon: 'in the afternoon',
-      evening: 'in the evening',
-      night: 'at night'
-    }
-  };
-
-  var ordinalNumber = function ordinalNumber(dirtyNumber, _options) {
-    var number = Number(dirtyNumber); // If ordinal numbers depend on context, for example,
-    // if they are different for different grammatical genders,
-    // use `options.unit`.
-    //
-    // `unit` can be 'year', 'quarter', 'month', 'week', 'date', 'dayOfYear',
-    // 'day', 'hour', 'minute', 'second'.
-
-    var rem100 = number % 100;
-
-    if (rem100 > 20 || rem100 < 10) {
-      switch (rem100 % 10) {
-        case 1:
-          return number + 'st';
-
-        case 2:
-          return number + 'nd';
-
-        case 3:
-          return number + 'rd';
-      }
-    }
-
-    return number + 'th';
-  };
-
-  var localize = {
-    ordinalNumber: ordinalNumber,
-    era: buildLocalizeFn({
-      values: eraValues,
-      defaultWidth: 'wide'
-    }),
-    quarter: buildLocalizeFn({
-      values: quarterValues,
-      defaultWidth: 'wide',
-      argumentCallback: function argumentCallback(quarter) {
-        return quarter - 1;
-      }
-    }),
-    month: buildLocalizeFn({
-      values: monthValues,
-      defaultWidth: 'wide'
-    }),
-    day: buildLocalizeFn({
-      values: dayValues,
-      defaultWidth: 'wide'
-    }),
-    dayPeriod: buildLocalizeFn({
-      values: dayPeriodValues,
-      defaultWidth: 'wide',
-      formattingValues: formattingDayPeriodValues,
-      defaultFormattingWidth: 'wide'
-    })
-  };
-  var localize$1 = localize;
-
-  function buildMatchFn(args) {
-    return function (string) {
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var width = options.width;
-      var matchPattern = width && args.matchPatterns[width] || args.matchPatterns[args.defaultMatchWidth];
-      var matchResult = string.match(matchPattern);
-
-      if (!matchResult) {
-        return null;
-      }
-
-      var matchedString = matchResult[0];
-      var parsePatterns = width && args.parsePatterns[width] || args.parsePatterns[args.defaultParseWidth];
-      var key = Array.isArray(parsePatterns) ? findIndex(parsePatterns, function (pattern) {
-        return pattern.test(matchedString);
-      }) : findKey(parsePatterns, function (pattern) {
-        return pattern.test(matchedString);
-      });
-      var value;
-      value = args.valueCallback ? args.valueCallback(key) : key;
-      value = options.valueCallback ? options.valueCallback(value) : value;
-      var rest = string.slice(matchedString.length);
-      return {
-        value: value,
-        rest: rest
-      };
-    };
-  }
-
-  function findKey(object, predicate) {
-    for (var key in object) {
-      if (object.hasOwnProperty(key) && predicate(object[key])) {
-        return key;
-      }
-    }
-
-    return undefined;
-  }
-
-  function findIndex(array, predicate) {
-    for (var key = 0; key < array.length; key++) {
-      if (predicate(array[key])) {
-        return key;
-      }
-    }
-
-    return undefined;
-  }
-
-  function buildMatchPatternFn(args) {
-    return function (string) {
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var matchResult = string.match(args.matchPattern);
-      if (!matchResult) return null;
-      var matchedString = matchResult[0];
-      var parseResult = string.match(args.parsePattern);
-      if (!parseResult) return null;
-      var value = args.valueCallback ? args.valueCallback(parseResult[0]) : parseResult[0];
-      value = options.valueCallback ? options.valueCallback(value) : value;
-      var rest = string.slice(matchedString.length);
-      return {
-        value: value,
-        rest: rest
-      };
-    };
-  }
-
-  var matchOrdinalNumberPattern = /^(\d+)(th|st|nd|rd)?/i;
-  var parseOrdinalNumberPattern = /\d+/i;
-  var matchEraPatterns = {
-    narrow: /^(b|a)/i,
-    abbreviated: /^(b\.?\s?c\.?|b\.?\s?c\.?\s?e\.?|a\.?\s?d\.?|c\.?\s?e\.?)/i,
-    wide: /^(before christ|before common era|anno domini|common era)/i
-  };
-  var parseEraPatterns = {
-    any: [/^b/i, /^(a|c)/i]
-  };
-  var matchQuarterPatterns = {
-    narrow: /^[1234]/i,
-    abbreviated: /^q[1234]/i,
-    wide: /^[1234](th|st|nd|rd)? quarter/i
-  };
-  var parseQuarterPatterns = {
-    any: [/1/i, /2/i, /3/i, /4/i]
-  };
-  var matchMonthPatterns = {
-    narrow: /^[jfmasond]/i,
-    abbreviated: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i,
-    wide: /^(january|february|march|april|may|june|july|august|september|october|november|december)/i
-  };
-  var parseMonthPatterns = {
-    narrow: [/^j/i, /^f/i, /^m/i, /^a/i, /^m/i, /^j/i, /^j/i, /^a/i, /^s/i, /^o/i, /^n/i, /^d/i],
-    any: [/^ja/i, /^f/i, /^mar/i, /^ap/i, /^may/i, /^jun/i, /^jul/i, /^au/i, /^s/i, /^o/i, /^n/i, /^d/i]
-  };
-  var matchDayPatterns = {
-    narrow: /^[smtwf]/i,
-    short: /^(su|mo|tu|we|th|fr|sa)/i,
-    abbreviated: /^(sun|mon|tue|wed|thu|fri|sat)/i,
-    wide: /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i
-  };
-  var parseDayPatterns = {
-    narrow: [/^s/i, /^m/i, /^t/i, /^w/i, /^t/i, /^f/i, /^s/i],
-    any: [/^su/i, /^m/i, /^tu/i, /^w/i, /^th/i, /^f/i, /^sa/i]
-  };
-  var matchDayPeriodPatterns = {
-    narrow: /^(a|p|mi|n|(in the|at) (morning|afternoon|evening|night))/i,
-    any: /^([ap]\.?\s?m\.?|midnight|noon|(in the|at) (morning|afternoon|evening|night))/i
-  };
-  var parseDayPeriodPatterns = {
-    any: {
-      am: /^a/i,
-      pm: /^p/i,
-      midnight: /^mi/i,
-      noon: /^no/i,
-      morning: /morning/i,
-      afternoon: /afternoon/i,
-      evening: /evening/i,
-      night: /night/i
-    }
-  };
-  var match = {
-    ordinalNumber: buildMatchPatternFn({
-      matchPattern: matchOrdinalNumberPattern,
-      parsePattern: parseOrdinalNumberPattern,
-      valueCallback: function valueCallback(value) {
-        return parseInt(value, 10);
-      }
-    }),
-    era: buildMatchFn({
-      matchPatterns: matchEraPatterns,
-      defaultMatchWidth: 'wide',
-      parsePatterns: parseEraPatterns,
-      defaultParseWidth: 'any'
-    }),
-    quarter: buildMatchFn({
-      matchPatterns: matchQuarterPatterns,
-      defaultMatchWidth: 'wide',
-      parsePatterns: parseQuarterPatterns,
-      defaultParseWidth: 'any',
-      valueCallback: function valueCallback(index) {
-        return index + 1;
-      }
-    }),
-    month: buildMatchFn({
-      matchPatterns: matchMonthPatterns,
-      defaultMatchWidth: 'wide',
-      parsePatterns: parseMonthPatterns,
-      defaultParseWidth: 'any'
-    }),
-    day: buildMatchFn({
-      matchPatterns: matchDayPatterns,
-      defaultMatchWidth: 'wide',
-      parsePatterns: parseDayPatterns,
-      defaultParseWidth: 'any'
-    }),
-    dayPeriod: buildMatchFn({
-      matchPatterns: matchDayPeriodPatterns,
-      defaultMatchWidth: 'any',
-      parsePatterns: parseDayPeriodPatterns,
-      defaultParseWidth: 'any'
-    })
-  };
-  var match$1 = match;
-
-  /**
-   * @type {Locale}
-   * @category Locales
-   * @summary English locale (United States).
-   * @language English
-   * @iso-639-2 eng
-   * @author Sasha Koss [@kossnocorp]{@link https://github.com/kossnocorp}
-   * @author Lesha Koss [@leshakoss]{@link https://github.com/leshakoss}
-   */
-
-  var locale = {
-    code: 'en-US',
-    formatDistance: formatDistance$1,
-    formatLong: formatLong$1,
-    formatRelative: formatRelative$1,
-    localize: localize$1,
-    match: match$1,
-    options: {
-      weekStartsOn: 0
-      /* Sunday */
-      ,
-      firstWeekContainsDate: 1
-    }
-  };
-  var defaultLocale = locale;
-
   /**
    * @name subMilliseconds
    * @category Millisecond Helpers
@@ -21071,10 +20670,6 @@
    *
    * @description
    * Subtract the specified number of milliseconds from the given date.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the date to be changed
    * @param {Number} amount - the amount of milliseconds to be subtracted. Positive decimals will be rounded using `Math.floor`, decimals less than zero will be rounded using `Math.ceil`.
@@ -21093,9 +20688,7 @@
     return addMilliseconds(dirtyDate, -amount);
   }
 
-  var MILLISECONDS_IN_DAY = 86400000; // This function will be a part of public API when UTC function will be implemented.
-  // See issue: https://github.com/date-fns/date-fns/issues/376
-
+  var MILLISECONDS_IN_DAY = 86400000;
   function getUTCDayOfYear(dirtyDate) {
     requiredArgs(1, arguments);
     var date = toDate(dirtyDate);
@@ -21107,8 +20700,6 @@
     return Math.floor(difference / MILLISECONDS_IN_DAY) + 1;
   }
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
-
   function startOfUTCISOWeek(dirtyDate) {
     requiredArgs(1, arguments);
     var weekStartsOn = 1;
@@ -21119,8 +20710,6 @@
     date.setUTCHours(0, 0, 0, 0);
     return date;
   }
-
-  // See issue: https://github.com/date-fns/date-fns/issues/376
 
   function getUTCISOWeekYear(dirtyDate) {
     requiredArgs(1, arguments);
@@ -21144,8 +20733,6 @@
     }
   }
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
-
   function startOfUTCISOWeekYear(dirtyDate) {
     requiredArgs(1, arguments);
     var year = getUTCISOWeekYear(dirtyDate);
@@ -21156,9 +20743,7 @@
     return date;
   }
 
-  var MILLISECONDS_IN_WEEK$1 = 604800000; // This function will be a part of public API when UTC function will be implemented.
-  // See issue: https://github.com/date-fns/date-fns/issues/376
-
+  var MILLISECONDS_IN_WEEK$1 = 604800000;
   function getUTCISOWeek(dirtyDate) {
     requiredArgs(1, arguments);
     var date = toDate(dirtyDate);
@@ -21169,15 +20754,12 @@
     return Math.round(diff / MILLISECONDS_IN_WEEK$1) + 1;
   }
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
+  function startOfUTCWeek(dirtyDate, options) {
+    var _ref, _ref2, _ref3, _options$weekStartsOn, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
 
-  function startOfUTCWeek(dirtyDate, dirtyOptions) {
     requiredArgs(1, arguments);
-    var options = dirtyOptions || {};
-    var locale = options.locale;
-    var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-    var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : toInteger(localeWeekStartsOn);
-    var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : toInteger(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+    var defaultOptions = getDefaultOptions();
+    var weekStartsOn = toInteger((_ref = (_ref2 = (_ref3 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.weekStartsOn) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.weekStartsOn) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.weekStartsOn) !== null && _ref !== void 0 ? _ref : 0); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
 
     if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
       throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
@@ -21191,17 +20773,14 @@
     return date;
   }
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
+  function getUTCWeekYear(dirtyDate, options) {
+    var _ref, _ref2, _ref3, _options$firstWeekCon, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
 
-  function getUTCWeekYear(dirtyDate, dirtyOptions) {
     requiredArgs(1, arguments);
     var date = toDate(dirtyDate);
     var year = date.getUTCFullYear();
-    var options = dirtyOptions || {};
-    var locale = options.locale;
-    var localeFirstWeekContainsDate = locale && locale.options && locale.options.firstWeekContainsDate;
-    var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : toInteger(localeFirstWeekContainsDate);
-    var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : toInteger(options.firstWeekContainsDate); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
+    var defaultOptions = getDefaultOptions();
+    var firstWeekContainsDate = toInteger((_ref = (_ref2 = (_ref3 = (_options$firstWeekCon = options === null || options === void 0 ? void 0 : options.firstWeekContainsDate) !== null && _options$firstWeekCon !== void 0 ? _options$firstWeekCon : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.firstWeekContainsDate) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.firstWeekContainsDate) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.firstWeekContainsDate) !== null && _ref !== void 0 ? _ref : 1); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
 
     if (!(firstWeekContainsDate >= 1 && firstWeekContainsDate <= 7)) {
       throw new RangeError('firstWeekContainsDate must be between 1 and 7 inclusively');
@@ -21210,11 +20789,11 @@
     var firstWeekOfNextYear = new Date(0);
     firstWeekOfNextYear.setUTCFullYear(year + 1, 0, firstWeekContainsDate);
     firstWeekOfNextYear.setUTCHours(0, 0, 0, 0);
-    var startOfNextYear = startOfUTCWeek(firstWeekOfNextYear, dirtyOptions);
+    var startOfNextYear = startOfUTCWeek(firstWeekOfNextYear, options);
     var firstWeekOfThisYear = new Date(0);
     firstWeekOfThisYear.setUTCFullYear(year, 0, firstWeekContainsDate);
     firstWeekOfThisYear.setUTCHours(0, 0, 0, 0);
-    var startOfThisYear = startOfUTCWeek(firstWeekOfThisYear, dirtyOptions);
+    var startOfThisYear = startOfUTCWeek(firstWeekOfThisYear, options);
 
     if (date.getTime() >= startOfNextYear.getTime()) {
       return year + 1;
@@ -21225,26 +20804,21 @@
     }
   }
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
+  function startOfUTCWeekYear(dirtyDate, options) {
+    var _ref, _ref2, _ref3, _options$firstWeekCon, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
 
-  function startOfUTCWeekYear(dirtyDate, dirtyOptions) {
     requiredArgs(1, arguments);
-    var options = dirtyOptions || {};
-    var locale = options.locale;
-    var localeFirstWeekContainsDate = locale && locale.options && locale.options.firstWeekContainsDate;
-    var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : toInteger(localeFirstWeekContainsDate);
-    var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : toInteger(options.firstWeekContainsDate);
-    var year = getUTCWeekYear(dirtyDate, dirtyOptions);
+    var defaultOptions = getDefaultOptions();
+    var firstWeekContainsDate = toInteger((_ref = (_ref2 = (_ref3 = (_options$firstWeekCon = options === null || options === void 0 ? void 0 : options.firstWeekContainsDate) !== null && _options$firstWeekCon !== void 0 ? _options$firstWeekCon : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.firstWeekContainsDate) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.firstWeekContainsDate) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.firstWeekContainsDate) !== null && _ref !== void 0 ? _ref : 1);
+    var year = getUTCWeekYear(dirtyDate, options);
     var firstWeek = new Date(0);
     firstWeek.setUTCFullYear(year, 0, firstWeekContainsDate);
     firstWeek.setUTCHours(0, 0, 0, 0);
-    var date = startOfUTCWeek(firstWeek, dirtyOptions);
+    var date = startOfUTCWeek(firstWeek, options);
     return date;
   }
 
-  var MILLISECONDS_IN_WEEK = 604800000; // This function will be a part of public API when UTC function will be implemented.
-  // See issue: https://github.com/date-fns/date-fns/issues/376
-
+  var MILLISECONDS_IN_WEEK = 604800000;
   function getUTCWeek(dirtyDate, options) {
     requiredArgs(1, arguments);
     var date = toDate(dirtyDate);
@@ -22210,7 +21784,7 @@
 
   var formatters$1 = formatters;
 
-  function dateLongFormatter(pattern, formatLong) {
+  var dateLongFormatter = function dateLongFormatter(pattern, formatLong) {
     switch (pattern) {
       case 'P':
         return formatLong.date({
@@ -22233,9 +21807,9 @@
           width: 'full'
         });
     }
-  }
+  };
 
-  function timeLongFormatter(pattern, formatLong) {
+  var timeLongFormatter = function timeLongFormatter(pattern, formatLong) {
     switch (pattern) {
       case 'p':
         return formatLong.time({
@@ -22258,9 +21832,9 @@
           width: 'full'
         });
     }
-  }
+  };
 
-  function dateTimeLongFormatter(pattern, formatLong) {
+  var dateTimeLongFormatter = function dateTimeLongFormatter(pattern, formatLong) {
     var matchResult = pattern.match(/(P+)(p+)?/) || [];
     var datePattern = matchResult[1];
     var timePattern = matchResult[2];
@@ -22299,7 +21873,7 @@
     }
 
     return dateTimeFormat.replace('{{date}}', dateLongFormatter(datePattern, formatLong)).replace('{{time}}', timeLongFormatter(timePattern, formatLong));
-  }
+  };
 
   var longFormatters = {
     p: timeLongFormatter,
@@ -22317,15 +21891,522 @@
   }
   function throwProtectedError(token, format, input) {
     if (token === 'YYYY') {
-      throw new RangeError("Use `yyyy` instead of `YYYY` (in `".concat(format, "`) for formatting years to the input `").concat(input, "`; see: https://git.io/fxCyr"));
+      throw new RangeError("Use `yyyy` instead of `YYYY` (in `".concat(format, "`) for formatting years to the input `").concat(input, "`; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md"));
     } else if (token === 'YY') {
-      throw new RangeError("Use `yy` instead of `YY` (in `".concat(format, "`) for formatting years to the input `").concat(input, "`; see: https://git.io/fxCyr"));
+      throw new RangeError("Use `yy` instead of `YY` (in `".concat(format, "`) for formatting years to the input `").concat(input, "`; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md"));
     } else if (token === 'D') {
-      throw new RangeError("Use `d` instead of `D` (in `".concat(format, "`) for formatting days of the month to the input `").concat(input, "`; see: https://git.io/fxCyr"));
+      throw new RangeError("Use `d` instead of `D` (in `".concat(format, "`) for formatting days of the month to the input `").concat(input, "`; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md"));
     } else if (token === 'DD') {
-      throw new RangeError("Use `dd` instead of `DD` (in `".concat(format, "`) for formatting days of the month to the input `").concat(input, "`; see: https://git.io/fxCyr"));
+      throw new RangeError("Use `dd` instead of `DD` (in `".concat(format, "`) for formatting days of the month to the input `").concat(input, "`; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md"));
     }
   }
+
+  var formatDistanceLocale = {
+    lessThanXSeconds: {
+      one: 'less than a second',
+      other: 'less than {{count}} seconds'
+    },
+    xSeconds: {
+      one: '1 second',
+      other: '{{count}} seconds'
+    },
+    halfAMinute: 'half a minute',
+    lessThanXMinutes: {
+      one: 'less than a minute',
+      other: 'less than {{count}} minutes'
+    },
+    xMinutes: {
+      one: '1 minute',
+      other: '{{count}} minutes'
+    },
+    aboutXHours: {
+      one: 'about 1 hour',
+      other: 'about {{count}} hours'
+    },
+    xHours: {
+      one: '1 hour',
+      other: '{{count}} hours'
+    },
+    xDays: {
+      one: '1 day',
+      other: '{{count}} days'
+    },
+    aboutXWeeks: {
+      one: 'about 1 week',
+      other: 'about {{count}} weeks'
+    },
+    xWeeks: {
+      one: '1 week',
+      other: '{{count}} weeks'
+    },
+    aboutXMonths: {
+      one: 'about 1 month',
+      other: 'about {{count}} months'
+    },
+    xMonths: {
+      one: '1 month',
+      other: '{{count}} months'
+    },
+    aboutXYears: {
+      one: 'about 1 year',
+      other: 'about {{count}} years'
+    },
+    xYears: {
+      one: '1 year',
+      other: '{{count}} years'
+    },
+    overXYears: {
+      one: 'over 1 year',
+      other: 'over {{count}} years'
+    },
+    almostXYears: {
+      one: 'almost 1 year',
+      other: 'almost {{count}} years'
+    }
+  };
+
+  var formatDistance = function formatDistance(token, count, options) {
+    var result;
+    var tokenValue = formatDistanceLocale[token];
+
+    if (typeof tokenValue === 'string') {
+      result = tokenValue;
+    } else if (count === 1) {
+      result = tokenValue.one;
+    } else {
+      result = tokenValue.other.replace('{{count}}', count.toString());
+    }
+
+    if (options !== null && options !== void 0 && options.addSuffix) {
+      if (options.comparison && options.comparison > 0) {
+        return 'in ' + result;
+      } else {
+        return result + ' ago';
+      }
+    }
+
+    return result;
+  };
+
+  var formatDistance$1 = formatDistance;
+
+  function buildFormatLongFn(args) {
+    return function () {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {}; // TODO: Remove String()
+
+      var width = options.width ? String(options.width) : args.defaultWidth;
+      var format = args.formats[width] || args.formats[args.defaultWidth];
+      return format;
+    };
+  }
+
+  var dateFormats = {
+    full: 'EEEE, MMMM do, y',
+    long: 'MMMM do, y',
+    medium: 'MMM d, y',
+    short: 'MM/dd/yyyy'
+  };
+  var timeFormats = {
+    full: 'h:mm:ss a zzzz',
+    long: 'h:mm:ss a z',
+    medium: 'h:mm:ss a',
+    short: 'h:mm a'
+  };
+  var dateTimeFormats = {
+    full: "{{date}} 'at' {{time}}",
+    long: "{{date}} 'at' {{time}}",
+    medium: '{{date}}, {{time}}',
+    short: '{{date}}, {{time}}'
+  };
+  var formatLong = {
+    date: buildFormatLongFn({
+      formats: dateFormats,
+      defaultWidth: 'full'
+    }),
+    time: buildFormatLongFn({
+      formats: timeFormats,
+      defaultWidth: 'full'
+    }),
+    dateTime: buildFormatLongFn({
+      formats: dateTimeFormats,
+      defaultWidth: 'full'
+    })
+  };
+  var formatLong$1 = formatLong;
+
+  var formatRelativeLocale = {
+    lastWeek: "'last' eeee 'at' p",
+    yesterday: "'yesterday at' p",
+    today: "'today at' p",
+    tomorrow: "'tomorrow at' p",
+    nextWeek: "eeee 'at' p",
+    other: 'P'
+  };
+
+  var formatRelative = function formatRelative(token, _date, _baseDate, _options) {
+    return formatRelativeLocale[token];
+  };
+
+  var formatRelative$1 = formatRelative;
+
+  function buildLocalizeFn(args) {
+    return function (dirtyIndex, options) {
+      var context = options !== null && options !== void 0 && options.context ? String(options.context) : 'standalone';
+      var valuesArray;
+
+      if (context === 'formatting' && args.formattingValues) {
+        var defaultWidth = args.defaultFormattingWidth || args.defaultWidth;
+        var width = options !== null && options !== void 0 && options.width ? String(options.width) : defaultWidth;
+        valuesArray = args.formattingValues[width] || args.formattingValues[defaultWidth];
+      } else {
+        var _defaultWidth = args.defaultWidth;
+
+        var _width = options !== null && options !== void 0 && options.width ? String(options.width) : args.defaultWidth;
+
+        valuesArray = args.values[_width] || args.values[_defaultWidth];
+      }
+
+      var index = args.argumentCallback ? args.argumentCallback(dirtyIndex) : dirtyIndex; // @ts-ignore: For some reason TypeScript just don't want to match it, no matter how hard we try. I challenge you to try to remove it!
+
+      return valuesArray[index];
+    };
+  }
+
+  var eraValues = {
+    narrow: ['B', 'A'],
+    abbreviated: ['BC', 'AD'],
+    wide: ['Before Christ', 'Anno Domini']
+  };
+  var quarterValues = {
+    narrow: ['1', '2', '3', '4'],
+    abbreviated: ['Q1', 'Q2', 'Q3', 'Q4'],
+    wide: ['1st quarter', '2nd quarter', '3rd quarter', '4th quarter']
+  }; // Note: in English, the names of days of the week and months are capitalized.
+  // If you are making a new locale based on this one, check if the same is true for the language you're working on.
+  // Generally, formatted dates should look like they are in the middle of a sentence,
+  // e.g. in Spanish language the weekdays and months should be in the lowercase.
+
+  var monthValues = {
+    narrow: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+    abbreviated: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    wide: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  };
+  var dayValues = {
+    narrow: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+    short: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+    abbreviated: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    wide: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  };
+  var dayPeriodValues = {
+    narrow: {
+      am: 'a',
+      pm: 'p',
+      midnight: 'mi',
+      noon: 'n',
+      morning: 'morning',
+      afternoon: 'afternoon',
+      evening: 'evening',
+      night: 'night'
+    },
+    abbreviated: {
+      am: 'AM',
+      pm: 'PM',
+      midnight: 'midnight',
+      noon: 'noon',
+      morning: 'morning',
+      afternoon: 'afternoon',
+      evening: 'evening',
+      night: 'night'
+    },
+    wide: {
+      am: 'a.m.',
+      pm: 'p.m.',
+      midnight: 'midnight',
+      noon: 'noon',
+      morning: 'morning',
+      afternoon: 'afternoon',
+      evening: 'evening',
+      night: 'night'
+    }
+  };
+  var formattingDayPeriodValues = {
+    narrow: {
+      am: 'a',
+      pm: 'p',
+      midnight: 'mi',
+      noon: 'n',
+      morning: 'in the morning',
+      afternoon: 'in the afternoon',
+      evening: 'in the evening',
+      night: 'at night'
+    },
+    abbreviated: {
+      am: 'AM',
+      pm: 'PM',
+      midnight: 'midnight',
+      noon: 'noon',
+      morning: 'in the morning',
+      afternoon: 'in the afternoon',
+      evening: 'in the evening',
+      night: 'at night'
+    },
+    wide: {
+      am: 'a.m.',
+      pm: 'p.m.',
+      midnight: 'midnight',
+      noon: 'noon',
+      morning: 'in the morning',
+      afternoon: 'in the afternoon',
+      evening: 'in the evening',
+      night: 'at night'
+    }
+  };
+
+  var ordinalNumber = function ordinalNumber(dirtyNumber, _options) {
+    var number = Number(dirtyNumber); // If ordinal numbers depend on context, for example,
+    // if they are different for different grammatical genders,
+    // use `options.unit`.
+    //
+    // `unit` can be 'year', 'quarter', 'month', 'week', 'date', 'dayOfYear',
+    // 'day', 'hour', 'minute', 'second'.
+
+    var rem100 = number % 100;
+
+    if (rem100 > 20 || rem100 < 10) {
+      switch (rem100 % 10) {
+        case 1:
+          return number + 'st';
+
+        case 2:
+          return number + 'nd';
+
+        case 3:
+          return number + 'rd';
+      }
+    }
+
+    return number + 'th';
+  };
+
+  var localize = {
+    ordinalNumber: ordinalNumber,
+    era: buildLocalizeFn({
+      values: eraValues,
+      defaultWidth: 'wide'
+    }),
+    quarter: buildLocalizeFn({
+      values: quarterValues,
+      defaultWidth: 'wide',
+      argumentCallback: function argumentCallback(quarter) {
+        return quarter - 1;
+      }
+    }),
+    month: buildLocalizeFn({
+      values: monthValues,
+      defaultWidth: 'wide'
+    }),
+    day: buildLocalizeFn({
+      values: dayValues,
+      defaultWidth: 'wide'
+    }),
+    dayPeriod: buildLocalizeFn({
+      values: dayPeriodValues,
+      defaultWidth: 'wide',
+      formattingValues: formattingDayPeriodValues,
+      defaultFormattingWidth: 'wide'
+    })
+  };
+  var localize$1 = localize;
+
+  function buildMatchFn(args) {
+    return function (string) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var width = options.width;
+      var matchPattern = width && args.matchPatterns[width] || args.matchPatterns[args.defaultMatchWidth];
+      var matchResult = string.match(matchPattern);
+
+      if (!matchResult) {
+        return null;
+      }
+
+      var matchedString = matchResult[0];
+      var parsePatterns = width && args.parsePatterns[width] || args.parsePatterns[args.defaultParseWidth];
+      var key = Array.isArray(parsePatterns) ? findIndex(parsePatterns, function (pattern) {
+        return pattern.test(matchedString);
+      }) : findKey(parsePatterns, function (pattern) {
+        return pattern.test(matchedString);
+      });
+      var value;
+      value = args.valueCallback ? args.valueCallback(key) : key;
+      value = options.valueCallback ? options.valueCallback(value) : value;
+      var rest = string.slice(matchedString.length);
+      return {
+        value: value,
+        rest: rest
+      };
+    };
+  }
+
+  function findKey(object, predicate) {
+    for (var key in object) {
+      if (object.hasOwnProperty(key) && predicate(object[key])) {
+        return key;
+      }
+    }
+
+    return undefined;
+  }
+
+  function findIndex(array, predicate) {
+    for (var key = 0; key < array.length; key++) {
+      if (predicate(array[key])) {
+        return key;
+      }
+    }
+
+    return undefined;
+  }
+
+  function buildMatchPatternFn(args) {
+    return function (string) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var matchResult = string.match(args.matchPattern);
+      if (!matchResult) return null;
+      var matchedString = matchResult[0];
+      var parseResult = string.match(args.parsePattern);
+      if (!parseResult) return null;
+      var value = args.valueCallback ? args.valueCallback(parseResult[0]) : parseResult[0];
+      value = options.valueCallback ? options.valueCallback(value) : value;
+      var rest = string.slice(matchedString.length);
+      return {
+        value: value,
+        rest: rest
+      };
+    };
+  }
+
+  var matchOrdinalNumberPattern = /^(\d+)(th|st|nd|rd)?/i;
+  var parseOrdinalNumberPattern = /\d+/i;
+  var matchEraPatterns = {
+    narrow: /^(b|a)/i,
+    abbreviated: /^(b\.?\s?c\.?|b\.?\s?c\.?\s?e\.?|a\.?\s?d\.?|c\.?\s?e\.?)/i,
+    wide: /^(before christ|before common era|anno domini|common era)/i
+  };
+  var parseEraPatterns = {
+    any: [/^b/i, /^(a|c)/i]
+  };
+  var matchQuarterPatterns = {
+    narrow: /^[1234]/i,
+    abbreviated: /^q[1234]/i,
+    wide: /^[1234](th|st|nd|rd)? quarter/i
+  };
+  var parseQuarterPatterns = {
+    any: [/1/i, /2/i, /3/i, /4/i]
+  };
+  var matchMonthPatterns = {
+    narrow: /^[jfmasond]/i,
+    abbreviated: /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i,
+    wide: /^(january|february|march|april|may|june|july|august|september|october|november|december)/i
+  };
+  var parseMonthPatterns = {
+    narrow: [/^j/i, /^f/i, /^m/i, /^a/i, /^m/i, /^j/i, /^j/i, /^a/i, /^s/i, /^o/i, /^n/i, /^d/i],
+    any: [/^ja/i, /^f/i, /^mar/i, /^ap/i, /^may/i, /^jun/i, /^jul/i, /^au/i, /^s/i, /^o/i, /^n/i, /^d/i]
+  };
+  var matchDayPatterns = {
+    narrow: /^[smtwf]/i,
+    short: /^(su|mo|tu|we|th|fr|sa)/i,
+    abbreviated: /^(sun|mon|tue|wed|thu|fri|sat)/i,
+    wide: /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i
+  };
+  var parseDayPatterns = {
+    narrow: [/^s/i, /^m/i, /^t/i, /^w/i, /^t/i, /^f/i, /^s/i],
+    any: [/^su/i, /^m/i, /^tu/i, /^w/i, /^th/i, /^f/i, /^sa/i]
+  };
+  var matchDayPeriodPatterns = {
+    narrow: /^(a|p|mi|n|(in the|at) (morning|afternoon|evening|night))/i,
+    any: /^([ap]\.?\s?m\.?|midnight|noon|(in the|at) (morning|afternoon|evening|night))/i
+  };
+  var parseDayPeriodPatterns = {
+    any: {
+      am: /^a/i,
+      pm: /^p/i,
+      midnight: /^mi/i,
+      noon: /^no/i,
+      morning: /morning/i,
+      afternoon: /afternoon/i,
+      evening: /evening/i,
+      night: /night/i
+    }
+  };
+  var match = {
+    ordinalNumber: buildMatchPatternFn({
+      matchPattern: matchOrdinalNumberPattern,
+      parsePattern: parseOrdinalNumberPattern,
+      valueCallback: function valueCallback(value) {
+        return parseInt(value, 10);
+      }
+    }),
+    era: buildMatchFn({
+      matchPatterns: matchEraPatterns,
+      defaultMatchWidth: 'wide',
+      parsePatterns: parseEraPatterns,
+      defaultParseWidth: 'any'
+    }),
+    quarter: buildMatchFn({
+      matchPatterns: matchQuarterPatterns,
+      defaultMatchWidth: 'wide',
+      parsePatterns: parseQuarterPatterns,
+      defaultParseWidth: 'any',
+      valueCallback: function valueCallback(index) {
+        return index + 1;
+      }
+    }),
+    month: buildMatchFn({
+      matchPatterns: matchMonthPatterns,
+      defaultMatchWidth: 'wide',
+      parsePatterns: parseMonthPatterns,
+      defaultParseWidth: 'any'
+    }),
+    day: buildMatchFn({
+      matchPatterns: matchDayPatterns,
+      defaultMatchWidth: 'wide',
+      parsePatterns: parseDayPatterns,
+      defaultParseWidth: 'any'
+    }),
+    dayPeriod: buildMatchFn({
+      matchPatterns: matchDayPeriodPatterns,
+      defaultMatchWidth: 'any',
+      parsePatterns: parseDayPeriodPatterns,
+      defaultParseWidth: 'any'
+    })
+  };
+  var match$1 = match;
+
+  /**
+   * @type {Locale}
+   * @category Locales
+   * @summary English locale (United States).
+   * @language English
+   * @iso-639-2 eng
+   * @author Sasha Koss [@kossnocorp]{@link https://github.com/kossnocorp}
+   * @author Lesha Koss [@leshakoss]{@link https://github.com/leshakoss}
+   */
+
+  var locale = {
+    code: 'en-US',
+    formatDistance: formatDistance$1,
+    formatLong: formatLong$1,
+    formatRelative: formatRelative$1,
+    localize: localize$1,
+    match: match$1,
+    options: {
+      weekStartsOn: 0
+      /* Sunday */
+      ,
+      firstWeekContainsDate: 1
+    }
+  };
+  var defaultLocale = locale;
 
   // - [yYQqMLwIdDecihHKkms]o matches any available ordinal number token
   //   (one of the certain letters followed by `o`)
@@ -22354,7 +22435,7 @@
    * Return the formatted date string in the given format. The result may vary by locale.
    *
    * > ⚠️ Please note that the `format` tokens differ from Moment.js and other libraries.
-   * > See: https://git.io/fxCyr
+   * > See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    *
    * The characters wrapped between two single quotes characters (') are escaped.
    * Two single quotes in a row, whether inside or outside a quoted sequence, represent a 'real' single quote.
@@ -22590,30 +22671,10 @@
    *    - `p`: long localized time
    *
    * 8. `YY` and `YYYY` tokens represent week-numbering years but they are often confused with years.
-   *    You should enable `options.useAdditionalWeekYearTokens` to use them. See: https://git.io/fxCyr
+   *    You should enable `options.useAdditionalWeekYearTokens` to use them. See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    *
    * 9. `D` and `DD` tokens represent days of the year but they are often confused with days of the month.
-   *    You should enable `options.useAdditionalDayOfYearTokens` to use them. See: https://git.io/fxCyr
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
-   * - The second argument is now required for the sake of explicitness.
-   *
-   *   ```javascript
-   *   // Before v2.0.0
-   *   format(new Date(2016, 0, 1))
-   *
-   *   // v2.0.0 onward
-   *   format(new Date(2016, 0, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
-   *   ```
-   *
-   * - New format string API for `format` function
-   *   which is based on [Unicode Technical Standard #35](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table).
-   *   See [this post](https://blog.date-fns.org/post/unicode-tokens-in-date-fns-v2-sreatyki91jg) for more details.
-   *
-   * - Characters are now escaped using single quote symbols (`'`) instead of square brackets.
+   *    You should enable `options.useAdditionalDayOfYearTokens` to use them. See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    *
    * @param {Date|Number} date - the original date
    * @param {String} format - the string of tokens
@@ -22622,9 +22683,9 @@
    * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
    * @param {Number} [options.firstWeekContainsDate=1] - the day of January, which is
    * @param {Boolean} [options.useAdditionalWeekYearTokens=false] - if true, allows usage of the week-numbering year tokens `YY` and `YYYY`;
-   *   see: https://git.io/fxCyr
+   *   see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    * @param {Boolean} [options.useAdditionalDayOfYearTokens=false] - if true, allows usage of the day of year tokens `D` and `DD`;
-   *   see: https://git.io/fxCyr
+   *   see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    * @returns {String} the formatted date string
    * @throws {TypeError} 2 arguments required
    * @throws {RangeError} `date` must not be Invalid Date
@@ -22632,47 +22693,45 @@
    * @throws {RangeError} `options.locale` must contain `formatLong` property
    * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
    * @throws {RangeError} `options.firstWeekContainsDate` must be between 1 and 7
-   * @throws {RangeError} use `yyyy` instead of `YYYY` for formatting years using [format provided] to the input [input provided]; see: https://git.io/fxCyr
-   * @throws {RangeError} use `yy` instead of `YY` for formatting years using [format provided] to the input [input provided]; see: https://git.io/fxCyr
-   * @throws {RangeError} use `d` instead of `D` for formatting days of the month using [format provided] to the input [input provided]; see: https://git.io/fxCyr
-   * @throws {RangeError} use `dd` instead of `DD` for formatting days of the month using [format provided] to the input [input provided]; see: https://git.io/fxCyr
+   * @throws {RangeError} use `yyyy` instead of `YYYY` for formatting years using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+   * @throws {RangeError} use `yy` instead of `YY` for formatting years using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+   * @throws {RangeError} use `d` instead of `D` for formatting days of the month using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+   * @throws {RangeError} use `dd` instead of `DD` for formatting days of the month using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    * @throws {RangeError} format string contains an unescaped latin alphabet character
    *
    * @example
    * // Represent 11 February 2014 in middle-endian format:
-   * var result = format(new Date(2014, 1, 11), 'MM/dd/yyyy')
+   * const result = format(new Date(2014, 1, 11), 'MM/dd/yyyy')
    * //=> '02/11/2014'
    *
    * @example
    * // Represent 2 July 2014 in Esperanto:
    * import { eoLocale } from 'date-fns/locale/eo'
-   * var result = format(new Date(2014, 6, 2), "do 'de' MMMM yyyy", {
+   * const result = format(new Date(2014, 6, 2), "do 'de' MMMM yyyy", {
    *   locale: eoLocale
    * })
    * //=> '2-a de julio 2014'
    *
    * @example
    * // Escape string by single quote characters:
-   * var result = format(new Date(2014, 6, 2, 15), "h 'o''clock'")
+   * const result = format(new Date(2014, 6, 2, 15), "h 'o''clock'")
    * //=> "3 o'clock"
    */
 
-  function format(dirtyDate, dirtyFormatStr, dirtyOptions) {
+  function format(dirtyDate, dirtyFormatStr, options) {
+    var _ref, _options$locale, _ref2, _ref3, _ref4, _options$firstWeekCon, _options$locale2, _options$locale2$opti, _defaultOptions$local, _defaultOptions$local2, _ref5, _ref6, _ref7, _options$weekStartsOn, _options$locale3, _options$locale3$opti, _defaultOptions$local3, _defaultOptions$local4;
+
     requiredArgs(2, arguments);
     var formatStr = String(dirtyFormatStr);
-    var options = dirtyOptions || {};
-    var locale = options.locale || defaultLocale;
-    var localeFirstWeekContainsDate = locale.options && locale.options.firstWeekContainsDate;
-    var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : toInteger(localeFirstWeekContainsDate);
-    var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : toInteger(options.firstWeekContainsDate); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
+    var defaultOptions = getDefaultOptions();
+    var locale = (_ref = (_options$locale = options === null || options === void 0 ? void 0 : options.locale) !== null && _options$locale !== void 0 ? _options$locale : defaultOptions.locale) !== null && _ref !== void 0 ? _ref : defaultLocale;
+    var firstWeekContainsDate = toInteger((_ref2 = (_ref3 = (_ref4 = (_options$firstWeekCon = options === null || options === void 0 ? void 0 : options.firstWeekContainsDate) !== null && _options$firstWeekCon !== void 0 ? _options$firstWeekCon : options === null || options === void 0 ? void 0 : (_options$locale2 = options.locale) === null || _options$locale2 === void 0 ? void 0 : (_options$locale2$opti = _options$locale2.options) === null || _options$locale2$opti === void 0 ? void 0 : _options$locale2$opti.firstWeekContainsDate) !== null && _ref4 !== void 0 ? _ref4 : defaultOptions.firstWeekContainsDate) !== null && _ref3 !== void 0 ? _ref3 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.firstWeekContainsDate) !== null && _ref2 !== void 0 ? _ref2 : 1); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
 
     if (!(firstWeekContainsDate >= 1 && firstWeekContainsDate <= 7)) {
       throw new RangeError('firstWeekContainsDate must be between 1 and 7 inclusively');
     }
 
-    var localeWeekStartsOn = locale.options && locale.options.weekStartsOn;
-    var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : toInteger(localeWeekStartsOn);
-    var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : toInteger(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+    var weekStartsOn = toInteger((_ref5 = (_ref6 = (_ref7 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale3 = options.locale) === null || _options$locale3 === void 0 ? void 0 : (_options$locale3$opti = _options$locale3.options) === null || _options$locale3$opti === void 0 ? void 0 : _options$locale3$opti.weekStartsOn) !== null && _ref7 !== void 0 ? _ref7 : defaultOptions.weekStartsOn) !== null && _ref6 !== void 0 ? _ref6 : (_defaultOptions$local3 = defaultOptions.locale) === null || _defaultOptions$local3 === void 0 ? void 0 : (_defaultOptions$local4 = _defaultOptions$local3.options) === null || _defaultOptions$local4 === void 0 ? void 0 : _defaultOptions$local4.weekStartsOn) !== null && _ref5 !== void 0 ? _ref5 : 0); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
 
     if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
       throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
@@ -22708,7 +22767,7 @@
 
       if (firstCharacter === 'p' || firstCharacter === 'P') {
         var longFormatter = longFormatters$1[firstCharacter];
-        return longFormatter(substring, locale.formatLong, formatterOptions);
+        return longFormatter(substring, locale.formatLong);
       }
 
       return substring;
@@ -22727,12 +22786,12 @@
       var formatter = formatters$1[firstCharacter];
 
       if (formatter) {
-        if (!options.useAdditionalWeekYearTokens && isProtectedWeekYearToken(substring)) {
-          throwProtectedError(substring, dirtyFormatStr, dirtyDate);
+        if (!(options !== null && options !== void 0 && options.useAdditionalWeekYearTokens) && isProtectedWeekYearToken(substring)) {
+          throwProtectedError(substring, dirtyFormatStr, String(dirtyDate));
         }
 
-        if (!options.useAdditionalDayOfYearTokens && isProtectedDayOfYearToken(substring)) {
-          throwProtectedError(substring, dirtyFormatStr, dirtyDate);
+        if (!(options !== null && options !== void 0 && options.useAdditionalDayOfYearTokens) && isProtectedDayOfYearToken(substring)) {
+          throwProtectedError(substring, dirtyFormatStr, String(dirtyDate));
         }
 
         return formatter(utcDate, substring, locale.localize, formatterOptions);
@@ -22748,94 +22807,263 @@
   }
 
   function cleanEscapedString$1(input) {
-    return input.match(escapedStringRegExp$1)[1].replace(doubleQuoteRegExp$1, "'");
+    var matched = input.match(escapedStringRegExp$1);
+
+    if (!matched) {
+      return input;
+    }
+
+    return matched[1].replace(doubleQuoteRegExp$1, "'");
   }
 
-  function assign(target, dirtyObject) {
+  function assign(target, object) {
     if (target == null) {
       throw new TypeError('assign requires that input parameter not be null or undefined');
     }
 
-    dirtyObject = dirtyObject || {};
-
-    for (var property in dirtyObject) {
-      if (Object.prototype.hasOwnProperty.call(dirtyObject, property)) {
-        target[property] = dirtyObject[property];
+    for (var property in object) {
+      if (Object.prototype.hasOwnProperty.call(object, property)) {
+        target[property] = object[property];
       }
     }
 
     return target;
   }
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
-
-  function setUTCDay(dirtyDate, dirtyDay, dirtyOptions) {
-    requiredArgs(2, arguments);
-    var options = dirtyOptions || {};
-    var locale = options.locale;
-    var localeWeekStartsOn = locale && locale.options && locale.options.weekStartsOn;
-    var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : toInteger(localeWeekStartsOn);
-    var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : toInteger(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
-
-    if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
-      throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
+  function _defineProperty$w(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
     }
 
-    var date = toDate(dirtyDate);
-    var day = toInteger(dirtyDay);
-    var currentDay = date.getUTCDay();
-    var remainder = day % 7;
-    var dayIndex = (remainder + 7) % 7;
-    var diff = (dayIndex < weekStartsOn ? 7 : 0) + day - currentDay;
-    date.setUTCDate(date.getUTCDate() + diff);
-    return date;
+    return obj;
   }
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
+  var TIMEZONE_UNIT_PRIORITY = 10;
+  var Setter = /*#__PURE__*/function () {
+    function Setter() {
+      _classCallCheck(this, Setter);
 
-  function setUTCISODay(dirtyDate, dirtyDay) {
-    requiredArgs(2, arguments);
-    var day = toInteger(dirtyDay);
+      _defineProperty$w(this, "priority", void 0);
 
-    if (day % 7 === 0) {
-      day = day - 7;
+      _defineProperty$w(this, "subPriority", 0);
     }
 
-    var weekStartsOn = 1;
-    var date = toDate(dirtyDate);
-    var currentDay = date.getUTCDay();
-    var remainder = day % 7;
-    var dayIndex = (remainder + 7) % 7;
-    var diff = (dayIndex < weekStartsOn ? 7 : 0) + day - currentDay;
-    date.setUTCDate(date.getUTCDate() + diff);
-    return date;
+    _createClass(Setter, [{
+      key: "validate",
+      value: function validate(_utcDate, _options) {
+        return true;
+      }
+    }]);
+
+    return Setter;
+  }();
+  var ValueSetter = /*#__PURE__*/function (_Setter) {
+    _inherits(ValueSetter, _Setter);
+
+    var _super = _createSuper(ValueSetter);
+
+    function ValueSetter(value, validateValue, setValue, priority, subPriority) {
+      var _this;
+
+      _classCallCheck(this, ValueSetter);
+
+      _this = _super.call(this);
+      _this.value = value;
+      _this.validateValue = validateValue;
+      _this.setValue = setValue;
+      _this.priority = priority;
+
+      if (subPriority) {
+        _this.subPriority = subPriority;
+      }
+
+      return _this;
+    }
+
+    _createClass(ValueSetter, [{
+      key: "validate",
+      value: function validate(utcDate, options) {
+        return this.validateValue(utcDate, this.value, options);
+      }
+    }, {
+      key: "set",
+      value: function set(utcDate, flags, options) {
+        return this.setValue(utcDate, flags, this.value, options);
+      }
+    }]);
+
+    return ValueSetter;
+  }(Setter);
+  var DateToSystemTimezoneSetter = /*#__PURE__*/function (_Setter2) {
+    _inherits(DateToSystemTimezoneSetter, _Setter2);
+
+    var _super2 = _createSuper(DateToSystemTimezoneSetter);
+
+    function DateToSystemTimezoneSetter() {
+      var _this2;
+
+      _classCallCheck(this, DateToSystemTimezoneSetter);
+
+      _this2 = _super2.apply(this, arguments);
+
+      _defineProperty$w(_assertThisInitialized(_this2), "priority", TIMEZONE_UNIT_PRIORITY);
+
+      _defineProperty$w(_assertThisInitialized(_this2), "subPriority", -1);
+
+      return _this2;
+    }
+
+    _createClass(DateToSystemTimezoneSetter, [{
+      key: "set",
+      value: function set(date, flags) {
+        if (flags.timestampIsSet) {
+          return date;
+        }
+
+        var convertedDate = new Date(0);
+        convertedDate.setFullYear(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+        convertedDate.setHours(date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds());
+        return convertedDate;
+      }
+    }]);
+
+    return DateToSystemTimezoneSetter;
+  }(Setter);
+
+  function _defineProperty$v(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
   }
+  var Parser = /*#__PURE__*/function () {
+    function Parser() {
+      _classCallCheck(this, Parser);
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
+      _defineProperty$v(this, "incompatibleTokens", void 0);
 
-  function setUTCISOWeek(dirtyDate, dirtyISOWeek) {
-    requiredArgs(2, arguments);
-    var date = toDate(dirtyDate);
-    var isoWeek = toInteger(dirtyISOWeek);
-    var diff = getUTCISOWeek(date) - isoWeek;
-    date.setUTCDate(date.getUTCDate() - diff * 7);
-    return date;
+      _defineProperty$v(this, "priority", void 0);
+
+      _defineProperty$v(this, "subPriority", void 0);
+    }
+
+    _createClass(Parser, [{
+      key: "run",
+      value: function run(dateString, token, match, options) {
+        var result = this.parse(dateString, token, match, options);
+
+        if (!result) {
+          return null;
+        }
+
+        return {
+          setter: new ValueSetter(result.value, this.validate, this.set, this.priority, this.subPriority),
+          rest: result.rest
+        };
+      }
+    }, {
+      key: "validate",
+      value: function validate(_utcDate, _value, _options) {
+        return true;
+      }
+    }]);
+
+    return Parser;
+  }();
+
+  function _defineProperty$u(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
   }
+  var EraParser = /*#__PURE__*/function (_Parser) {
+    _inherits(EraParser, _Parser);
 
-  // See issue: https://github.com/date-fns/date-fns/issues/376
+    var _super = _createSuper(EraParser);
 
-  function setUTCWeek(dirtyDate, dirtyWeek, options) {
-    requiredArgs(2, arguments);
-    var date = toDate(dirtyDate);
-    var week = toInteger(dirtyWeek);
-    var diff = getUTCWeek(date, options) - week;
-    date.setUTCDate(date.getUTCDate() - diff * 7);
-    return date;
-  }
+    function EraParser() {
+      var _this;
 
-  var MILLISECONDS_IN_HOUR = 3600000;
-  var MILLISECONDS_IN_MINUTE = 60000;
-  var MILLISECONDS_IN_SECOND = 1000;
+      _classCallCheck(this, EraParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$u(_assertThisInitialized(_this), "priority", 140);
+
+      _defineProperty$u(_assertThisInitialized(_this), "incompatibleTokens", ['R', 'u', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(EraParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          // AD, BC
+          case 'G':
+          case 'GG':
+          case 'GGG':
+            return match.era(dateString, {
+              width: 'abbreviated'
+            }) || match.era(dateString, {
+              width: 'narrow'
+            });
+          // A, B
+
+          case 'GGGGG':
+            return match.era(dateString, {
+              width: 'narrow'
+            });
+          // Anno Domini, Before Christ
+
+          case 'GGGG':
+          default:
+            return match.era(dateString, {
+              width: 'wide'
+            }) || match.era(dateString, {
+              width: 'abbreviated'
+            }) || match.era(dateString, {
+              width: 'narrow'
+            });
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, flags, value) {
+        flags.era = value;
+        date.setUTCFullYear(value, 0, 1);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return EraParser;
+  }(Parser);
+
   var numericPatterns = {
     month: /^(1[0-2]|0?\d)/,
     // 0 to 12
@@ -22883,22 +23111,30 @@
     extendedOptionalSeconds: /^([+-])(\d{2}):(\d{2})(:(\d{2}))?|Z/
   };
 
-  function parseNumericPattern(pattern, string, valueCallback) {
-    var matchResult = string.match(pattern);
+  function mapValue(parseFnResult, mapFn) {
+    if (!parseFnResult) {
+      return parseFnResult;
+    }
+
+    return {
+      value: mapFn(parseFnResult.value),
+      rest: parseFnResult.rest
+    };
+  }
+  function parseNumericPattern(pattern, dateString) {
+    var matchResult = dateString.match(pattern);
 
     if (!matchResult) {
       return null;
     }
 
-    var value = parseInt(matchResult[0], 10);
     return {
-      value: valueCallback ? valueCallback(value) : value,
-      rest: string.slice(matchResult[0].length)
+      value: parseInt(matchResult[0], 10),
+      rest: dateString.slice(matchResult[0].length)
     };
   }
-
-  function parseTimezonePattern(pattern, string) {
-    var matchResult = string.match(pattern);
+  function parseTimezonePattern(pattern, dateString) {
+    var matchResult = dateString.match(pattern);
 
     if (!matchResult) {
       return null;
@@ -22908,7 +23144,7 @@
     if (matchResult[0] === 'Z') {
       return {
         value: 0,
-        rest: string.slice(1)
+        rest: dateString.slice(1)
       };
     }
 
@@ -22917,55 +23153,51 @@
     var minutes = matchResult[3] ? parseInt(matchResult[3], 10) : 0;
     var seconds = matchResult[5] ? parseInt(matchResult[5], 10) : 0;
     return {
-      value: sign * (hours * MILLISECONDS_IN_HOUR + minutes * MILLISECONDS_IN_MINUTE + seconds * MILLISECONDS_IN_SECOND),
-      rest: string.slice(matchResult[0].length)
+      value: sign * (hours * millisecondsInHour + minutes * millisecondsInMinute + seconds * millisecondsInSecond),
+      rest: dateString.slice(matchResult[0].length)
     };
   }
-
-  function parseAnyDigitsSigned(string, valueCallback) {
-    return parseNumericPattern(numericPatterns.anyDigitsSigned, string, valueCallback);
+  function parseAnyDigitsSigned(dateString) {
+    return parseNumericPattern(numericPatterns.anyDigitsSigned, dateString);
   }
-
-  function parseNDigits(n, string, valueCallback) {
+  function parseNDigits(n, dateString) {
     switch (n) {
       case 1:
-        return parseNumericPattern(numericPatterns.singleDigit, string, valueCallback);
+        return parseNumericPattern(numericPatterns.singleDigit, dateString);
 
       case 2:
-        return parseNumericPattern(numericPatterns.twoDigits, string, valueCallback);
+        return parseNumericPattern(numericPatterns.twoDigits, dateString);
 
       case 3:
-        return parseNumericPattern(numericPatterns.threeDigits, string, valueCallback);
+        return parseNumericPattern(numericPatterns.threeDigits, dateString);
 
       case 4:
-        return parseNumericPattern(numericPatterns.fourDigits, string, valueCallback);
+        return parseNumericPattern(numericPatterns.fourDigits, dateString);
 
       default:
-        return parseNumericPattern(new RegExp('^\\d{1,' + n + '}'), string, valueCallback);
+        return parseNumericPattern(new RegExp('^\\d{1,' + n + '}'), dateString);
     }
   }
-
-  function parseNDigitsSigned(n, string, valueCallback) {
+  function parseNDigitsSigned(n, dateString) {
     switch (n) {
       case 1:
-        return parseNumericPattern(numericPatterns.singleDigitSigned, string, valueCallback);
+        return parseNumericPattern(numericPatterns.singleDigitSigned, dateString);
 
       case 2:
-        return parseNumericPattern(numericPatterns.twoDigitsSigned, string, valueCallback);
+        return parseNumericPattern(numericPatterns.twoDigitsSigned, dateString);
 
       case 3:
-        return parseNumericPattern(numericPatterns.threeDigitsSigned, string, valueCallback);
+        return parseNumericPattern(numericPatterns.threeDigitsSigned, dateString);
 
       case 4:
-        return parseNumericPattern(numericPatterns.fourDigitsSigned, string, valueCallback);
+        return parseNumericPattern(numericPatterns.fourDigitsSigned, dateString);
 
       default:
-        return parseNumericPattern(new RegExp('^-?\\d{1,' + n + '}'), string, valueCallback);
+        return parseNumericPattern(new RegExp('^-?\\d{1,' + n + '}'), dateString);
     }
   }
-
-  function dayPeriodEnumToHours(enumValue) {
-    switch (enumValue) {
+  function dayPeriodEnumToHours(dayPeriod) {
+    switch (dayPeriod) {
       case 'morning':
         return 4;
 
@@ -22984,7 +23216,6 @@
         return 0;
     }
   }
-
   function normalizeTwoDigitYear(twoDigitYear, currentYear) {
     var isCommonEra = currentYear > 0; // Absolute number of the current year:
     // 1 -> 1 AC
@@ -23005,13 +23236,2445 @@
 
     return isCommonEra ? result : 1 - result;
   }
-
-  var DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  var DAYS_IN_MONTH_LEAP_YEAR = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // User for validation
-
   function isLeapYearIndex$1(year) {
     return year % 400 === 0 || year % 4 === 0 && year % 100 !== 0;
   }
+
+  function _defineProperty$t(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  // | Year     |     y | yy |   yyy |  yyyy | yyyyy |
+  // |----------|-------|----|-------|-------|-------|
+  // | AD 1     |     1 | 01 |   001 |  0001 | 00001 |
+  // | AD 12    |    12 | 12 |   012 |  0012 | 00012 |
+  // | AD 123   |   123 | 23 |   123 |  0123 | 00123 |
+  // | AD 1234  |  1234 | 34 |  1234 |  1234 | 01234 |
+  // | AD 12345 | 12345 | 45 | 12345 | 12345 | 12345 |
+
+  var YearParser = /*#__PURE__*/function (_Parser) {
+    _inherits(YearParser, _Parser);
+
+    var _super = _createSuper(YearParser);
+
+    function YearParser() {
+      var _this;
+
+      _classCallCheck(this, YearParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$t(_assertThisInitialized(_this), "priority", 130);
+
+      _defineProperty$t(_assertThisInitialized(_this), "incompatibleTokens", ['Y', 'R', 'u', 'w', 'I', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(YearParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        var valueCallback = function valueCallback(year) {
+          return {
+            year: year,
+            isTwoDigitYear: token === 'yy'
+          };
+        };
+
+        switch (token) {
+          case 'y':
+            return mapValue(parseNDigits(4, dateString), valueCallback);
+
+          case 'yo':
+            return mapValue(match.ordinalNumber(dateString, {
+              unit: 'year'
+            }), valueCallback);
+
+          default:
+            return mapValue(parseNDigits(token.length, dateString), valueCallback);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value.isTwoDigitYear || value.year > 0;
+      }
+    }, {
+      key: "set",
+      value: function set(date, flags, value) {
+        var currentYear = date.getUTCFullYear();
+
+        if (value.isTwoDigitYear) {
+          var normalizedTwoDigitYear = normalizeTwoDigitYear(value.year, currentYear);
+          date.setUTCFullYear(normalizedTwoDigitYear, 0, 1);
+          date.setUTCHours(0, 0, 0, 0);
+          return date;
+        }
+
+        var year = !('era' in flags) || flags.era === 1 ? value.year : 1 - value.year;
+        date.setUTCFullYear(year, 0, 1);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return YearParser;
+  }(Parser);
+
+  function _defineProperty$s(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var LocalWeekYearParser = /*#__PURE__*/function (_Parser) {
+    _inherits(LocalWeekYearParser, _Parser);
+
+    var _super = _createSuper(LocalWeekYearParser);
+
+    function LocalWeekYearParser() {
+      var _this;
+
+      _classCallCheck(this, LocalWeekYearParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$s(_assertThisInitialized(_this), "priority", 130);
+
+      _defineProperty$s(_assertThisInitialized(_this), "incompatibleTokens", ['y', 'R', 'u', 'Q', 'q', 'M', 'L', 'I', 'd', 'D', 'i', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(LocalWeekYearParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        var valueCallback = function valueCallback(year) {
+          return {
+            year: year,
+            isTwoDigitYear: token === 'YY'
+          };
+        };
+
+        switch (token) {
+          case 'Y':
+            return mapValue(parseNDigits(4, dateString), valueCallback);
+
+          case 'Yo':
+            return mapValue(match.ordinalNumber(dateString, {
+              unit: 'year'
+            }), valueCallback);
+
+          default:
+            return mapValue(parseNDigits(token.length, dateString), valueCallback);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value.isTwoDigitYear || value.year > 0;
+      }
+    }, {
+      key: "set",
+      value: function set(date, flags, value, options) {
+        var currentYear = getUTCWeekYear(date, options);
+
+        if (value.isTwoDigitYear) {
+          var normalizedTwoDigitYear = normalizeTwoDigitYear(value.year, currentYear);
+          date.setUTCFullYear(normalizedTwoDigitYear, 0, options.firstWeekContainsDate);
+          date.setUTCHours(0, 0, 0, 0);
+          return startOfUTCWeek(date, options);
+        }
+
+        var year = !('era' in flags) || flags.era === 1 ? value.year : 1 - value.year;
+        date.setUTCFullYear(year, 0, options.firstWeekContainsDate);
+        date.setUTCHours(0, 0, 0, 0);
+        return startOfUTCWeek(date, options);
+      }
+    }]);
+
+    return LocalWeekYearParser;
+  }(Parser);
+
+  function _defineProperty$r(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var ISOWeekYearParser = /*#__PURE__*/function (_Parser) {
+    _inherits(ISOWeekYearParser, _Parser);
+
+    var _super = _createSuper(ISOWeekYearParser);
+
+    function ISOWeekYearParser() {
+      var _this;
+
+      _classCallCheck(this, ISOWeekYearParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$r(_assertThisInitialized(_this), "priority", 130);
+
+      _defineProperty$r(_assertThisInitialized(_this), "incompatibleTokens", ['G', 'y', 'Y', 'u', 'Q', 'q', 'M', 'L', 'w', 'd', 'D', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(ISOWeekYearParser, [{
+      key: "parse",
+      value: function parse(dateString, token) {
+        if (token === 'R') {
+          return parseNDigitsSigned(4, dateString);
+        }
+
+        return parseNDigitsSigned(token.length, dateString);
+      }
+    }, {
+      key: "set",
+      value: function set(_date, _flags, value) {
+        var firstWeekOfYear = new Date(0);
+        firstWeekOfYear.setUTCFullYear(value, 0, 4);
+        firstWeekOfYear.setUTCHours(0, 0, 0, 0);
+        return startOfUTCISOWeek(firstWeekOfYear);
+      }
+    }]);
+
+    return ISOWeekYearParser;
+  }(Parser);
+
+  function _defineProperty$q(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var ExtendedYearParser = /*#__PURE__*/function (_Parser) {
+    _inherits(ExtendedYearParser, _Parser);
+
+    var _super = _createSuper(ExtendedYearParser);
+
+    function ExtendedYearParser() {
+      var _this;
+
+      _classCallCheck(this, ExtendedYearParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$q(_assertThisInitialized(_this), "priority", 130);
+
+      _defineProperty$q(_assertThisInitialized(_this), "incompatibleTokens", ['G', 'y', 'Y', 'R', 'w', 'I', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(ExtendedYearParser, [{
+      key: "parse",
+      value: function parse(dateString, token) {
+        if (token === 'u') {
+          return parseNDigitsSigned(4, dateString);
+        }
+
+        return parseNDigitsSigned(token.length, dateString);
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCFullYear(value, 0, 1);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return ExtendedYearParser;
+  }(Parser);
+
+  function _defineProperty$p(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var QuarterParser = /*#__PURE__*/function (_Parser) {
+    _inherits(QuarterParser, _Parser);
+
+    var _super = _createSuper(QuarterParser);
+
+    function QuarterParser() {
+      var _this;
+
+      _classCallCheck(this, QuarterParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$p(_assertThisInitialized(_this), "priority", 120);
+
+      _defineProperty$p(_assertThisInitialized(_this), "incompatibleTokens", ['Y', 'R', 'q', 'M', 'L', 'w', 'I', 'd', 'D', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(QuarterParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          // 1, 2, 3, 4
+          case 'Q':
+          case 'QQ':
+            // 01, 02, 03, 04
+            return parseNDigits(token.length, dateString);
+          // 1st, 2nd, 3rd, 4th
+
+          case 'Qo':
+            return match.ordinalNumber(dateString, {
+              unit: 'quarter'
+            });
+          // Q1, Q2, Q3, Q4
+
+          case 'QQQ':
+            return match.quarter(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.quarter(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // 1, 2, 3, 4 (narrow quarter; could be not numerical)
+
+          case 'QQQQQ':
+            return match.quarter(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // 1st quarter, 2nd quarter, ...
+
+          case 'QQQQ':
+          default:
+            return match.quarter(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.quarter(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.quarter(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 1 && value <= 4;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCMonth((value - 1) * 3, 1);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return QuarterParser;
+  }(Parser);
+
+  function _defineProperty$o(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var StandAloneQuarterParser = /*#__PURE__*/function (_Parser) {
+    _inherits(StandAloneQuarterParser, _Parser);
+
+    var _super = _createSuper(StandAloneQuarterParser);
+
+    function StandAloneQuarterParser() {
+      var _this;
+
+      _classCallCheck(this, StandAloneQuarterParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$o(_assertThisInitialized(_this), "priority", 120);
+
+      _defineProperty$o(_assertThisInitialized(_this), "incompatibleTokens", ['Y', 'R', 'Q', 'M', 'L', 'w', 'I', 'd', 'D', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(StandAloneQuarterParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          // 1, 2, 3, 4
+          case 'q':
+          case 'qq':
+            // 01, 02, 03, 04
+            return parseNDigits(token.length, dateString);
+          // 1st, 2nd, 3rd, 4th
+
+          case 'qo':
+            return match.ordinalNumber(dateString, {
+              unit: 'quarter'
+            });
+          // Q1, Q2, Q3, Q4
+
+          case 'qqq':
+            return match.quarter(dateString, {
+              width: 'abbreviated',
+              context: 'standalone'
+            }) || match.quarter(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+          // 1, 2, 3, 4 (narrow quarter; could be not numerical)
+
+          case 'qqqqq':
+            return match.quarter(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+          // 1st quarter, 2nd quarter, ...
+
+          case 'qqqq':
+          default:
+            return match.quarter(dateString, {
+              width: 'wide',
+              context: 'standalone'
+            }) || match.quarter(dateString, {
+              width: 'abbreviated',
+              context: 'standalone'
+            }) || match.quarter(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 1 && value <= 4;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCMonth((value - 1) * 3, 1);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return StandAloneQuarterParser;
+  }(Parser);
+
+  function _defineProperty$n(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var MonthParser = /*#__PURE__*/function (_Parser) {
+    _inherits(MonthParser, _Parser);
+
+    var _super = _createSuper(MonthParser);
+
+    function MonthParser() {
+      var _this;
+
+      _classCallCheck(this, MonthParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$n(_assertThisInitialized(_this), "incompatibleTokens", ['Y', 'R', 'q', 'Q', 'L', 'w', 'I', 'D', 'i', 'e', 'c', 't', 'T']);
+
+      _defineProperty$n(_assertThisInitialized(_this), "priority", 110);
+
+      return _this;
+    }
+
+    _createClass(MonthParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        var valueCallback = function valueCallback(value) {
+          return value - 1;
+        };
+
+        switch (token) {
+          // 1, 2, ..., 12
+          case 'M':
+            return mapValue(parseNumericPattern(numericPatterns.month, dateString), valueCallback);
+          // 01, 02, ..., 12
+
+          case 'MM':
+            return mapValue(parseNDigits(2, dateString), valueCallback);
+          // 1st, 2nd, ..., 12th
+
+          case 'Mo':
+            return mapValue(match.ordinalNumber(dateString, {
+              unit: 'month'
+            }), valueCallback);
+          // Jan, Feb, ..., Dec
+
+          case 'MMM':
+            return match.month(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.month(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // J, F, ..., D
+
+          case 'MMMMM':
+            return match.month(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // January, February, ..., December
+
+          case 'MMMM':
+          default:
+            return match.month(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.month(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.month(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 11;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCMonth(value, 1);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return MonthParser;
+  }(Parser);
+
+  function _defineProperty$m(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var StandAloneMonthParser = /*#__PURE__*/function (_Parser) {
+    _inherits(StandAloneMonthParser, _Parser);
+
+    var _super = _createSuper(StandAloneMonthParser);
+
+    function StandAloneMonthParser() {
+      var _this;
+
+      _classCallCheck(this, StandAloneMonthParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$m(_assertThisInitialized(_this), "priority", 110);
+
+      _defineProperty$m(_assertThisInitialized(_this), "incompatibleTokens", ['Y', 'R', 'q', 'Q', 'M', 'w', 'I', 'D', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(StandAloneMonthParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        var valueCallback = function valueCallback(value) {
+          return value - 1;
+        };
+
+        switch (token) {
+          // 1, 2, ..., 12
+          case 'L':
+            return mapValue(parseNumericPattern(numericPatterns.month, dateString), valueCallback);
+          // 01, 02, ..., 12
+
+          case 'LL':
+            return mapValue(parseNDigits(2, dateString), valueCallback);
+          // 1st, 2nd, ..., 12th
+
+          case 'Lo':
+            return mapValue(match.ordinalNumber(dateString, {
+              unit: 'month'
+            }), valueCallback);
+          // Jan, Feb, ..., Dec
+
+          case 'LLL':
+            return match.month(dateString, {
+              width: 'abbreviated',
+              context: 'standalone'
+            }) || match.month(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+          // J, F, ..., D
+
+          case 'LLLLL':
+            return match.month(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+          // January, February, ..., December
+
+          case 'LLLL':
+          default:
+            return match.month(dateString, {
+              width: 'wide',
+              context: 'standalone'
+            }) || match.month(dateString, {
+              width: 'abbreviated',
+              context: 'standalone'
+            }) || match.month(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 11;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCMonth(value, 1);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return StandAloneMonthParser;
+  }(Parser);
+
+  function setUTCWeek(dirtyDate, dirtyWeek, options) {
+    requiredArgs(2, arguments);
+    var date = toDate(dirtyDate);
+    var week = toInteger(dirtyWeek);
+    var diff = getUTCWeek(date, options) - week;
+    date.setUTCDate(date.getUTCDate() - diff * 7);
+    return date;
+  }
+
+  function _defineProperty$l(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var LocalWeekParser = /*#__PURE__*/function (_Parser) {
+    _inherits(LocalWeekParser, _Parser);
+
+    var _super = _createSuper(LocalWeekParser);
+
+    function LocalWeekParser() {
+      var _this;
+
+      _classCallCheck(this, LocalWeekParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$l(_assertThisInitialized(_this), "priority", 100);
+
+      _defineProperty$l(_assertThisInitialized(_this), "incompatibleTokens", ['y', 'R', 'u', 'q', 'Q', 'M', 'L', 'I', 'd', 'D', 'i', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(LocalWeekParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'w':
+            return parseNumericPattern(numericPatterns.week, dateString);
+
+          case 'wo':
+            return match.ordinalNumber(dateString, {
+              unit: 'week'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 1 && value <= 53;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value, options) {
+        return startOfUTCWeek(setUTCWeek(date, value, options), options);
+      }
+    }]);
+
+    return LocalWeekParser;
+  }(Parser);
+
+  function setUTCISOWeek(dirtyDate, dirtyISOWeek) {
+    requiredArgs(2, arguments);
+    var date = toDate(dirtyDate);
+    var isoWeek = toInteger(dirtyISOWeek);
+    var diff = getUTCISOWeek(date) - isoWeek;
+    date.setUTCDate(date.getUTCDate() - diff * 7);
+    return date;
+  }
+
+  function _defineProperty$k(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var ISOWeekParser = /*#__PURE__*/function (_Parser) {
+    _inherits(ISOWeekParser, _Parser);
+
+    var _super = _createSuper(ISOWeekParser);
+
+    function ISOWeekParser() {
+      var _this;
+
+      _classCallCheck(this, ISOWeekParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$k(_assertThisInitialized(_this), "priority", 100);
+
+      _defineProperty$k(_assertThisInitialized(_this), "incompatibleTokens", ['y', 'Y', 'u', 'q', 'Q', 'M', 'L', 'w', 'd', 'D', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(ISOWeekParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'I':
+            return parseNumericPattern(numericPatterns.week, dateString);
+
+          case 'Io':
+            return match.ordinalNumber(dateString, {
+              unit: 'week'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 1 && value <= 53;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        return startOfUTCISOWeek(setUTCISOWeek(date, value));
+      }
+    }]);
+
+    return ISOWeekParser;
+  }(Parser);
+
+  function _defineProperty$j(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  var DAYS_IN_MONTH_LEAP_YEAR = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // Day of the month
+
+  var DateParser = /*#__PURE__*/function (_Parser) {
+    _inherits(DateParser, _Parser);
+
+    var _super = _createSuper(DateParser);
+
+    function DateParser() {
+      var _this;
+
+      _classCallCheck(this, DateParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$j(_assertThisInitialized(_this), "priority", 90);
+
+      _defineProperty$j(_assertThisInitialized(_this), "subPriority", 1);
+
+      _defineProperty$j(_assertThisInitialized(_this), "incompatibleTokens", ['Y', 'R', 'q', 'Q', 'w', 'I', 'D', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(DateParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'd':
+            return parseNumericPattern(numericPatterns.date, dateString);
+
+          case 'do':
+            return match.ordinalNumber(dateString, {
+              unit: 'date'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(date, value) {
+        var year = date.getUTCFullYear();
+        var isLeapYear = isLeapYearIndex$1(year);
+        var month = date.getUTCMonth();
+
+        if (isLeapYear) {
+          return value >= 1 && value <= DAYS_IN_MONTH_LEAP_YEAR[month];
+        } else {
+          return value >= 1 && value <= DAYS_IN_MONTH[month];
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCDate(value);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return DateParser;
+  }(Parser);
+
+  function _defineProperty$i(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var DayOfYearParser = /*#__PURE__*/function (_Parser) {
+    _inherits(DayOfYearParser, _Parser);
+
+    var _super = _createSuper(DayOfYearParser);
+
+    function DayOfYearParser() {
+      var _this;
+
+      _classCallCheck(this, DayOfYearParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$i(_assertThisInitialized(_this), "priority", 90);
+
+      _defineProperty$i(_assertThisInitialized(_this), "subpriority", 1);
+
+      _defineProperty$i(_assertThisInitialized(_this), "incompatibleTokens", ['Y', 'R', 'q', 'Q', 'M', 'L', 'w', 'I', 'd', 'E', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(DayOfYearParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'D':
+          case 'DD':
+            return parseNumericPattern(numericPatterns.dayOfYear, dateString);
+
+          case 'Do':
+            return match.ordinalNumber(dateString, {
+              unit: 'date'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(date, value) {
+        var year = date.getUTCFullYear();
+        var isLeapYear = isLeapYearIndex$1(year);
+
+        if (isLeapYear) {
+          return value >= 1 && value <= 366;
+        } else {
+          return value >= 1 && value <= 365;
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCMonth(0, value);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return DayOfYearParser;
+  }(Parser);
+
+  function setUTCDay(dirtyDate, dirtyDay, options) {
+    var _ref, _ref2, _ref3, _options$weekStartsOn, _options$locale, _options$locale$optio, _defaultOptions$local, _defaultOptions$local2;
+
+    requiredArgs(2, arguments);
+    var defaultOptions = getDefaultOptions();
+    var weekStartsOn = toInteger((_ref = (_ref2 = (_ref3 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale = options.locale) === null || _options$locale === void 0 ? void 0 : (_options$locale$optio = _options$locale.options) === null || _options$locale$optio === void 0 ? void 0 : _options$locale$optio.weekStartsOn) !== null && _ref3 !== void 0 ? _ref3 : defaultOptions.weekStartsOn) !== null && _ref2 !== void 0 ? _ref2 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.weekStartsOn) !== null && _ref !== void 0 ? _ref : 0); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+
+    if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
+      throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
+    }
+
+    var date = toDate(dirtyDate);
+    var day = toInteger(dirtyDay);
+    var currentDay = date.getUTCDay();
+    var remainder = day % 7;
+    var dayIndex = (remainder + 7) % 7;
+    var diff = (dayIndex < weekStartsOn ? 7 : 0) + day - currentDay;
+    date.setUTCDate(date.getUTCDate() + diff);
+    return date;
+  }
+
+  function _defineProperty$h(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var DayParser = /*#__PURE__*/function (_Parser) {
+    _inherits(DayParser, _Parser);
+
+    var _super = _createSuper(DayParser);
+
+    function DayParser() {
+      var _this;
+
+      _classCallCheck(this, DayParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$h(_assertThisInitialized(_this), "priority", 90);
+
+      _defineProperty$h(_assertThisInitialized(_this), "incompatibleTokens", ['D', 'i', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(DayParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          // Tue
+          case 'E':
+          case 'EE':
+          case 'EEE':
+            return match.day(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // T
+
+          case 'EEEEE':
+            return match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // Tu
+
+          case 'EEEEEE':
+            return match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // Tuesday
+
+          case 'EEEE':
+          default:
+            return match.day(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 6;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value, options) {
+        date = setUTCDay(date, value, options);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return DayParser;
+  }(Parser);
+
+  function _defineProperty$g(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var LocalDayParser = /*#__PURE__*/function (_Parser) {
+    _inherits(LocalDayParser, _Parser);
+
+    var _super = _createSuper(LocalDayParser);
+
+    function LocalDayParser() {
+      var _this;
+
+      _classCallCheck(this, LocalDayParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$g(_assertThisInitialized(_this), "priority", 90);
+
+      _defineProperty$g(_assertThisInitialized(_this), "incompatibleTokens", ['y', 'R', 'u', 'q', 'Q', 'M', 'L', 'I', 'd', 'D', 'E', 'i', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(LocalDayParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match, options) {
+        var valueCallback = function valueCallback(value) {
+          var wholeWeekDays = Math.floor((value - 1) / 7) * 7;
+          return (value + options.weekStartsOn + 6) % 7 + wholeWeekDays;
+        };
+
+        switch (token) {
+          // 3
+          case 'e':
+          case 'ee':
+            // 03
+            return mapValue(parseNDigits(token.length, dateString), valueCallback);
+          // 3rd
+
+          case 'eo':
+            return mapValue(match.ordinalNumber(dateString, {
+              unit: 'day'
+            }), valueCallback);
+          // Tue
+
+          case 'eee':
+            return match.day(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // T
+
+          case 'eeeee':
+            return match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // Tu
+
+          case 'eeeeee':
+            return match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+          // Tuesday
+
+          case 'eeee':
+          default:
+            return match.day(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 6;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value, options) {
+        date = setUTCDay(date, value, options);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return LocalDayParser;
+  }(Parser);
+
+  function _defineProperty$f(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var StandAloneLocalDayParser = /*#__PURE__*/function (_Parser) {
+    _inherits(StandAloneLocalDayParser, _Parser);
+
+    var _super = _createSuper(StandAloneLocalDayParser);
+
+    function StandAloneLocalDayParser() {
+      var _this;
+
+      _classCallCheck(this, StandAloneLocalDayParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$f(_assertThisInitialized(_this), "priority", 90);
+
+      _defineProperty$f(_assertThisInitialized(_this), "incompatibleTokens", ['y', 'R', 'u', 'q', 'Q', 'M', 'L', 'I', 'd', 'D', 'E', 'i', 'e', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(StandAloneLocalDayParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match, options) {
+        var valueCallback = function valueCallback(value) {
+          var wholeWeekDays = Math.floor((value - 1) / 7) * 7;
+          return (value + options.weekStartsOn + 6) % 7 + wholeWeekDays;
+        };
+
+        switch (token) {
+          // 3
+          case 'c':
+          case 'cc':
+            // 03
+            return mapValue(parseNDigits(token.length, dateString), valueCallback);
+          // 3rd
+
+          case 'co':
+            return mapValue(match.ordinalNumber(dateString, {
+              unit: 'day'
+            }), valueCallback);
+          // Tue
+
+          case 'ccc':
+            return match.day(dateString, {
+              width: 'abbreviated',
+              context: 'standalone'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'standalone'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+          // T
+
+          case 'ccccc':
+            return match.day(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+          // Tu
+
+          case 'cccccc':
+            return match.day(dateString, {
+              width: 'short',
+              context: 'standalone'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+          // Tuesday
+
+          case 'cccc':
+          default:
+            return match.day(dateString, {
+              width: 'wide',
+              context: 'standalone'
+            }) || match.day(dateString, {
+              width: 'abbreviated',
+              context: 'standalone'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'standalone'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'standalone'
+            });
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 6;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value, options) {
+        date = setUTCDay(date, value, options);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return StandAloneLocalDayParser;
+  }(Parser);
+
+  function setUTCISODay(dirtyDate, dirtyDay) {
+    requiredArgs(2, arguments);
+    var day = toInteger(dirtyDay);
+
+    if (day % 7 === 0) {
+      day = day - 7;
+    }
+
+    var weekStartsOn = 1;
+    var date = toDate(dirtyDate);
+    var currentDay = date.getUTCDay();
+    var remainder = day % 7;
+    var dayIndex = (remainder + 7) % 7;
+    var diff = (dayIndex < weekStartsOn ? 7 : 0) + day - currentDay;
+    date.setUTCDate(date.getUTCDate() + diff);
+    return date;
+  }
+
+  function _defineProperty$e(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var ISODayParser = /*#__PURE__*/function (_Parser) {
+    _inherits(ISODayParser, _Parser);
+
+    var _super = _createSuper(ISODayParser);
+
+    function ISODayParser() {
+      var _this;
+
+      _classCallCheck(this, ISODayParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$e(_assertThisInitialized(_this), "priority", 90);
+
+      _defineProperty$e(_assertThisInitialized(_this), "incompatibleTokens", ['y', 'Y', 'u', 'q', 'Q', 'M', 'L', 'w', 'd', 'D', 'E', 'e', 'c', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(ISODayParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        var valueCallback = function valueCallback(value) {
+          if (value === 0) {
+            return 7;
+          }
+
+          return value;
+        };
+
+        switch (token) {
+          // 2
+          case 'i':
+          case 'ii':
+            // 02
+            return parseNDigits(token.length, dateString);
+          // 2nd
+
+          case 'io':
+            return match.ordinalNumber(dateString, {
+              unit: 'day'
+            });
+          // Tue
+
+          case 'iii':
+            return mapValue(match.day(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            }), valueCallback);
+          // T
+
+          case 'iiiii':
+            return mapValue(match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            }), valueCallback);
+          // Tu
+
+          case 'iiiiii':
+            return mapValue(match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            }), valueCallback);
+          // Tuesday
+
+          case 'iiii':
+          default:
+            return mapValue(match.day(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'short',
+              context: 'formatting'
+            }) || match.day(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            }), valueCallback);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 1 && value <= 7;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date = setUTCISODay(date, value);
+        date.setUTCHours(0, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return ISODayParser;
+  }(Parser);
+
+  function _defineProperty$d(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var AMPMParser = /*#__PURE__*/function (_Parser) {
+    _inherits(AMPMParser, _Parser);
+
+    var _super = _createSuper(AMPMParser);
+
+    function AMPMParser() {
+      var _this;
+
+      _classCallCheck(this, AMPMParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$d(_assertThisInitialized(_this), "priority", 80);
+
+      _defineProperty$d(_assertThisInitialized(_this), "incompatibleTokens", ['b', 'B', 'H', 'k', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(AMPMParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'a':
+          case 'aa':
+          case 'aaa':
+            return match.dayPeriod(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+
+          case 'aaaaa':
+            return match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+
+          case 'aaaa':
+          default:
+            return match.dayPeriod(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return AMPMParser;
+  }(Parser);
+
+  function _defineProperty$c(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var AMPMMidnightParser = /*#__PURE__*/function (_Parser) {
+    _inherits(AMPMMidnightParser, _Parser);
+
+    var _super = _createSuper(AMPMMidnightParser);
+
+    function AMPMMidnightParser() {
+      var _this;
+
+      _classCallCheck(this, AMPMMidnightParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$c(_assertThisInitialized(_this), "priority", 80);
+
+      _defineProperty$c(_assertThisInitialized(_this), "incompatibleTokens", ['a', 'B', 'H', 'k', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(AMPMMidnightParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'b':
+          case 'bb':
+          case 'bbb':
+            return match.dayPeriod(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+
+          case 'bbbbb':
+            return match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+
+          case 'bbbb':
+          default:
+            return match.dayPeriod(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return AMPMMidnightParser;
+  }(Parser);
+
+  function _defineProperty$b(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var DayPeriodParser = /*#__PURE__*/function (_Parser) {
+    _inherits(DayPeriodParser, _Parser);
+
+    var _super = _createSuper(DayPeriodParser);
+
+    function DayPeriodParser() {
+      var _this;
+
+      _classCallCheck(this, DayPeriodParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$b(_assertThisInitialized(_this), "priority", 80);
+
+      _defineProperty$b(_assertThisInitialized(_this), "incompatibleTokens", ['a', 'b', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(DayPeriodParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'B':
+          case 'BB':
+          case 'BBB':
+            return match.dayPeriod(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+
+          case 'BBBBB':
+            return match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+
+          case 'BBBB':
+          default:
+            return match.dayPeriod(dateString, {
+              width: 'wide',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'abbreviated',
+              context: 'formatting'
+            }) || match.dayPeriod(dateString, {
+              width: 'narrow',
+              context: 'formatting'
+            });
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return DayPeriodParser;
+  }(Parser);
+
+  function _defineProperty$a(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var Hour1to12Parser = /*#__PURE__*/function (_Parser) {
+    _inherits(Hour1to12Parser, _Parser);
+
+    var _super = _createSuper(Hour1to12Parser);
+
+    function Hour1to12Parser() {
+      var _this;
+
+      _classCallCheck(this, Hour1to12Parser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$a(_assertThisInitialized(_this), "priority", 70);
+
+      _defineProperty$a(_assertThisInitialized(_this), "incompatibleTokens", ['H', 'K', 'k', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(Hour1to12Parser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'h':
+            return parseNumericPattern(numericPatterns.hour12h, dateString);
+
+          case 'ho':
+            return match.ordinalNumber(dateString, {
+              unit: 'hour'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 1 && value <= 12;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        var isPM = date.getUTCHours() >= 12;
+
+        if (isPM && value < 12) {
+          date.setUTCHours(value + 12, 0, 0, 0);
+        } else if (!isPM && value === 12) {
+          date.setUTCHours(0, 0, 0, 0);
+        } else {
+          date.setUTCHours(value, 0, 0, 0);
+        }
+
+        return date;
+      }
+    }]);
+
+    return Hour1to12Parser;
+  }(Parser);
+
+  function _defineProperty$9(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var Hour0to23Parser = /*#__PURE__*/function (_Parser) {
+    _inherits(Hour0to23Parser, _Parser);
+
+    var _super = _createSuper(Hour0to23Parser);
+
+    function Hour0to23Parser() {
+      var _this;
+
+      _classCallCheck(this, Hour0to23Parser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$9(_assertThisInitialized(_this), "priority", 70);
+
+      _defineProperty$9(_assertThisInitialized(_this), "incompatibleTokens", ['a', 'b', 'h', 'K', 'k', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(Hour0to23Parser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'H':
+            return parseNumericPattern(numericPatterns.hour23h, dateString);
+
+          case 'Ho':
+            return match.ordinalNumber(dateString, {
+              unit: 'hour'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 23;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCHours(value, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return Hour0to23Parser;
+  }(Parser);
+
+  function _defineProperty$8(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var Hour0To11Parser = /*#__PURE__*/function (_Parser) {
+    _inherits(Hour0To11Parser, _Parser);
+
+    var _super = _createSuper(Hour0To11Parser);
+
+    function Hour0To11Parser() {
+      var _this;
+
+      _classCallCheck(this, Hour0To11Parser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$8(_assertThisInitialized(_this), "priority", 70);
+
+      _defineProperty$8(_assertThisInitialized(_this), "incompatibleTokens", ['h', 'H', 'k', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(Hour0To11Parser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'K':
+            return parseNumericPattern(numericPatterns.hour11h, dateString);
+
+          case 'Ko':
+            return match.ordinalNumber(dateString, {
+              unit: 'hour'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 11;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        var isPM = date.getUTCHours() >= 12;
+
+        if (isPM && value < 12) {
+          date.setUTCHours(value + 12, 0, 0, 0);
+        } else {
+          date.setUTCHours(value, 0, 0, 0);
+        }
+
+        return date;
+      }
+    }]);
+
+    return Hour0To11Parser;
+  }(Parser);
+
+  function _defineProperty$7(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var Hour1To24Parser = /*#__PURE__*/function (_Parser) {
+    _inherits(Hour1To24Parser, _Parser);
+
+    var _super = _createSuper(Hour1To24Parser);
+
+    function Hour1To24Parser() {
+      var _this;
+
+      _classCallCheck(this, Hour1To24Parser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$7(_assertThisInitialized(_this), "priority", 70);
+
+      _defineProperty$7(_assertThisInitialized(_this), "incompatibleTokens", ['a', 'b', 'h', 'H', 'K', 't', 'T']);
+
+      return _this;
+    }
+
+    _createClass(Hour1To24Parser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'k':
+            return parseNumericPattern(numericPatterns.hour24h, dateString);
+
+          case 'ko':
+            return match.ordinalNumber(dateString, {
+              unit: 'hour'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 1 && value <= 24;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        var hours = value <= 24 ? value % 24 : value;
+        date.setUTCHours(hours, 0, 0, 0);
+        return date;
+      }
+    }]);
+
+    return Hour1To24Parser;
+  }(Parser);
+
+  function _defineProperty$6(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var MinuteParser = /*#__PURE__*/function (_Parser) {
+    _inherits(MinuteParser, _Parser);
+
+    var _super = _createSuper(MinuteParser);
+
+    function MinuteParser() {
+      var _this;
+
+      _classCallCheck(this, MinuteParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$6(_assertThisInitialized(_this), "priority", 60);
+
+      _defineProperty$6(_assertThisInitialized(_this), "incompatibleTokens", ['t', 'T']);
+
+      return _this;
+    }
+
+    _createClass(MinuteParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 'm':
+            return parseNumericPattern(numericPatterns.minute, dateString);
+
+          case 'mo':
+            return match.ordinalNumber(dateString, {
+              unit: 'minute'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 59;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCMinutes(value, 0, 0);
+        return date;
+      }
+    }]);
+
+    return MinuteParser;
+  }(Parser);
+
+  function _defineProperty$5(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var SecondParser = /*#__PURE__*/function (_Parser) {
+    _inherits(SecondParser, _Parser);
+
+    var _super = _createSuper(SecondParser);
+
+    function SecondParser() {
+      var _this;
+
+      _classCallCheck(this, SecondParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$5(_assertThisInitialized(_this), "priority", 50);
+
+      _defineProperty$5(_assertThisInitialized(_this), "incompatibleTokens", ['t', 'T']);
+
+      return _this;
+    }
+
+    _createClass(SecondParser, [{
+      key: "parse",
+      value: function parse(dateString, token, match) {
+        switch (token) {
+          case 's':
+            return parseNumericPattern(numericPatterns.second, dateString);
+
+          case 'so':
+            return match.ordinalNumber(dateString, {
+              unit: 'second'
+            });
+
+          default:
+            return parseNDigits(token.length, dateString);
+        }
+      }
+    }, {
+      key: "validate",
+      value: function validate(_date, value) {
+        return value >= 0 && value <= 59;
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCSeconds(value, 0);
+        return date;
+      }
+    }]);
+
+    return SecondParser;
+  }(Parser);
+
+  function _defineProperty$4(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var FractionOfSecondParser = /*#__PURE__*/function (_Parser) {
+    _inherits(FractionOfSecondParser, _Parser);
+
+    var _super = _createSuper(FractionOfSecondParser);
+
+    function FractionOfSecondParser() {
+      var _this;
+
+      _classCallCheck(this, FractionOfSecondParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$4(_assertThisInitialized(_this), "priority", 30);
+
+      _defineProperty$4(_assertThisInitialized(_this), "incompatibleTokens", ['t', 'T']);
+
+      return _this;
+    }
+
+    _createClass(FractionOfSecondParser, [{
+      key: "parse",
+      value: function parse(dateString, token) {
+        var valueCallback = function valueCallback(value) {
+          return Math.floor(value * Math.pow(10, -token.length + 3));
+        };
+
+        return mapValue(parseNDigits(token.length, dateString), valueCallback);
+      }
+    }, {
+      key: "set",
+      value: function set(date, _flags, value) {
+        date.setUTCMilliseconds(value);
+        return date;
+      }
+    }]);
+
+    return FractionOfSecondParser;
+  }(Parser);
+
+  function _defineProperty$3(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var ISOTimezoneWithZParser = /*#__PURE__*/function (_Parser) {
+    _inherits(ISOTimezoneWithZParser, _Parser);
+
+    var _super = _createSuper(ISOTimezoneWithZParser);
+
+    function ISOTimezoneWithZParser() {
+      var _this;
+
+      _classCallCheck(this, ISOTimezoneWithZParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$3(_assertThisInitialized(_this), "priority", 10);
+
+      _defineProperty$3(_assertThisInitialized(_this), "incompatibleTokens", ['t', 'T', 'x']);
+
+      return _this;
+    }
+
+    _createClass(ISOTimezoneWithZParser, [{
+      key: "parse",
+      value: function parse(dateString, token) {
+        switch (token) {
+          case 'X':
+            return parseTimezonePattern(timezonePatterns.basicOptionalMinutes, dateString);
+
+          case 'XX':
+            return parseTimezonePattern(timezonePatterns.basic, dateString);
+
+          case 'XXXX':
+            return parseTimezonePattern(timezonePatterns.basicOptionalSeconds, dateString);
+
+          case 'XXXXX':
+            return parseTimezonePattern(timezonePatterns.extendedOptionalSeconds, dateString);
+
+          case 'XXX':
+          default:
+            return parseTimezonePattern(timezonePatterns.extended, dateString);
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, flags, value) {
+        if (flags.timestampIsSet) {
+          return date;
+        }
+
+        return new Date(date.getTime() - value);
+      }
+    }]);
+
+    return ISOTimezoneWithZParser;
+  }(Parser);
+
+  function _defineProperty$2(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var ISOTimezoneParser = /*#__PURE__*/function (_Parser) {
+    _inherits(ISOTimezoneParser, _Parser);
+
+    var _super = _createSuper(ISOTimezoneParser);
+
+    function ISOTimezoneParser() {
+      var _this;
+
+      _classCallCheck(this, ISOTimezoneParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$2(_assertThisInitialized(_this), "priority", 10);
+
+      _defineProperty$2(_assertThisInitialized(_this), "incompatibleTokens", ['t', 'T', 'X']);
+
+      return _this;
+    }
+
+    _createClass(ISOTimezoneParser, [{
+      key: "parse",
+      value: function parse(dateString, token) {
+        switch (token) {
+          case 'x':
+            return parseTimezonePattern(timezonePatterns.basicOptionalMinutes, dateString);
+
+          case 'xx':
+            return parseTimezonePattern(timezonePatterns.basic, dateString);
+
+          case 'xxxx':
+            return parseTimezonePattern(timezonePatterns.basicOptionalSeconds, dateString);
+
+          case 'xxxxx':
+            return parseTimezonePattern(timezonePatterns.extendedOptionalSeconds, dateString);
+
+          case 'xxx':
+          default:
+            return parseTimezonePattern(timezonePatterns.extended, dateString);
+        }
+      }
+    }, {
+      key: "set",
+      value: function set(date, flags, value) {
+        if (flags.timestampIsSet) {
+          return date;
+        }
+
+        return new Date(date.getTime() - value);
+      }
+    }]);
+
+    return ISOTimezoneParser;
+  }(Parser);
+
+  function _defineProperty$1(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var TimestampSecondsParser = /*#__PURE__*/function (_Parser) {
+    _inherits(TimestampSecondsParser, _Parser);
+
+    var _super = _createSuper(TimestampSecondsParser);
+
+    function TimestampSecondsParser() {
+      var _this;
+
+      _classCallCheck(this, TimestampSecondsParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty$1(_assertThisInitialized(_this), "priority", 40);
+
+      _defineProperty$1(_assertThisInitialized(_this), "incompatibleTokens", '*');
+
+      return _this;
+    }
+
+    _createClass(TimestampSecondsParser, [{
+      key: "parse",
+      value: function parse(dateString) {
+        return parseAnyDigitsSigned(dateString);
+      }
+    }, {
+      key: "set",
+      value: function set(_date, _flags, value) {
+        return [new Date(value * 1000), {
+          timestampIsSet: true
+        }];
+      }
+    }]);
+
+    return TimestampSecondsParser;
+  }(Parser);
+
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+  var TimestampMillisecondsParser = /*#__PURE__*/function (_Parser) {
+    _inherits(TimestampMillisecondsParser, _Parser);
+
+    var _super = _createSuper(TimestampMillisecondsParser);
+
+    function TimestampMillisecondsParser() {
+      var _this;
+
+      _classCallCheck(this, TimestampMillisecondsParser);
+
+      _this = _super.apply(this, arguments);
+
+      _defineProperty(_assertThisInitialized(_this), "priority", 20);
+
+      _defineProperty(_assertThisInitialized(_this), "incompatibleTokens", '*');
+
+      return _this;
+    }
+
+    _createClass(TimestampMillisecondsParser, [{
+      key: "parse",
+      value: function parse(dateString) {
+        return parseAnyDigitsSigned(dateString);
+      }
+    }, {
+      key: "set",
+      value: function set(_date, _flags, value) {
+        return [new Date(value), {
+          timestampIsSet: true
+        }];
+      }
+    }]);
+
+    return TimestampMillisecondsParser;
+  }(Parser);
+
   /*
    * |     | Unit                           |     | Unit                           |
    * |-----|--------------------------------|-----|--------------------------------|
@@ -23056,1281 +25719,40 @@
    *   for week-numbering date specific to the locale.
    */
 
-
   var parsers = {
-    // Era
-    G: {
-      priority: 140,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          // AD, BC
-          case 'G':
-          case 'GG':
-          case 'GGG':
-            return match.era(string, {
-              width: 'abbreviated'
-            }) || match.era(string, {
-              width: 'narrow'
-            });
-          // A, B
-
-          case 'GGGGG':
-            return match.era(string, {
-              width: 'narrow'
-            });
-          // Anno Domini, Before Christ
-
-          case 'GGGG':
-          default:
-            return match.era(string, {
-              width: 'wide'
-            }) || match.era(string, {
-              width: 'abbreviated'
-            }) || match.era(string, {
-              width: 'narrow'
-            });
-        }
-      },
-      set: function set(date, flags, value, _options) {
-        flags.era = value;
-        date.setUTCFullYear(value, 0, 1);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['R', 'u', 't', 'T']
-    },
-    // Year
-    y: {
-      // From http://www.unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Format_Patterns
-      // | Year     |     y | yy |   yyy |  yyyy | yyyyy |
-      // |----------|-------|----|-------|-------|-------|
-      // | AD 1     |     1 | 01 |   001 |  0001 | 00001 |
-      // | AD 12    |    12 | 12 |   012 |  0012 | 00012 |
-      // | AD 123   |   123 | 23 |   123 |  0123 | 00123 |
-      // | AD 1234  |  1234 | 34 |  1234 |  1234 | 01234 |
-      // | AD 12345 | 12345 | 45 | 12345 | 12345 | 12345 |
-      priority: 130,
-      parse: function parse(string, token, match, _options) {
-        var valueCallback = function valueCallback(year) {
-          return {
-            year: year,
-            isTwoDigitYear: token === 'yy'
-          };
-        };
-
-        switch (token) {
-          case 'y':
-            return parseNDigits(4, string, valueCallback);
-
-          case 'yo':
-            return match.ordinalNumber(string, {
-              unit: 'year',
-              valueCallback: valueCallback
-            });
-
-          default:
-            return parseNDigits(token.length, string, valueCallback);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value.isTwoDigitYear || value.year > 0;
-      },
-      set: function set(date, flags, value, _options) {
-        var currentYear = date.getUTCFullYear();
-
-        if (value.isTwoDigitYear) {
-          var normalizedTwoDigitYear = normalizeTwoDigitYear(value.year, currentYear);
-          date.setUTCFullYear(normalizedTwoDigitYear, 0, 1);
-          date.setUTCHours(0, 0, 0, 0);
-          return date;
-        }
-
-        var year = !('era' in flags) || flags.era === 1 ? value.year : 1 - value.year;
-        date.setUTCFullYear(year, 0, 1);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['Y', 'R', 'u', 'w', 'I', 'i', 'e', 'c', 't', 'T']
-    },
-    // Local week-numbering year
-    Y: {
-      priority: 130,
-      parse: function parse(string, token, match, _options) {
-        var valueCallback = function valueCallback(year) {
-          return {
-            year: year,
-            isTwoDigitYear: token === 'YY'
-          };
-        };
-
-        switch (token) {
-          case 'Y':
-            return parseNDigits(4, string, valueCallback);
-
-          case 'Yo':
-            return match.ordinalNumber(string, {
-              unit: 'year',
-              valueCallback: valueCallback
-            });
-
-          default:
-            return parseNDigits(token.length, string, valueCallback);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value.isTwoDigitYear || value.year > 0;
-      },
-      set: function set(date, flags, value, options) {
-        var currentYear = getUTCWeekYear(date, options);
-
-        if (value.isTwoDigitYear) {
-          var normalizedTwoDigitYear = normalizeTwoDigitYear(value.year, currentYear);
-          date.setUTCFullYear(normalizedTwoDigitYear, 0, options.firstWeekContainsDate);
-          date.setUTCHours(0, 0, 0, 0);
-          return startOfUTCWeek(date, options);
-        }
-
-        var year = !('era' in flags) || flags.era === 1 ? value.year : 1 - value.year;
-        date.setUTCFullYear(year, 0, options.firstWeekContainsDate);
-        date.setUTCHours(0, 0, 0, 0);
-        return startOfUTCWeek(date, options);
-      },
-      incompatibleTokens: ['y', 'R', 'u', 'Q', 'q', 'M', 'L', 'I', 'd', 'D', 'i', 't', 'T']
-    },
-    // ISO week-numbering year
-    R: {
-      priority: 130,
-      parse: function parse(string, token, _match, _options) {
-        if (token === 'R') {
-          return parseNDigitsSigned(4, string);
-        }
-
-        return parseNDigitsSigned(token.length, string);
-      },
-      set: function set(_date, _flags, value, _options) {
-        var firstWeekOfYear = new Date(0);
-        firstWeekOfYear.setUTCFullYear(value, 0, 4);
-        firstWeekOfYear.setUTCHours(0, 0, 0, 0);
-        return startOfUTCISOWeek(firstWeekOfYear);
-      },
-      incompatibleTokens: ['G', 'y', 'Y', 'u', 'Q', 'q', 'M', 'L', 'w', 'd', 'D', 'e', 'c', 't', 'T']
-    },
-    // Extended year
-    u: {
-      priority: 130,
-      parse: function parse(string, token, _match, _options) {
-        if (token === 'u') {
-          return parseNDigitsSigned(4, string);
-        }
-
-        return parseNDigitsSigned(token.length, string);
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCFullYear(value, 0, 1);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['G', 'y', 'Y', 'R', 'w', 'I', 'i', 'e', 'c', 't', 'T']
-    },
-    // Quarter
-    Q: {
-      priority: 120,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          // 1, 2, 3, 4
-          case 'Q':
-          case 'QQ':
-            // 01, 02, 03, 04
-            return parseNDigits(token.length, string);
-          // 1st, 2nd, 3rd, 4th
-
-          case 'Qo':
-            return match.ordinalNumber(string, {
-              unit: 'quarter'
-            });
-          // Q1, Q2, Q3, Q4
-
-          case 'QQQ':
-            return match.quarter(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.quarter(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // 1, 2, 3, 4 (narrow quarter; could be not numerical)
-
-          case 'QQQQQ':
-            return match.quarter(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // 1st quarter, 2nd quarter, ...
-
-          case 'QQQQ':
-          default:
-            return match.quarter(string, {
-              width: 'wide',
-              context: 'formatting'
-            }) || match.quarter(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.quarter(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 1 && value <= 4;
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCMonth((value - 1) * 3, 1);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['Y', 'R', 'q', 'M', 'L', 'w', 'I', 'd', 'D', 'i', 'e', 'c', 't', 'T']
-    },
-    // Stand-alone quarter
-    q: {
-      priority: 120,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          // 1, 2, 3, 4
-          case 'q':
-          case 'qq':
-            // 01, 02, 03, 04
-            return parseNDigits(token.length, string);
-          // 1st, 2nd, 3rd, 4th
-
-          case 'qo':
-            return match.ordinalNumber(string, {
-              unit: 'quarter'
-            });
-          // Q1, Q2, Q3, Q4
-
-          case 'qqq':
-            return match.quarter(string, {
-              width: 'abbreviated',
-              context: 'standalone'
-            }) || match.quarter(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-          // 1, 2, 3, 4 (narrow quarter; could be not numerical)
-
-          case 'qqqqq':
-            return match.quarter(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-          // 1st quarter, 2nd quarter, ...
-
-          case 'qqqq':
-          default:
-            return match.quarter(string, {
-              width: 'wide',
-              context: 'standalone'
-            }) || match.quarter(string, {
-              width: 'abbreviated',
-              context: 'standalone'
-            }) || match.quarter(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 1 && value <= 4;
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCMonth((value - 1) * 3, 1);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['Y', 'R', 'Q', 'M', 'L', 'w', 'I', 'd', 'D', 'i', 'e', 'c', 't', 'T']
-    },
-    // Month
-    M: {
-      priority: 110,
-      parse: function parse(string, token, match, _options) {
-        var valueCallback = function valueCallback(value) {
-          return value - 1;
-        };
-
-        switch (token) {
-          // 1, 2, ..., 12
-          case 'M':
-            return parseNumericPattern(numericPatterns.month, string, valueCallback);
-          // 01, 02, ..., 12
-
-          case 'MM':
-            return parseNDigits(2, string, valueCallback);
-          // 1st, 2nd, ..., 12th
-
-          case 'Mo':
-            return match.ordinalNumber(string, {
-              unit: 'month',
-              valueCallback: valueCallback
-            });
-          // Jan, Feb, ..., Dec
-
-          case 'MMM':
-            return match.month(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.month(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // J, F, ..., D
-
-          case 'MMMMM':
-            return match.month(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // January, February, ..., December
-
-          case 'MMMM':
-          default:
-            return match.month(string, {
-              width: 'wide',
-              context: 'formatting'
-            }) || match.month(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.month(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 11;
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCMonth(value, 1);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['Y', 'R', 'q', 'Q', 'L', 'w', 'I', 'D', 'i', 'e', 'c', 't', 'T']
-    },
-    // Stand-alone month
-    L: {
-      priority: 110,
-      parse: function parse(string, token, match, _options) {
-        var valueCallback = function valueCallback(value) {
-          return value - 1;
-        };
-
-        switch (token) {
-          // 1, 2, ..., 12
-          case 'L':
-            return parseNumericPattern(numericPatterns.month, string, valueCallback);
-          // 01, 02, ..., 12
-
-          case 'LL':
-            return parseNDigits(2, string, valueCallback);
-          // 1st, 2nd, ..., 12th
-
-          case 'Lo':
-            return match.ordinalNumber(string, {
-              unit: 'month',
-              valueCallback: valueCallback
-            });
-          // Jan, Feb, ..., Dec
-
-          case 'LLL':
-            return match.month(string, {
-              width: 'abbreviated',
-              context: 'standalone'
-            }) || match.month(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-          // J, F, ..., D
-
-          case 'LLLLL':
-            return match.month(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-          // January, February, ..., December
-
-          case 'LLLL':
-          default:
-            return match.month(string, {
-              width: 'wide',
-              context: 'standalone'
-            }) || match.month(string, {
-              width: 'abbreviated',
-              context: 'standalone'
-            }) || match.month(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 11;
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCMonth(value, 1);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['Y', 'R', 'q', 'Q', 'M', 'w', 'I', 'D', 'i', 'e', 'c', 't', 'T']
-    },
-    // Local week of year
-    w: {
-      priority: 100,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'w':
-            return parseNumericPattern(numericPatterns.week, string);
-
-          case 'wo':
-            return match.ordinalNumber(string, {
-              unit: 'week'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 1 && value <= 53;
-      },
-      set: function set(date, _flags, value, options) {
-        return startOfUTCWeek(setUTCWeek(date, value, options), options);
-      },
-      incompatibleTokens: ['y', 'R', 'u', 'q', 'Q', 'M', 'L', 'I', 'd', 'D', 'i', 't', 'T']
-    },
-    // ISO week of year
-    I: {
-      priority: 100,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'I':
-            return parseNumericPattern(numericPatterns.week, string);
-
-          case 'Io':
-            return match.ordinalNumber(string, {
-              unit: 'week'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 1 && value <= 53;
-      },
-      set: function set(date, _flags, value, options) {
-        return startOfUTCISOWeek(setUTCISOWeek(date, value, options), options);
-      },
-      incompatibleTokens: ['y', 'Y', 'u', 'q', 'Q', 'M', 'L', 'w', 'd', 'D', 'e', 'c', 't', 'T']
-    },
-    // Day of the month
-    d: {
-      priority: 90,
-      subPriority: 1,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'd':
-            return parseNumericPattern(numericPatterns.date, string);
-
-          case 'do':
-            return match.ordinalNumber(string, {
-              unit: 'date'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(date, value, _options) {
-        var year = date.getUTCFullYear();
-        var isLeapYear = isLeapYearIndex$1(year);
-        var month = date.getUTCMonth();
-
-        if (isLeapYear) {
-          return value >= 1 && value <= DAYS_IN_MONTH_LEAP_YEAR[month];
-        } else {
-          return value >= 1 && value <= DAYS_IN_MONTH[month];
-        }
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCDate(value);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['Y', 'R', 'q', 'Q', 'w', 'I', 'D', 'i', 'e', 'c', 't', 'T']
-    },
-    // Day of year
-    D: {
-      priority: 90,
-      subPriority: 1,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'D':
-          case 'DD':
-            return parseNumericPattern(numericPatterns.dayOfYear, string);
-
-          case 'Do':
-            return match.ordinalNumber(string, {
-              unit: 'date'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(date, value, _options) {
-        var year = date.getUTCFullYear();
-        var isLeapYear = isLeapYearIndex$1(year);
-
-        if (isLeapYear) {
-          return value >= 1 && value <= 366;
-        } else {
-          return value >= 1 && value <= 365;
-        }
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCMonth(0, value);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['Y', 'R', 'q', 'Q', 'M', 'L', 'w', 'I', 'd', 'E', 'i', 'e', 'c', 't', 'T']
-    },
-    // Day of week
-    E: {
-      priority: 90,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          // Tue
-          case 'E':
-          case 'EE':
-          case 'EEE':
-            return match.day(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'short',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // T
-
-          case 'EEEEE':
-            return match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // Tu
-
-          case 'EEEEEE':
-            return match.day(string, {
-              width: 'short',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // Tuesday
-
-          case 'EEEE':
-          default:
-            return match.day(string, {
-              width: 'wide',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'short',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 6;
-      },
-      set: function set(date, _flags, value, options) {
-        date = setUTCDay(date, value, options);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['D', 'i', 'e', 'c', 't', 'T']
-    },
-    // Local day of week
-    e: {
-      priority: 90,
-      parse: function parse(string, token, match, options) {
-        var valueCallback = function valueCallback(value) {
-          var wholeWeekDays = Math.floor((value - 1) / 7) * 7;
-          return (value + options.weekStartsOn + 6) % 7 + wholeWeekDays;
-        };
-
-        switch (token) {
-          // 3
-          case 'e':
-          case 'ee':
-            // 03
-            return parseNDigits(token.length, string, valueCallback);
-          // 3rd
-
-          case 'eo':
-            return match.ordinalNumber(string, {
-              unit: 'day',
-              valueCallback: valueCallback
-            });
-          // Tue
-
-          case 'eee':
-            return match.day(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'short',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // T
-
-          case 'eeeee':
-            return match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // Tu
-
-          case 'eeeeee':
-            return match.day(string, {
-              width: 'short',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-          // Tuesday
-
-          case 'eeee':
-          default:
-            return match.day(string, {
-              width: 'wide',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'short',
-              context: 'formatting'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 6;
-      },
-      set: function set(date, _flags, value, options) {
-        date = setUTCDay(date, value, options);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['y', 'R', 'u', 'q', 'Q', 'M', 'L', 'I', 'd', 'D', 'E', 'i', 'c', 't', 'T']
-    },
-    // Stand-alone local day of week
-    c: {
-      priority: 90,
-      parse: function parse(string, token, match, options) {
-        var valueCallback = function valueCallback(value) {
-          var wholeWeekDays = Math.floor((value - 1) / 7) * 7;
-          return (value + options.weekStartsOn + 6) % 7 + wholeWeekDays;
-        };
-
-        switch (token) {
-          // 3
-          case 'c':
-          case 'cc':
-            // 03
-            return parseNDigits(token.length, string, valueCallback);
-          // 3rd
-
-          case 'co':
-            return match.ordinalNumber(string, {
-              unit: 'day',
-              valueCallback: valueCallback
-            });
-          // Tue
-
-          case 'ccc':
-            return match.day(string, {
-              width: 'abbreviated',
-              context: 'standalone'
-            }) || match.day(string, {
-              width: 'short',
-              context: 'standalone'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-          // T
-
-          case 'ccccc':
-            return match.day(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-          // Tu
-
-          case 'cccccc':
-            return match.day(string, {
-              width: 'short',
-              context: 'standalone'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-          // Tuesday
-
-          case 'cccc':
-          default:
-            return match.day(string, {
-              width: 'wide',
-              context: 'standalone'
-            }) || match.day(string, {
-              width: 'abbreviated',
-              context: 'standalone'
-            }) || match.day(string, {
-              width: 'short',
-              context: 'standalone'
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'standalone'
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 6;
-      },
-      set: function set(date, _flags, value, options) {
-        date = setUTCDay(date, value, options);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['y', 'R', 'u', 'q', 'Q', 'M', 'L', 'I', 'd', 'D', 'E', 'i', 'e', 't', 'T']
-    },
-    // ISO day of week
-    i: {
-      priority: 90,
-      parse: function parse(string, token, match, _options) {
-        var valueCallback = function valueCallback(value) {
-          if (value === 0) {
-            return 7;
-          }
-
-          return value;
-        };
-
-        switch (token) {
-          // 2
-          case 'i':
-          case 'ii':
-            // 02
-            return parseNDigits(token.length, string);
-          // 2nd
-
-          case 'io':
-            return match.ordinalNumber(string, {
-              unit: 'day'
-            });
-          // Tue
-
-          case 'iii':
-            return match.day(string, {
-              width: 'abbreviated',
-              context: 'formatting',
-              valueCallback: valueCallback
-            }) || match.day(string, {
-              width: 'short',
-              context: 'formatting',
-              valueCallback: valueCallback
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting',
-              valueCallback: valueCallback
-            });
-          // T
-
-          case 'iiiii':
-            return match.day(string, {
-              width: 'narrow',
-              context: 'formatting',
-              valueCallback: valueCallback
-            });
-          // Tu
-
-          case 'iiiiii':
-            return match.day(string, {
-              width: 'short',
-              context: 'formatting',
-              valueCallback: valueCallback
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting',
-              valueCallback: valueCallback
-            });
-          // Tuesday
-
-          case 'iiii':
-          default:
-            return match.day(string, {
-              width: 'wide',
-              context: 'formatting',
-              valueCallback: valueCallback
-            }) || match.day(string, {
-              width: 'abbreviated',
-              context: 'formatting',
-              valueCallback: valueCallback
-            }) || match.day(string, {
-              width: 'short',
-              context: 'formatting',
-              valueCallback: valueCallback
-            }) || match.day(string, {
-              width: 'narrow',
-              context: 'formatting',
-              valueCallback: valueCallback
-            });
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 1 && value <= 7;
-      },
-      set: function set(date, _flags, value, options) {
-        date = setUTCISODay(date, value, options);
-        date.setUTCHours(0, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['y', 'Y', 'u', 'q', 'Q', 'M', 'L', 'w', 'd', 'D', 'E', 'e', 'c', 't', 'T']
-    },
-    // AM or PM
-    a: {
-      priority: 80,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'a':
-          case 'aa':
-          case 'aaa':
-            return match.dayPeriod(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-
-          case 'aaaaa':
-            return match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-
-          case 'aaaa':
-          default:
-            return match.dayPeriod(string, {
-              width: 'wide',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-        }
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['b', 'B', 'H', 'k', 't', 'T']
-    },
-    // AM, PM, midnight
-    b: {
-      priority: 80,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'b':
-          case 'bb':
-          case 'bbb':
-            return match.dayPeriod(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-
-          case 'bbbbb':
-            return match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-
-          case 'bbbb':
-          default:
-            return match.dayPeriod(string, {
-              width: 'wide',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-        }
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['a', 'B', 'H', 'k', 't', 'T']
-    },
-    // in the morning, in the afternoon, in the evening, at night
-    B: {
-      priority: 80,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'B':
-          case 'BB':
-          case 'BBB':
-            return match.dayPeriod(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-
-          case 'BBBBB':
-            return match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-
-          case 'BBBB':
-          default:
-            return match.dayPeriod(string, {
-              width: 'wide',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'abbreviated',
-              context: 'formatting'
-            }) || match.dayPeriod(string, {
-              width: 'narrow',
-              context: 'formatting'
-            });
-        }
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCHours(dayPeriodEnumToHours(value), 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['a', 'b', 't', 'T']
-    },
-    // Hour [1-12]
-    h: {
-      priority: 70,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'h':
-            return parseNumericPattern(numericPatterns.hour12h, string);
-
-          case 'ho':
-            return match.ordinalNumber(string, {
-              unit: 'hour'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 1 && value <= 12;
-      },
-      set: function set(date, _flags, value, _options) {
-        var isPM = date.getUTCHours() >= 12;
-
-        if (isPM && value < 12) {
-          date.setUTCHours(value + 12, 0, 0, 0);
-        } else if (!isPM && value === 12) {
-          date.setUTCHours(0, 0, 0, 0);
-        } else {
-          date.setUTCHours(value, 0, 0, 0);
-        }
-
-        return date;
-      },
-      incompatibleTokens: ['H', 'K', 'k', 't', 'T']
-    },
-    // Hour [0-23]
-    H: {
-      priority: 70,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'H':
-            return parseNumericPattern(numericPatterns.hour23h, string);
-
-          case 'Ho':
-            return match.ordinalNumber(string, {
-              unit: 'hour'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 23;
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCHours(value, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['a', 'b', 'h', 'K', 'k', 't', 'T']
-    },
-    // Hour [0-11]
-    K: {
-      priority: 70,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'K':
-            return parseNumericPattern(numericPatterns.hour11h, string);
-
-          case 'Ko':
-            return match.ordinalNumber(string, {
-              unit: 'hour'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 11;
-      },
-      set: function set(date, _flags, value, _options) {
-        var isPM = date.getUTCHours() >= 12;
-
-        if (isPM && value < 12) {
-          date.setUTCHours(value + 12, 0, 0, 0);
-        } else {
-          date.setUTCHours(value, 0, 0, 0);
-        }
-
-        return date;
-      },
-      incompatibleTokens: ['h', 'H', 'k', 't', 'T']
-    },
-    // Hour [1-24]
-    k: {
-      priority: 70,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'k':
-            return parseNumericPattern(numericPatterns.hour24h, string);
-
-          case 'ko':
-            return match.ordinalNumber(string, {
-              unit: 'hour'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 1 && value <= 24;
-      },
-      set: function set(date, _flags, value, _options) {
-        var hours = value <= 24 ? value % 24 : value;
-        date.setUTCHours(hours, 0, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['a', 'b', 'h', 'H', 'K', 't', 'T']
-    },
-    // Minute
-    m: {
-      priority: 60,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 'm':
-            return parseNumericPattern(numericPatterns.minute, string);
-
-          case 'mo':
-            return match.ordinalNumber(string, {
-              unit: 'minute'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 59;
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCMinutes(value, 0, 0);
-        return date;
-      },
-      incompatibleTokens: ['t', 'T']
-    },
-    // Second
-    s: {
-      priority: 50,
-      parse: function parse(string, token, match, _options) {
-        switch (token) {
-          case 's':
-            return parseNumericPattern(numericPatterns.second, string);
-
-          case 'so':
-            return match.ordinalNumber(string, {
-              unit: 'second'
-            });
-
-          default:
-            return parseNDigits(token.length, string);
-        }
-      },
-      validate: function validate(_date, value, _options) {
-        return value >= 0 && value <= 59;
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCSeconds(value, 0);
-        return date;
-      },
-      incompatibleTokens: ['t', 'T']
-    },
-    // Fraction of second
-    S: {
-      priority: 30,
-      parse: function parse(string, token, _match, _options) {
-        var valueCallback = function valueCallback(value) {
-          return Math.floor(value * Math.pow(10, -token.length + 3));
-        };
-
-        return parseNDigits(token.length, string, valueCallback);
-      },
-      set: function set(date, _flags, value, _options) {
-        date.setUTCMilliseconds(value);
-        return date;
-      },
-      incompatibleTokens: ['t', 'T']
-    },
-    // Timezone (ISO-8601. +00:00 is `'Z'`)
-    X: {
-      priority: 10,
-      parse: function parse(string, token, _match, _options) {
-        switch (token) {
-          case 'X':
-            return parseTimezonePattern(timezonePatterns.basicOptionalMinutes, string);
-
-          case 'XX':
-            return parseTimezonePattern(timezonePatterns.basic, string);
-
-          case 'XXXX':
-            return parseTimezonePattern(timezonePatterns.basicOptionalSeconds, string);
-
-          case 'XXXXX':
-            return parseTimezonePattern(timezonePatterns.extendedOptionalSeconds, string);
-
-          case 'XXX':
-          default:
-            return parseTimezonePattern(timezonePatterns.extended, string);
-        }
-      },
-      set: function set(date, flags, value, _options) {
-        if (flags.timestampIsSet) {
-          return date;
-        }
-
-        return new Date(date.getTime() - value);
-      },
-      incompatibleTokens: ['t', 'T', 'x']
-    },
-    // Timezone (ISO-8601)
-    x: {
-      priority: 10,
-      parse: function parse(string, token, _match, _options) {
-        switch (token) {
-          case 'x':
-            return parseTimezonePattern(timezonePatterns.basicOptionalMinutes, string);
-
-          case 'xx':
-            return parseTimezonePattern(timezonePatterns.basic, string);
-
-          case 'xxxx':
-            return parseTimezonePattern(timezonePatterns.basicOptionalSeconds, string);
-
-          case 'xxxxx':
-            return parseTimezonePattern(timezonePatterns.extendedOptionalSeconds, string);
-
-          case 'xxx':
-          default:
-            return parseTimezonePattern(timezonePatterns.extended, string);
-        }
-      },
-      set: function set(date, flags, value, _options) {
-        if (flags.timestampIsSet) {
-          return date;
-        }
-
-        return new Date(date.getTime() - value);
-      },
-      incompatibleTokens: ['t', 'T', 'X']
-    },
-    // Seconds timestamp
-    t: {
-      priority: 40,
-      parse: function parse(string, _token, _match, _options) {
-        return parseAnyDigitsSigned(string);
-      },
-      set: function set(_date, _flags, value, _options) {
-        return [new Date(value * 1000), {
-          timestampIsSet: true
-        }];
-      },
-      incompatibleTokens: '*'
-    },
-    // Milliseconds timestamp
-    T: {
-      priority: 20,
-      parse: function parse(string, _token, _match, _options) {
-        return parseAnyDigitsSigned(string);
-      },
-      set: function set(_date, _flags, value, _options) {
-        return [new Date(value), {
-          timestampIsSet: true
-        }];
-      },
-      incompatibleTokens: '*'
-    }
+    G: new EraParser(),
+    y: new YearParser(),
+    Y: new LocalWeekYearParser(),
+    R: new ISOWeekYearParser(),
+    u: new ExtendedYearParser(),
+    Q: new QuarterParser(),
+    q: new StandAloneQuarterParser(),
+    M: new MonthParser(),
+    L: new StandAloneMonthParser(),
+    w: new LocalWeekParser(),
+    I: new ISOWeekParser(),
+    d: new DateParser(),
+    D: new DayOfYearParser(),
+    E: new DayParser(),
+    e: new LocalDayParser(),
+    c: new StandAloneLocalDayParser(),
+    i: new ISODayParser(),
+    a: new AMPMParser(),
+    b: new AMPMMidnightParser(),
+    B: new DayPeriodParser(),
+    h: new Hour1to12Parser(),
+    H: new Hour0to23Parser(),
+    K: new Hour0To11Parser(),
+    k: new Hour1To24Parser(),
+    m: new MinuteParser(),
+    s: new SecondParser(),
+    S: new FractionOfSecondParser(),
+    X: new ISOTimezoneWithZParser(),
+    x: new ISOTimezoneParser(),
+    t: new TimestampSecondsParser(),
+    T: new TimestampMillisecondsParser()
   };
-  var parsers$1 = parsers;
 
-  var TIMEZONE_UNIT_PRIORITY = 10; // This RegExp consists of three parts separated by `|`:
   // - [yYQqMLwIdDecihHKkms]o matches any available ordinal number token
   //   (one of the certain letters followed by `o`)
   // - (\w)\1* matches any sequences of the same letter
@@ -24359,7 +25781,7 @@
    * Return the date parsed from string using the given format string.
    *
    * > ⚠️ Please note that the `format` tokens differ from Moment.js and other libraries.
-   * > See: https://git.io/fxCyr
+   * > See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    *
    * The characters in the format string wrapped between two single quotes characters (') are escaped.
    * Two single quotes in a row, whether inside or outside a quoted sequence, represent a 'real' single quote.
@@ -24582,10 +26004,10 @@
    *    - `p`: long localized time
    *
    * 6. `YY` and `YYYY` tokens represent week-numbering years but they are often confused with years.
-   *    You should enable `options.useAdditionalWeekYearTokens` to use them. See: https://git.io/fxCyr
+   *    You should enable `options.useAdditionalWeekYearTokens` to use them. See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    *
    * 7. `D` and `DD` tokens represent days of the year but they are ofthen confused with days of the month.
-   *    You should enable `options.useAdditionalDayOfYearTokens` to use them. See: https://git.io/fxCyr
+   *    You should enable `options.useAdditionalDayOfYearTokens` to use them. See: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    *
    * 8. `P+` tokens do not have a defined priority since they are merely aliases to other tokens based
    *    on the given locale.
@@ -24616,23 +26038,6 @@
    * Invalid Date is a Date, whose time value is NaN.
    * Time value of Date: http://es5.github.io/#x15.9.1.1
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
-   * - Old `parse` was renamed to `toDate`.
-   *   Now `parse` is a new function which parses a string using a provided format.
-   *
-   *   ```javascript
-   *   // Before v2.0.0
-   *   parse('2016-01-01')
-   *
-   *   // v2.0.0 onward (toDate no longer accepts a string)
-   *   toDate(1392098430000) // Unix to timestamp
-   *   toDate(new Date(2014, 1, 11, 11, 30, 30)) // Cloning the date
-   *   parse('2016-01-01', 'yyyy-MM-dd', new Date())
-   *   ```
-   *
    * @param {String} dateString - the string to parse
    * @param {String} formatString - the string of tokens
    * @param {Date|Number} referenceDate - defines values missing from the parsed dateString
@@ -24641,18 +26046,18 @@
    * @param {0|1|2|3|4|5|6} [options.weekStartsOn=0] - the index of the first day of the week (0 - Sunday)
    * @param {1|2|3|4|5|6|7} [options.firstWeekContainsDate=1] - the day of January, which is always in the first week of the year
    * @param {Boolean} [options.useAdditionalWeekYearTokens=false] - if true, allows usage of the week-numbering year tokens `YY` and `YYYY`;
-   *   see: https://git.io/fxCyr
+   *   see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    * @param {Boolean} [options.useAdditionalDayOfYearTokens=false] - if true, allows usage of the day of year tokens `D` and `DD`;
-   *   see: https://git.io/fxCyr
+   *   see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    * @returns {Date} the parsed date
    * @throws {TypeError} 3 arguments required
    * @throws {RangeError} `options.weekStartsOn` must be between 0 and 6
    * @throws {RangeError} `options.firstWeekContainsDate` must be between 1 and 7
    * @throws {RangeError} `options.locale` must contain `match` property
-   * @throws {RangeError} use `yyyy` instead of `YYYY` for formatting years using [format provided] to the input [input provided]; see: https://git.io/fxCyr
-   * @throws {RangeError} use `yy` instead of `YY` for formatting years using [format provided] to the input [input provided]; see: https://git.io/fxCyr
-   * @throws {RangeError} use `d` instead of `D` for formatting days of the month using [format provided] to the input [input provided]; see: https://git.io/fxCyr
-   * @throws {RangeError} use `dd` instead of `DD` for formatting days of the month using [format provided] to the input [input provided]; see: https://git.io/fxCyr
+   * @throws {RangeError} use `yyyy` instead of `YYYY` for formatting years using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+   * @throws {RangeError} use `yy` instead of `YY` for formatting years using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+   * @throws {RangeError} use `d` instead of `D` for formatting days of the month using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
+   * @throws {RangeError} use `dd` instead of `DD` for formatting days of the month using [format provided] to the input [input provided]; see: https://github.com/date-fns/date-fns/blob/master/docs/unicodeTokens.md
    * @throws {RangeError} format string contains an unescaped latin alphabet character
    *
    * @example
@@ -24669,28 +26074,26 @@
    * //=> Sun Feb 28 2010 00:00:00
    */
 
-  function parse(dirtyDateString, dirtyFormatString, dirtyReferenceDate, dirtyOptions) {
+  function parse(dirtyDateString, dirtyFormatString, dirtyReferenceDate, options) {
+    var _ref, _options$locale, _ref2, _ref3, _ref4, _options$firstWeekCon, _options$locale2, _options$locale2$opti, _defaultOptions$local, _defaultOptions$local2, _ref5, _ref6, _ref7, _options$weekStartsOn, _options$locale3, _options$locale3$opti, _defaultOptions$local3, _defaultOptions$local4;
+
     requiredArgs(3, arguments);
     var dateString = String(dirtyDateString);
     var formatString = String(dirtyFormatString);
-    var options = dirtyOptions || {};
-    var locale = options.locale || defaultLocale;
+    var defaultOptions = getDefaultOptions();
+    var locale = (_ref = (_options$locale = options === null || options === void 0 ? void 0 : options.locale) !== null && _options$locale !== void 0 ? _options$locale : defaultOptions.locale) !== null && _ref !== void 0 ? _ref : defaultLocale;
 
     if (!locale.match) {
       throw new RangeError('locale must contain match property');
     }
 
-    var localeFirstWeekContainsDate = locale.options && locale.options.firstWeekContainsDate;
-    var defaultFirstWeekContainsDate = localeFirstWeekContainsDate == null ? 1 : toInteger(localeFirstWeekContainsDate);
-    var firstWeekContainsDate = options.firstWeekContainsDate == null ? defaultFirstWeekContainsDate : toInteger(options.firstWeekContainsDate); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
+    var firstWeekContainsDate = toInteger((_ref2 = (_ref3 = (_ref4 = (_options$firstWeekCon = options === null || options === void 0 ? void 0 : options.firstWeekContainsDate) !== null && _options$firstWeekCon !== void 0 ? _options$firstWeekCon : options === null || options === void 0 ? void 0 : (_options$locale2 = options.locale) === null || _options$locale2 === void 0 ? void 0 : (_options$locale2$opti = _options$locale2.options) === null || _options$locale2$opti === void 0 ? void 0 : _options$locale2$opti.firstWeekContainsDate) !== null && _ref4 !== void 0 ? _ref4 : defaultOptions.firstWeekContainsDate) !== null && _ref3 !== void 0 ? _ref3 : (_defaultOptions$local = defaultOptions.locale) === null || _defaultOptions$local === void 0 ? void 0 : (_defaultOptions$local2 = _defaultOptions$local.options) === null || _defaultOptions$local2 === void 0 ? void 0 : _defaultOptions$local2.firstWeekContainsDate) !== null && _ref2 !== void 0 ? _ref2 : 1); // Test if weekStartsOn is between 1 and 7 _and_ is not NaN
 
     if (!(firstWeekContainsDate >= 1 && firstWeekContainsDate <= 7)) {
       throw new RangeError('firstWeekContainsDate must be between 1 and 7 inclusively');
     }
 
-    var localeWeekStartsOn = locale.options && locale.options.weekStartsOn;
-    var defaultWeekStartsOn = localeWeekStartsOn == null ? 0 : toInteger(localeWeekStartsOn);
-    var weekStartsOn = options.weekStartsOn == null ? defaultWeekStartsOn : toInteger(options.weekStartsOn); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
+    var weekStartsOn = toInteger((_ref5 = (_ref6 = (_ref7 = (_options$weekStartsOn = options === null || options === void 0 ? void 0 : options.weekStartsOn) !== null && _options$weekStartsOn !== void 0 ? _options$weekStartsOn : options === null || options === void 0 ? void 0 : (_options$locale3 = options.locale) === null || _options$locale3 === void 0 ? void 0 : (_options$locale3$opti = _options$locale3.options) === null || _options$locale3$opti === void 0 ? void 0 : _options$locale3$opti.weekStartsOn) !== null && _ref7 !== void 0 ? _ref7 : defaultOptions.weekStartsOn) !== null && _ref6 !== void 0 ? _ref6 : (_defaultOptions$local3 = defaultOptions.locale) === null || _defaultOptions$local3 === void 0 ? void 0 : (_defaultOptions$local4 = _defaultOptions$local3.options) === null || _defaultOptions$local4 === void 0 ? void 0 : _defaultOptions$local4.weekStartsOn) !== null && _ref5 !== void 0 ? _ref5 : 0); // Test if weekStartsOn is between 0 and 6 _and_ is not NaN
 
     if (!(weekStartsOn >= 0 && weekStartsOn <= 6)) {
       throw new RangeError('weekStartsOn must be between 0 and 6 inclusively');
@@ -24710,79 +26113,60 @@
       locale: locale
     }; // If timezone isn't specified, it will be set to the system timezone
 
-    var setters = [{
-      priority: TIMEZONE_UNIT_PRIORITY,
-      subPriority: -1,
-      set: dateToSystemTimezone,
-      index: 0
-    }];
-    var i;
+    var setters = [new DateToSystemTimezoneSetter()];
     var tokens = formatString.match(longFormattingTokensRegExp).map(function (substring) {
       var firstCharacter = substring[0];
 
-      if (firstCharacter === 'p' || firstCharacter === 'P') {
+      if (firstCharacter in longFormatters$1) {
         var longFormatter = longFormatters$1[firstCharacter];
-        return longFormatter(substring, locale.formatLong, subFnOptions);
+        return longFormatter(substring, locale.formatLong);
       }
 
       return substring;
     }).join('').match(formattingTokensRegExp);
     var usedTokens = [];
 
-    for (i = 0; i < tokens.length; i++) {
-      var token = tokens[i];
-
-      if (!options.useAdditionalWeekYearTokens && isProtectedWeekYearToken(token)) {
-        throwProtectedError(token, formatString, dirtyDateString);
+    var _loop = function _loop(_token) {
+      if (!(options !== null && options !== void 0 && options.useAdditionalWeekYearTokens) && isProtectedWeekYearToken(_token)) {
+        throwProtectedError(_token, formatString, dirtyDateString);
       }
 
-      if (!options.useAdditionalDayOfYearTokens && isProtectedDayOfYearToken(token)) {
-        throwProtectedError(token, formatString, dirtyDateString);
+      if (!(options !== null && options !== void 0 && options.useAdditionalDayOfYearTokens) && isProtectedDayOfYearToken(_token)) {
+        throwProtectedError(_token, formatString, dirtyDateString);
       }
 
-      var firstCharacter = token[0];
-      var parser = parsers$1[firstCharacter];
+      var firstCharacter = _token[0];
+      var parser = parsers[firstCharacter];
 
       if (parser) {
         var incompatibleTokens = parser.incompatibleTokens;
 
         if (Array.isArray(incompatibleTokens)) {
-          var incompatibleToken = void 0;
-
-          for (var _i = 0; _i < usedTokens.length; _i++) {
-            var usedToken = usedTokens[_i].token;
-
-            if (incompatibleTokens.indexOf(usedToken) !== -1 || usedToken === firstCharacter) {
-              incompatibleToken = usedTokens[_i];
-              break;
-            }
-          }
+          var incompatibleToken = usedTokens.find(function (usedToken) {
+            return incompatibleTokens.includes(usedToken.token) || usedToken.token === firstCharacter;
+          });
 
           if (incompatibleToken) {
-            throw new RangeError("The format string mustn't contain `".concat(incompatibleToken.fullToken, "` and `").concat(token, "` at the same time"));
+            throw new RangeError("The format string mustn't contain `".concat(incompatibleToken.fullToken, "` and `").concat(_token, "` at the same time"));
           }
-        } else if (parser.incompatibleTokens === '*' && usedTokens.length) {
-          throw new RangeError("The format string mustn't contain `".concat(token, "` and any other token at the same time"));
+        } else if (parser.incompatibleTokens === '*' && usedTokens.length > 0) {
+          throw new RangeError("The format string mustn't contain `".concat(_token, "` and any other token at the same time"));
         }
 
         usedTokens.push({
           token: firstCharacter,
-          fullToken: token
+          fullToken: _token
         });
-        var parseResult = parser.parse(dateString, token, locale.match, subFnOptions);
+        var parseResult = parser.run(dateString, _token, locale.match, subFnOptions);
 
         if (!parseResult) {
-          return new Date(NaN);
+          token = _token;
+          return {
+            v: new Date(NaN)
+          };
         }
 
-        setters.push({
-          priority: parser.priority,
-          subPriority: parser.subPriority || 0,
-          set: parser.set,
-          validate: parser.validate,
-          value: parseResult.value,
-          index: setters.length
-        });
+        setters.push(parseResult.setter);
         dateString = parseResult.rest;
       } else {
         if (firstCharacter.match(unescapedLatinCharacterRegExp)) {
@@ -24790,21 +26174,43 @@
         } // Replace two single quote characters with one single quote character
 
 
-        if (token === "''") {
-          token = "'";
+        if (_token === "''") {
+          _token = "'";
         } else if (firstCharacter === "'") {
-          token = cleanEscapedString(token);
+          _token = cleanEscapedString(_token);
         } // Cut token from string, or, if string doesn't match the token, return Invalid Date
 
 
-        if (dateString.indexOf(token) === 0) {
-          dateString = dateString.slice(token.length);
+        if (dateString.indexOf(_token) === 0) {
+          dateString = dateString.slice(_token.length);
         } else {
-          return new Date(NaN);
+          token = _token;
+          return {
+            v: new Date(NaN)
+          };
         }
       }
-    } // Check if the remaining input contains something other than whitespace
 
+      token = _token;
+    };
+
+    var _iterator = _createForOfIteratorHelper(tokens),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var token = _step.value;
+
+        var _ret = _loop(token);
+
+        if (_typeof(_ret) === "object") return _ret.v;
+      } // Check if the remaining input contains something other than whitespace
+
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
 
     if (dateString.length > 0 && notWhitespaceRegExp.test(dateString)) {
       return new Date(NaN);
@@ -24827,45 +26233,41 @@
     });
     var date = toDate(dirtyReferenceDate);
 
-    if (isNaN(date)) {
+    if (isNaN(date.getTime())) {
       return new Date(NaN);
     } // Convert the date in system timezone to the same date in UTC+00:00 timezone.
-    // This ensures that when UTC functions will be implemented, locales will be compatible with them.
-    // See an issue about UTC functions: https://github.com/date-fns/date-fns/issues/37
 
 
     var utcDate = subMilliseconds(date, getTimezoneOffsetInMilliseconds(date));
     var flags = {};
 
-    for (i = 0; i < uniquePrioritySetters.length; i++) {
-      var setter = uniquePrioritySetters[i];
+    var _iterator2 = _createForOfIteratorHelper(uniquePrioritySetters),
+        _step2;
 
-      if (setter.validate && !setter.validate(utcDate, setter.value, subFnOptions)) {
-        return new Date(NaN);
+    try {
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var setter = _step2.value;
+
+        if (!setter.validate(utcDate, subFnOptions)) {
+          return new Date(NaN);
+        }
+
+        var result = setter.set(utcDate, flags, subFnOptions); // Result is tuple (date, flags)
+
+        if (Array.isArray(result)) {
+          utcDate = result[0];
+          assign(flags, result[1]); // Result is date
+        } else {
+          utcDate = result;
+        }
       }
-
-      var result = setter.set(utcDate, flags, setter.value, subFnOptions); // Result is tuple (date, flags)
-
-      if (result[0]) {
-        utcDate = result[0];
-        assign(flags, result[1]); // Result is date
-      } else {
-        utcDate = result;
-      }
+    } catch (err) {
+      _iterator2.e(err);
+    } finally {
+      _iterator2.f();
     }
 
     return utcDate;
-  }
-
-  function dateToSystemTimezone(date, flags) {
-    if (flags.timestampIsSet) {
-      return date;
-    }
-
-    var convertedDate = new Date(0);
-    convertedDate.setFullYear(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-    convertedDate.setHours(date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds());
-    return convertedDate;
   }
 
   function cleanEscapedString(input) {
@@ -24880,10 +26282,6 @@
    * @description
    * Return the start of an hour for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the start of an hour
@@ -24910,10 +26308,6 @@
    * @description
    * Return the start of a second for the given date.
    * The result will be in the local timezone.
-   *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
    *
    * @param {Date|Number} date - the original date
    * @returns {Date} the start of a second
@@ -24946,31 +26340,6 @@
    * If the argument isn't a string, the function cannot parse the string or
    * the values are invalid, it returns Invalid Date.
    *
-   * ### v2.0.0 breaking changes:
-   *
-   * - [Changes that are common for the whole library](https://github.com/date-fns/date-fns/blob/master/docs/upgradeGuide.md#Common-Changes).
-   *
-   * - The previous `parse` implementation was renamed to `parseISO`.
-   *
-   *   ```javascript
-   *   // Before v2.0.0
-   *   parse('2016-01-01')
-   *
-   *   // v2.0.0 onward
-   *   parseISO('2016-01-01')
-   *   ```
-   *
-   * - `parseISO` now validates separate date and time values in ISO-8601 strings
-   *   and returns `Invalid Date` if the date is invalid.
-   *
-   *   ```javascript
-   *   parseISO('2018-13-32')
-   *   //=> Invalid Date
-   *   ```
-   *
-   * - `parseISO` now doesn't fall back to `new Date` constructor
-   *   if it fails to parse a string argument. Instead, it returns `Invalid Date`.
-   *
    * @param {String} argument - the value to convert
    * @param {Object} [options] - an object with options.
    * @param {0|1|2} [options.additionalDigits=2] - the additional number of digits in the extended year format
@@ -24990,10 +26359,11 @@
    * //=> Fri Apr 11 2014 00:00:00
    */
 
-  function parseISO(argument, dirtyOptions) {
+  function parseISO(argument, options) {
+    var _options$additionalDi;
+
     requiredArgs(1, arguments);
-    var options = dirtyOptions || {};
-    var additionalDigits = options.additionalDigits == null ? 2 : toInteger(options.additionalDigits);
+    var additionalDigits = toInteger((_options$additionalDi = options === null || options === void 0 ? void 0 : options.additionalDigits) !== null && _options$additionalDi !== void 0 ? _options$additionalDi : 2);
 
     if (additionalDigits !== 2 && additionalDigits !== 1 && additionalDigits !== 0) {
       throw new RangeError('additionalDigits must be 0, 1 or 2');
