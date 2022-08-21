@@ -447,7 +447,7 @@ gem "chartkick"
 
 Next, choose your charting library.
 
-- [Chart.js](#chart-js)
+- [Chart.js](#chartjs)
 - [Google Charts](#google-charts)
 - [Highcharts](#highcharts)
 
