@@ -1,5 +1,6 @@
 require "json"
 require "erb"
+require 'securerandom'
 
 module Chartkick
   module Helper

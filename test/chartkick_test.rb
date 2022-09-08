@@ -167,11 +167,13 @@ class ChartkickTest < Minitest::Test
     Chartkick.options = {}
   end
 
-  def test_chart_ids
-    @chartkick_chart_id = 0
-    3.times do |i|
-      assert_match "chart-#{i + 1}", line_chart(@data)
+  def test_chart_ids_dont_collide
+    outputs = 3.times.map do
+      html = line_chart(@data)
+      html.match(/id="(chart-[-\w]{16})"/)[1]
     end
+
+    assert_equal outputs.uniq.length, outputs.length
   end
 
   def test_chart_json
