@@ -41,9 +41,7 @@ module Chartkick
     def chartkick_chart(klass, data_source, **options)
       options = chartkick_deep_merge(Chartkick.options, options)
 
-      @chartkick_chart_id ||= 0
-      element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
-
+      element_id = options.delete(:id) || "chart-#{SecureRandom.hex(8)}"
       height = (options.delete(:height) || "300px").to_s
       width = (options.delete(:width) || "100%").to_s
       defer = !!options.delete(:defer)
