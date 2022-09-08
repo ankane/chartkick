@@ -62,6 +62,9 @@ module Chartkick
         elsif respond_to?(:content_security_policy_script_nonce)
           # Secure Headers
           nonce = content_security_policy_script_nonce
+        elsif respond_to?(:helpers) && helpers.respond_to?(:content_security_policy_nonce)
+          # ViewComponent render context
+          nonce = helpers.content_security_policy_nonce
         else
           nonce = nil
         end
