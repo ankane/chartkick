@@ -1,7 +1,7 @@
 /*!
- * Chart.js v4.1.1
+ * Chart.js v4.1.2
  * https://www.chartjs.org
- * (c) 2022 Chart.js Contributors
+ * (c) 2023 Chart.js Contributors
  * Released under the MIT License
  *
  * chartjs-adapter-date-fns v3.0.0
@@ -10235,7 +10235,7 @@
     }
     return false;
   }
-  var version = "4.1.1";
+  var version = "4.1.2";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
