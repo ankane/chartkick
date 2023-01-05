@@ -1,3 +1,7 @@
+## 5.0.0 (unreleased)
+
+- Removed support for Ruby < 2.7 and Rails < 6
+
 ## 4.2.1 (2022-08-02)
 
 - Updated Chart.js to 3.9.0
