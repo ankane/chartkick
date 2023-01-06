@@ -27272,7 +27272,7 @@
 
   // for plugins
   // match src/index.umd.ts in Chart.js
-  // except for platforms
+  // except for platforms (not exported)
   Chart.helpers = _objectSpread2({}, helpers);
   Chart._adapters = adapters;
   Chart.Animation = Animation;

@@ -20,7 +20,7 @@ import "chartjs-adapter-date-fns"
 
 // for plugins
 // match src/index.umd.ts in Chart.js
-// except for platforms
+// except for platforms (not exported)
 Chart.helpers = {...helpers}
 Chart._adapters = _adapters
 Chart.Animation = Animation
