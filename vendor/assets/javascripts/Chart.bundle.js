@@ -1179,6 +1179,14 @@
       target[key] = clone(sval);
     }
   }
+  /**
+   * @private
+   */
+  function _deprecated(scope, value, previous, current) {
+    if (value !== undefined) {
+      console.warn(scope + ': "' + previous + '" is deprecated. Please use "' + current + '" instead');
+    }
+  }
   // resolveObjectKey resolver cache
   var keyResolvers = {
     // Chart.helpers.core resolveObjectKey should resolve empty key to root object
@@ -1585,6 +1593,9 @@
       return items;
     }
     return Array.from(set);
+  }
+  function fontString(pixelSize, fontStyle, fontFamily) {
+    return fontStyle + ' ' + pixelSize + 'px ' + fontFamily;
   }
   /**
   * Request animation polyfill
@@ -16978,6 +16989,131 @@
   Chart$1.register.apply(Chart$1, _toConsumableArray(registerables));
   var Chart = Chart$1;
 
+  var helpers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    HALF_PI: HALF_PI,
+    INFINITY: INFINITY,
+    PI: PI,
+    PITAU: PITAU,
+    QUARTER_PI: QUARTER_PI,
+    RAD_PER_DEG: RAD_PER_DEG,
+    TAU: TAU,
+    TWO_THIRDS_PI: TWO_THIRDS_PI,
+    _addGrace: _addGrace,
+    _alignPixel: _alignPixel,
+    _alignStartEnd: _alignStartEnd,
+    _angleBetween: _angleBetween,
+    _angleDiff: _angleDiff,
+    _arrayUnique: _arrayUnique,
+    _attachContext: _attachContext,
+    _bezierCurveTo: _bezierCurveTo,
+    _bezierInterpolation: _bezierInterpolation,
+    _boundSegment: _boundSegment,
+    _boundSegments: _boundSegments,
+    _capitalize: _capitalize,
+    _computeSegments: _computeSegments,
+    _createResolver: _createResolver,
+    _decimalPlaces: _decimalPlaces,
+    _deprecated: _deprecated,
+    _descriptors: _descriptors,
+    _elementsEqual: _elementsEqual,
+    _factorize: _factorize,
+    _filterBetween: _filterBetween,
+    _getParentNode: _getParentNode,
+    _getStartAndCountOfVisiblePoints: _getStartAndCountOfVisiblePoints,
+    _int16Range: _int16Range,
+    _isBetween: _isBetween,
+    _isClickEvent: _isClickEvent,
+    _isDomSupported: _isDomSupported,
+    _isPointInArea: _isPointInArea,
+    _limitValue: _limitValue,
+    _longestText: _longestText,
+    _lookup: _lookup,
+    _lookupByKey: _lookupByKey,
+    _measureText: _measureText,
+    _merger: _merger,
+    _mergerIf: _mergerIf,
+    _normalizeAngle: _normalizeAngle,
+    _parseObjectDataRadialScale: _parseObjectDataRadialScale,
+    _pointInLine: _pointInLine,
+    _readValueToProps: _readValueToProps,
+    _rlookupByKey: _rlookupByKey,
+    _scaleRangesChanged: _scaleRangesChanged,
+    _setMinAndMaxByKey: _setMinAndMaxByKey,
+    _splitKey: _splitKey,
+    _steppedInterpolation: _steppedInterpolation,
+    _steppedLineTo: _steppedLineTo,
+    _textX: _textX,
+    _toLeftRightCenter: _toLeftRightCenter,
+    _updateBezierControlPoints: _updateBezierControlPoints,
+    addRoundedRectPath: addRoundedRectPath,
+    almostEquals: almostEquals,
+    almostWhole: almostWhole,
+    callback: callback,
+    clearCanvas: clearCanvas,
+    clipArea: clipArea,
+    clone: clone,
+    color: color,
+    createContext: createContext,
+    debounce: debounce,
+    defined: defined,
+    distanceBetweenPoints: distanceBetweenPoints,
+    drawPoint: drawPoint,
+    drawPointLegend: drawPointLegend,
+    each: each,
+    easingEffects: effects,
+    finiteOrDefault: finiteOrDefault,
+    fontString: fontString,
+    formatNumber: formatNumber,
+    getAngleFromPoint: getAngleFromPoint,
+    getHoverColor: getHoverColor,
+    getMaximumSize: getMaximumSize,
+    getRelativePosition: getRelativePosition,
+    getRtlAdapter: getRtlAdapter,
+    getStyle: getStyle,
+    isArray: isArray,
+    isFinite: isNumberFinite,
+    isFunction: isFunction,
+    isNullOrUndef: isNullOrUndef,
+    isNumber: isNumber,
+    isObject: isObject,
+    isPatternOrGradient: isPatternOrGradient,
+    listenArrayEvents: listenArrayEvents,
+    log10: log10,
+    merge: merge,
+    mergeIf: mergeIf,
+    niceNum: niceNum,
+    noop: noop,
+    overrideTextDirection: overrideTextDirection,
+    readUsedSize: readUsedSize,
+    renderText: renderText,
+    requestAnimFrame: requestAnimFrame,
+    resolve: resolve,
+    resolveObjectKey: resolveObjectKey,
+    restoreTextDirection: restoreTextDirection,
+    retinaScale: retinaScale,
+    setsEqual: setsEqual,
+    sign: sign,
+    splineCurve: splineCurve,
+    splineCurveMonotone: splineCurveMonotone,
+    supportsEventListenerOptions: supportsEventListenerOptions,
+    throttled: throttled,
+    toDegrees: toDegrees,
+    toDimension: toDimension,
+    toFont: toFont,
+    toFontString: toFontString,
+    toLineHeight: toLineHeight,
+    toPadding: toPadding,
+    toPercentage: toPercentage,
+    toRadians: toRadians,
+    toTRBL: toTRBL,
+    toTRBLCorners: toTRBLCorners,
+    uid: uid,
+    unclipArea: unclipArea,
+    unlistenArrayEvents: unlistenArrayEvents,
+    valueOrDefault: valueOrDefault
+  });
+
   function toInteger(dirtyNumber) {
     if (dirtyNumber === null || dirtyNumber === true || dirtyNumber === false) {
       return NaN;
@@ -27133,6 +27269,25 @@
       }
     }
   });
+
+  // for plugins
+  // match src/index.umd.ts in Chart.js
+  // except for platforms
+  Chart.helpers = _objectSpread2({}, helpers);
+  Chart._adapters = adapters;
+  Chart.Animation = Animation;
+  Chart.Animations = Animations;
+  Chart.animator = animator;
+  Chart.controllers = registry.controllers.items;
+  Chart.DatasetController = DatasetController;
+  Chart.Element = Element;
+  Chart.elements = elements;
+  Chart.Interaction = Interaction;
+  Chart.layouts = layouts;
+  Chart.Scale = Scale;
+  Chart.Ticks = Ticks;
+  Object.assign(Chart, controllers, scales, elements, plugins);
+  Chart.Chart = Chart;
 
   return Chart;
 
