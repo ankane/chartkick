@@ -1,6 +1,7 @@
 ## 5.0.0 (unreleased)
 
-- Updated Chart.js to 4.1.2
+- Added support for Chart.js 4
+- Changed `chart_json` to be defined on `Hash` and `Array` instead of `Enumerable`
 - Removed support for Ruby < 2.7 and Rails < 6
 
 ## 4.2.1 (2022-08-02)
