@@ -1,11 +1,11 @@
 # modules
-require "chartkick/enumerable"
-require "chartkick/helper"
-require "chartkick/version"
+require_relative "chartkick/enumerable"
+require_relative "chartkick/helper"
+require_relative "chartkick/version"
 
 # integrations
-require "chartkick/engine" if defined?(Rails)
-require "chartkick/sinatra" if defined?(Sinatra)
+require_relative "chartkick/engine" if defined?(Rails)
+require_relative "chartkick/sinatra" if defined?(Sinatra)
 
 if defined?(ActiveSupport.on_load)
   ActiveSupport.on_load(:action_view) do
