@@ -1,3 +1,7 @@
+# stdlib
+require "erb"
+require "json"
+
 # modules
 require_relative "chartkick/core_ext"
 require_relative "chartkick/helper"

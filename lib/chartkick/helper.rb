@@ -1,6 +1,3 @@
-require "json"
-require "erb"
-
 module Chartkick
   module Helper
     def line_chart(data_source, **options)
