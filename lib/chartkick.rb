@@ -1,6 +1,7 @@
 # modules
 require_relative "chartkick/enumerable"
 require_relative "chartkick/helper"
+require_relative "chartkick/utils"
 require_relative "chartkick/version"
 
 # integrations

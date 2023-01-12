@@ -58,18 +58,18 @@ class ChartkickTest < Minitest::Test
     assert_equal "boom", options[:id]
   end
 
-  def test_chartkick_deep_merge_different_inner_key
+  def test_deep_merge_different_inner_key
     global_option = {library: {backgroundColor: "#eee"}}
     local_option = {library: {title: "test"}}
     correct_merge = {library: {backgroundColor: "#eee", title: "test"}}
-    assert_equal chartkick_deep_merge(global_option, local_option), correct_merge
+    assert_equal Chartkick::Utils.deep_merge(global_option, local_option), correct_merge
   end
 
-  def test_chartkick_deep_merge_same_inner_key
+  def test_deep_merge_same_inner_key
     global_option = {library: {backgroundColor: "#eee"}}
     local_option = {library: {backgroundColor: "#fff"}}
     correct_merge = {library: {backgroundColor: "#fff"}}
-    assert_equal chartkick_deep_merge(global_option, local_option), correct_merge
+    assert_equal Chartkick::Utils.deep_merge(global_option, local_option), correct_merge
   end
 
   def test_id

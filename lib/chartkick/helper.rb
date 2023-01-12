@@ -39,7 +39,7 @@ module Chartkick
 
     # don't break out options since need to merge with default options
     def chartkick_chart(klass, data_source, **options)
-      options = chartkick_deep_merge(Chartkick.options, options)
+      options = Chartkick::Utils.deep_merge(Chartkick.options, options)
 
       @chartkick_chart_id ||= 0
       element_id = options.delete(:id) || "chart-#{@chartkick_chart_id += 1}"
@@ -101,7 +101,7 @@ module Chartkick
         options: options.to_json
       }
       js_vars.each_key do |k|
-        js_vars[k] = chartkick_json_escape(js_vars[k])
+        js_vars[k] = Chartkick::Utils.json_escape(js_vars[k])
       end
       createjs = "new Chartkick[%{type}](%{id}, %{data}, %{options});" % js_vars
 
@@ -136,27 +136,6 @@ module Chartkick
       end
 
       html.respond_to?(:html_safe) ? html.html_safe : html
-    end
-
-    # https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/hash/deep_merge.rb
-    def chartkick_deep_merge(hash_a, hash_b)
-      hash_a = hash_a.dup
-      hash_b.each_pair do |k, v|
-        tv = hash_a[k]
-        hash_a[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? chartkick_deep_merge(tv, v) : v
-      end
-      hash_a
-    end
-
-    # from https://github.com/rails/rails/blob/master/activesupport/lib/active_support/core_ext/string/output_safety.rb
-    JSON_ESCAPE = { "&" => '\u0026', ">" => '\u003e', "<" => '\u003c', "\u2028" => '\u2028', "\u2029" => '\u2029' }
-    JSON_ESCAPE_REGEXP = /[\u2028\u2029&><]/u
-    def chartkick_json_escape(s)
-      if ERB::Util.respond_to?(:json_escape)
-        ERB::Util.json_escape(s)
-      else
-        s.to_s.gsub(JSON_ESCAPE_REGEXP, JSON_ESCAPE)
-      end
     end
   end
 end
