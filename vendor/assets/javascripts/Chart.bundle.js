@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.1.2
+ * Chart.js v4.2.0
  * https://www.chartjs.org
  * (c) 2023 Chart.js Contributors
  * Released under the MIT License
@@ -10251,7 +10251,7 @@
     }
     return false;
   }
-  var version = "4.1.2";
+  var version = "4.2.0";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -12386,6 +12386,9 @@
     }
     return false;
   }
+  function containsColorsDefinition(descriptor) {
+    return descriptor && (descriptor.borderColor || descriptor.backgroundColor);
+  }
   var plugin_colors = {
     id: 'colors',
     defaults: {
@@ -12397,9 +12400,10 @@
         return;
       }
       var _chart$config = chart.config,
-        elements = _chart$config.options.elements,
-        datasets = _chart$config.data.datasets;
-      if (!options.forceOverride && (containsColorsDefinitions(datasets) || elements && containsColorsDefinitions(elements))) {
+        datasets = _chart$config.data.datasets,
+        chartOptions = _chart$config.options;
+      var elements = chartOptions.elements;
+      if (!options.forceOverride && (containsColorsDefinitions(datasets) || containsColorsDefinition(chartOptions) || elements && containsColorsDefinitions(elements))) {
         return;
       }
       var colorizer = getColorizer(chart);
@@ -13146,10 +13150,10 @@
           tgt = _step22$value.target,
           start = _step22$value.start,
           end = _step22$value.end;
-        var _src$style = src.style;
-        _src$style = _src$style === void 0 ? {} : _src$style;
-        var _src$style$background = _src$style.backgroundColor,
-          backgroundColor = _src$style$background === void 0 ? color : _src$style$background;
+        var _src$style = src.style,
+          _src$style2 = _src$style === void 0 ? {} : _src$style,
+          _src$style2$backgroun = _src$style2.backgroundColor,
+          backgroundColor = _src$style2$backgroun === void 0 ? color : _src$style2$backgroun;
         var notShape = target !== true;
         ctx.save();
         ctx.fillStyle = backgroundColor;
@@ -16017,8 +16021,7 @@
         top = _scale$_pointLabelIte.top,
         right = _scale$_pointLabelIte.right,
         bottom = _scale$_pointLabelIte.bottom;
-      var _optsAtIndex = optsAtIndex,
-        backdropColor = _optsAtIndex.backdropColor;
+      var backdropColor = optsAtIndex.backdropColor;
       if (!isNullOrUndef(backdropColor)) {
         var borderRadius = toTRBLCorners(optsAtIndex.borderRadius);
         var padding = toPadding(optsAtIndex.backdropPadding);
@@ -16727,6 +16730,15 @@
           return adapter.format(value, timeOpts.tooltipFormat);
         }
         return adapter.format(value, timeOpts.displayFormats.datetime);
+      }
+    }, {
+      key: "format",
+      value: function format(value, _format) {
+        var options = this.options;
+        var formats = options.time.displayFormats;
+        var unit = this._unit;
+        var fmt = _format || formats[unit];
+        return this._adapter.format(value, fmt);
       }
     }, {
       key: "_tickFormatFunction",
