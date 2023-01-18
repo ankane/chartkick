@@ -4,6 +4,8 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 [See it in action](https://chartkick.com)
 
+**Chartkick 5.0 was recently released** - see [how to upgrade](#upgrading)
+
 :fire: For admin charts and dashboards, check out [Blazer](https://github.com/ankane/blazer/), and for advanced visualizations, check out [Vega](https://github.com/ankane/vega)
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
@@ -693,33 +695,20 @@ Check out [chartkick.js](https://github.com/ankane/chartkick.js)
 
 ## Upgrading
 
-### 4.0
+### 5.0
 
-If you use Sprockets, update the gem and you’re good to go!
+If you use Importmaps or Sprockets, update the gem and you’re good to go!
 
-If you use Webpacker, run:
+If you use esbuild, Webpack, or Webpacker, run:
 
 ```sh
 yarn upgrade chartkick --latest
 ```
 
-If you use Chart.js with Webpacker, also run:
+If you use Chart.js with esbuild, Webpack, or Webpacker, also run:
 
 ```sh
 yarn upgrade chart.js --latest
-```
-
-And in `app/javascript/packs/application.js`, change:
-
-```js
-require("chartkick")
-require("chart.js")
-```
-
-to:
-
-```js
-require("chartkick/chart.js")
 ```
 
 ## History

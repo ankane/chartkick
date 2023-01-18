@@ -1,4 +1,4 @@
-## 5.0.0 (unreleased)
+## 5.0.0 (2022-01-18)
 
 - Added support for Chart.js 4
 - Changed `chart_json` to be defined on `Hash` and `Array` instead of `Enumerable`
