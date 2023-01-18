@@ -3,6 +3,7 @@
 - Added support for Chart.js 4
 - Changed `chart_json` to be defined on `Hash` and `Array` instead of `Enumerable`
 - Updated Chartkick.js to 5.0.0
+- Removed support for Chart.js 3
 - Removed support for Ruby < 2.7 and Rails < 6
 
 ## 4.2.1 (2022-08-02)
