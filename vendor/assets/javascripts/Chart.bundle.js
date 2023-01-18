@@ -4,6 +4,11 @@
  * (c) 2023 Chart.js Contributors
  * Released under the MIT License
  *
+ * @kurkle/color v0.3.2
+ * https://github.com/kurkle/color#readme
+ * (c) 2023 Jukka Kurkela
+ * Released under the MIT License
+ *
  * chartjs-adapter-date-fns v3.0.0
  * https://www.chartjs.org
  * (c) 2022 chartjs-adapter-date-fns Contributors
@@ -306,9 +311,9 @@
   }
 
   /*!
-   * @kurkle/color v0.3.1
+   * @kurkle/color v0.3.2
    * https://github.com/kurkle/color#readme
-   * (c) 2022 Jukka Kurkela
+   * (c) 2023 Jukka Kurkela
    * Released under the MIT License
    */
   function round(v) {

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "chart.js": "4.1.2",
+    "@kurkle/color": "0.3.2",
     "chartjs-adapter-date-fns": "3.0.0",
     "date-fns": "2.29.3"
   }
