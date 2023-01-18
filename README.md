@@ -18,16 +18,16 @@ Add this line to your application’s Gemfile:
 gem "chartkick"
 ```
 
-Then follow the instructions for your framework:
+Then follow the instructions for your JavaScript setup:
 
-- [Rails 7 / Importmap](#rails-7--importmap)
-- [Rails 7 / esbuild or Webpack](#rails-7--esbuild-or-webpack)
-- [Rails 6 / Webpacker](#rails-6--webpacker)
-- [Rails 5 / Sprockets](#rails-5--sprockets)
+- [Importmap](#rails-7--importmap) (Rails 7 default)
+- [esbuild, rollup.js, or Webpack](#rails-7--esbuild-rollupjs-or-webpack)
+- [Webpacker](#rails-6--webpacker) (Rails 6 default)
+- [Sprockets](#rails-5--sprockets)
 
 This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries and frameworks, see [detailed instructions](#installation).
 
-### Rails 7 / Importmap
+### Importmap
 
 In `config/importmap.rb`, add:
 
@@ -43,7 +43,7 @@ import "chartkick"
 import "Chart.bundle"
 ```
 
-### Rails 7 / esbuild or Webpack
+### esbuild, rollup.js, or Webpack
 
 Run:
 
@@ -57,7 +57,9 @@ And in `app/javascript/application.js`, add:
 import "chartkick/chart.js"
 ```
 
-### Rails 6 / Webpacker
+Note: For rollup.js, this requires `format: "iife"` in `rollup.config.js`.
+
+### Webpacker
 
 Run:
 
@@ -71,7 +73,7 @@ And in `app/javascript/packs/application.js`, add:
 import "chartkick/chart.js"
 ```
 
-### Rails 5 / Sprockets
+### Sprockets
 
 In `app/assets/javascripts/application.js`, add:
 
