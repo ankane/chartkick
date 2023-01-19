@@ -1,5 +1,5 @@
 /*!
- * Chartkick.js v5.0.0
+ * Chartkick.js v5.0.1
  * Create beautiful charts with one line of JavaScript
  * https://github.com/ankane/chartkick.js
  * MIT License
@@ -211,15 +211,11 @@
       return "day";
     }
 
-    var dayOfWeek = values[0].getDay();
-    var week = every(values, function (d) { return d.getDay() === dayOfWeek; });
-    if (!week) {
-      return "day";
-    }
-
     var month = every(values, function (d) { return d.getDate() === 1; });
     if (!month) {
-      return "week";
+      var dayOfWeek = values[0].getDay();
+      var week = every(values, function (d) { return d.getDay() === dayOfWeek; });
+      return (week ? "week" : "day");
     }
 
     var year = every(values, function (d) { return d.getMonth() === 0; });
@@ -499,15 +495,20 @@
   }
 
   function setFormatOptions$1(chart, options, chartType) {
-    var formatOptions = {
+    // options to apply to x and r values for scatter and bubble
+    var numericOptions = {
+      thousands: chart.options.thousands,
+      decimal: chart.options.decimal
+    };
+
+    // options to apply to y value
+    var formatOptions = merge({
       prefix: chart.options.prefix,
       suffix: chart.options.suffix,
-      thousands: chart.options.thousands,
-      decimal: chart.options.decimal,
       precision: chart.options.precision,
       round: chart.options.round,
       zeros: chart.options.zeros
-    };
+    }, numericOptions);
 
     if (chart.options.bytes) {
       var series = chart.data;
@@ -539,6 +540,12 @@
           return formatValue("", value, formatOptions, true);
         };
       }
+
+      if ((chartType === "scatter" || chartType === "bubble") && !options.scales.x.ticks.callback) {
+        options.scales.x.ticks.callback = function (value) {
+          return formatValue("", value, numericOptions, true);
+        };
+      }
     }
 
     if (!options.plugins.tooltip.callbacks.label) {
@@ -549,7 +556,8 @@
             label += ': ';
           }
 
-          return label + context.formattedValue;
+          var dataPoint = context.parsed;
+          return label + '(' + formatValue('', dataPoint.x, numericOptions) + ', ' + formatValue('', dataPoint.y, formatOptions) + ')';
         };
       } else if (chartType === "bubble") {
         options.plugins.tooltip.callbacks.label = function (context) {
@@ -558,7 +566,7 @@
             label += ': ';
           }
           var dataPoint = context.raw;
-          return label + '(' + dataPoint.x + ', ' + dataPoint.y + ', ' + dataPoint.v + ')';
+          return label + '(' + formatValue('', dataPoint.x, numericOptions) + ', ' + formatValue('', dataPoint.y, formatOptions) + ', ' + formatValue('', dataPoint.v, numericOptions) + ')';
         };
       } else if (chartType === "pie") {
         // need to use separate label for pie charts
@@ -578,6 +586,22 @@
             label += ': ';
           }
           return formatValue(label, context.parsed[valueLabel], formatOptions);
+        };
+      }
+    }
+
+    // avoid formatting x-axis labels
+    // by default, Chart.js applies locale
+    if ((chartType === "line" || chartType === "area") && chart.xtype === "number") {
+      if (!options.scales.x.ticks.callback) {
+        options.scales.x.ticks.callback = function (value) {
+          return toStr(value);
+        };
+      }
+
+      if (!options.plugins.tooltip.callbacks.title) {
+        options.plugins.tooltip.callbacks.title = function (context) {
+          return toStr(context[0].parsed.x);
         };
       }
     }
@@ -881,7 +905,11 @@
         }
 
         if (!options.scales.x.time.tooltipFormat) {
-          if (isDay(timeUnit)) {
+          if (timeUnit === "year") {
+            options.scales.x.time.tooltipFormat = "yyyy";
+          } else if (timeUnit === "month") {
+            options.scales.x.time.tooltipFormat = "MMM yyyy";
+          } else if (timeUnit === "week" || timeUnit === "day") {
             options.scales.x.time.tooltipFormat = "PP";
           } else if (timeUnit === "hour") {
             options.scales.x.time.tooltipFormat = "MMM d, h a";
@@ -904,12 +932,16 @@
   };
 
   defaultExport$2.prototype.renderLineChart = function renderLineChart (chart, chartType) {
+    if (!chartType) {
+      chartType = "line";
+    }
+
     var chartOptions = {};
 
     var options = jsOptions$2(chart, merge(chartOptions, chart.options));
     setFormatOptions$1(chart, options, chartType);
 
-    var data = createDataTable(chart, options, chartType || "line");
+    var data = createDataTable(chart, options, chartType);
 
     if (chart.xtype === "number") {
       options.scales.x.type = options.scales.x.type || "linear";
