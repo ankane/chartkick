@@ -638,10 +638,6 @@ Chartkick.eachChart( function(chart) {
 
 Check out [how to configure CSP](https://github.com/ankane/chartkick/blob/master/guides/Content-Security-Policy.md)
 
-## No Ruby? No Problem
-
-Check out [chartkick.js](https://github.com/ankane/chartkick.js)
-
 ## Tutorials
 
 - [Charts with Chartkick and Groupdate](https://gorails.com/episodes/charts-with-chartkick-and-groupdate)
