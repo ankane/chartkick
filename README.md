@@ -27,7 +27,7 @@ Then follow the instructions for your JavaScript setup:
 - [Webpacker](#webpacker) (Rails 6 default)
 - [Sprockets](#sprockets)
 
-This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries and frameworks, see [detailed instructions](#installation).
+This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries and frameworks, see [these instructions](#additional-charting-libraries).
 
 ### Importmap
 
@@ -441,54 +441,10 @@ Set title
 <%= line_chart data, title: "Awesome chart" %>
 ```
 
-## Installation
+## Additional Charting Libraries
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem "chartkick"
-```
-
-Next, choose your charting library.
-
-- [Chart.js](#chartjs)
 - [Google Charts](#google-charts)
 - [Highcharts](#highcharts)
-
-### Chart.js
-
-For Rails 7 / Importmap, in `config/importmap.rb`, add:
-
-```ruby
-pin "chartkick", to: "chartkick.js"
-pin "Chart.bundle", to: "Chart.bundle.js"
-```
-
-And in `app/javascript/application.js`, add:
-
-```js
-import "chartkick"
-import "Chart.bundle"
-```
-
-For Rails 6 / Webpacker, run:
-
-```sh
-yarn add chartkick chart.js
-```
-
-And in `app/javascript/packs/application.js`, add:
-
-```js
-import "chartkick/chart.js"
-```
-
-For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
-
-```js
-//= require chartkick
-//= require Chart.bundle
-```
 
 ### Google Charts
 
@@ -498,7 +454,7 @@ In your layout or views, add:
 <%= javascript_include_tag "https://www.gstatic.com/charts/loader.js" %>
 ```
 
-For Rails 7 / Importmap, in `config/importmap.rb`, add:
+For Importmap (Rails 7 default), in `config/importmap.rb`, add:
 
 ```ruby
 pin "chartkick", to: "chartkick.js"
@@ -510,7 +466,7 @@ And in `app/javascript/application.js`, add:
 import "chartkick"
 ```
 
-For Rails 6 / Webpacker, run:
+For Webpacker (Rails 6 default), run:
 
 ```sh
 yarn add chartkick
@@ -522,7 +478,7 @@ And in `app/javascript/packs/application.js`, add:
 import "chartkick"
 ```
 
-For Rails 5 / Sprockets, in `app/assets/javascripts/application.js`, add:
+For Sprockets, in `app/assets/javascripts/application.js`, add:
 
 ```js
 //= require chartkick
@@ -538,7 +494,7 @@ before your charts.
 
 ### Highcharts
 
-For Rails 7 / Importmap, run:
+For Importmap (Rails 7 default), run:
 
 ```sh
 bin/importmap pin highcharts --download
@@ -559,7 +515,7 @@ import Highcharts from "highcharts"
 window.Highcharts = Highcharts
 ```
 
-For Rails 6 / Webpacker, run:
+For Webpacker (Rails 6 default), run:
 
 ```sh
 yarn add chartkick highcharts
@@ -571,14 +527,22 @@ And in `app/javascript/packs/application.js`, add:
 import "chartkick/highcharts"
 ```
 
-For Rails 5 / Sprockets, download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts` (or use `yarn add highcharts` in Rails 5.1+), and in `app/assets/javascripts/application.js`, add:
+For Sprockets, download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts` (or use `yarn add highcharts` in Rails 5.1+), and in `app/assets/javascripts/application.js`, add:
 
 ```js
 //= require chartkick
 //= require highcharts
 ```
 
-### Sinatra and Padrino
+### Multiple Libraries
+
+If more than one charting library is loaded, choose between them with:
+
+```erb
+<%= line_chart data, adapter: "google" %> <!-- or highcharts or chartjs -->
+```
+
+## Sinatra and Padrino
 
 Download [chartkick.js](https://raw.githubusercontent.com/ankane/chartkick/master/vendor/assets/javascripts/chartkick.js) and include it manually.
 
@@ -605,14 +569,6 @@ Highcharts - download [highcharts.js](https://code.highcharts.com/highcharts.js)
 
 ```html
 <script src="highcharts.js"></script>
-```
-
-### Multiple Libraries
-
-If more than one charting library is loaded, choose between them with:
-
-```erb
-<%= line_chart data, adapter: "google" %> <!-- or highcharts or chartjs -->
 ```
 
 ## JavaScript API
@@ -697,7 +653,7 @@ Check out [chartkick.js](https://github.com/ankane/chartkick.js)
 
 ### 5.0
 
-If you use Importmaps or Sprockets, update the gem and you’re good to go!
+If you use Importmap or Sprockets, update the gem and you’re good to go!
 
 If you use esbuild, Webpack, or Webpacker, run:
 
