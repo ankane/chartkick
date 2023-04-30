@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.2.0
+ * Chart.js v4.3.0
  * https://www.chartjs.org
  * (c) 2023 Chart.js Contributors
  * Released under the MIT License
@@ -1589,12 +1589,8 @@
    * @param items
    */
   function _arrayUnique(items) {
-    var set = new Set();
-    var i, ilen;
-    for (i = 0, ilen = items.length; i < ilen; ++i) {
-      set.add(items[i]);
-    }
-    if (set.size === ilen) {
+    var set = new Set(items);
+    if (set.size === items.length) {
       return items;
     }
     return Array.from(set);
@@ -1994,7 +1990,7 @@
         delta = calculateDelta(tickValue, ticks);
       }
       var logDelta = log10(Math.abs(delta));
-      var numDecimal = Math.max(Math.min(-1 * Math.floor(logDelta), 20), 0);
+      var numDecimal = isNaN(logDelta) ? 1 : Math.max(Math.min(-1 * Math.floor(logDelta), 20), 0);
       var options = {
         notation: notation,
         minimumFractionDigits: numDecimal,
@@ -2245,12 +2241,22 @@
       _indexable: false
     }
   }, [applyAnimationsDefaults, applyLayoutsDefaults, applyScaleDefaults]);
+
+  /**
+   * Converts the given font object into a CSS font string.
+   * @param font - A font object.
+   * @return The CSS font string. See https://developer.mozilla.org/en-US/docs/Web/CSS/font
+   * @private
+   */
   function toFontString(font) {
     if (!font || isNullOrUndef(font.size) || isNullOrUndef(font.family)) {
       return null;
     }
     return (font.style ? font.style + ' ' : '') + (font.weight ? font.weight + ' ' : '') + font.size + 'px ' + font.family;
   }
+  /**
+   * @private
+   */
   function _measureText(ctx, data, gc, longest, string) {
     var textWidth = data[string];
     if (!textWidth) {
@@ -2262,6 +2268,9 @@
     }
     return longest;
   }
+  /**
+   * @private
+   */ // eslint-disable-next-line complexity
   function _longestText(ctx, font, arrayOfThings, cache) {
     cache = cache || {};
     var data = cache.data = cache.data || {};
@@ -2278,11 +2287,15 @@
     var i, j, jlen, thing, nestedThing;
     for (i = 0; i < ilen; i++) {
       thing = arrayOfThings[i];
-      if (thing !== undefined && thing !== null && isArray(thing) !== true) {
+      // Undefined strings and arrays should not be measured
+      if (thing !== undefined && thing !== null && !isArray(thing)) {
         longest = _measureText(ctx, data, gc, longest, thing);
       } else if (isArray(thing)) {
+        // if it is an array lets measure each element
+        // to do maybe simplify this function a bit so we can do this more recursively?
         for (j = 0, jlen = thing.length; j < jlen; j++) {
           nestedThing = thing[j];
+          // Undefined strings and arrays should not be measured
           if (nestedThing !== undefined && nestedThing !== null && !isArray(nestedThing)) {
             longest = _measureText(ctx, data, gc, longest, nestedThing);
           }
@@ -2299,21 +2312,36 @@
     }
     return longest;
   }
+  /**
+   * Returns the aligned pixel value to avoid anti-aliasing blur
+   * @param chart - The chart instance.
+   * @param pixel - A pixel value.
+   * @param width - The width of the element.
+   * @returns The aligned pixel value.
+   * @private
+   */
   function _alignPixel(chart, pixel, width) {
     var devicePixelRatio = chart.currentDevicePixelRatio;
     var halfWidth = width !== 0 ? Math.max(width / 2, 0.5) : 0;
     return Math.round((pixel - halfWidth) * devicePixelRatio) / devicePixelRatio + halfWidth;
   }
+  /**
+   * Clears the entire canvas.
+   */
   function clearCanvas(canvas, ctx) {
     ctx = ctx || canvas.getContext('2d');
     ctx.save();
+    // canvas.width and canvas.height do not consider the canvas transform,
+    // while clearRect does
     ctx.resetTransform();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
   }
   function drawPoint(ctx, options, x, y) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     drawPointLegend(ctx, options, x, y, null);
   }
+  // eslint-disable-next-line complexity
   function drawPointLegend(ctx, options, x, y, w) {
     var type, xOffset, yOffset, size, cornerRadius, width, xOffsetW, yOffsetW;
     var style = options.pointStyle;
@@ -2336,6 +2364,7 @@
     }
     ctx.beginPath();
     switch (style) {
+      // Default includes circle
       default:
         if (w) {
           ctx.ellipse(x, y, w / 2, radius, 0, 0, TAU);
@@ -2354,6 +2383,13 @@
         ctx.closePath();
         break;
       case 'rectRounded':
+        // NOTE: the rounded rect implementation changed to use `arc` instead of
+        // `quadraticCurveTo` since it generates better results when rect is
+        // almost a circle. 0.516 (instead of 0.5) produces results with visually
+        // closer proportion to the previous impl and it is inscribed in the
+        // circle with `radius`. For more details, see the following PRs:
+        // https://github.com/chartjs/Chart.js/issues/5597
+        // https://github.com/chartjs/Chart.js/issues/5858
         cornerRadius = radius * 0.516;
         size = radius - cornerRadius;
         xOffset = Math.cos(rad + QUARTER_PI) * size;
@@ -2374,6 +2410,7 @@
           break;
         }
         rad += QUARTER_PI;
+      /* falls through */
       case 'rectRot':
         xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
         xOffset = Math.cos(rad) * radius;
@@ -2387,6 +2424,7 @@
         break;
       case 'crossRot':
         rad += QUARTER_PI;
+      /* falls through */
       case 'cross':
         xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
         xOffset = Math.cos(rad) * radius;
@@ -2435,8 +2473,15 @@
       ctx.stroke();
     }
   }
+  /**
+   * Returns true if the point is inside the rectangle
+   * @param point - The point to test
+   * @param area - The rectangle
+   * @param margin - allowed margin
+   * @private
+   */
   function _isPointInArea(point, area, margin) {
-    margin = margin || 0.5;
+    margin = margin || 0.5; // margin - default is to match rounded decimals
     return !area || point && point.x > area.left - margin && point.x < area.right + margin && point.y > area.top - margin && point.y < area.bottom + margin;
   }
   function clipArea(ctx, area) {
@@ -2448,6 +2493,9 @@
   function unclipArea(ctx) {
     ctx.restore();
   }
+  /**
+   * @private
+   */
   function _steppedLineTo(ctx, previous, target, flip, mode) {
     if (!previous) {
       return ctx.lineTo(target.x, target.y);
@@ -2463,12 +2511,64 @@
     }
     ctx.lineTo(target.x, target.y);
   }
+  /**
+   * @private
+   */
   function _bezierCurveTo(ctx, previous, target, flip) {
     if (!previous) {
       return ctx.lineTo(target.x, target.y);
     }
     ctx.bezierCurveTo(flip ? previous.cp1x : previous.cp2x, flip ? previous.cp1y : previous.cp2y, flip ? target.cp2x : target.cp1x, flip ? target.cp2y : target.cp1y, target.x, target.y);
   }
+  function setRenderOpts(ctx, opts) {
+    if (opts.translation) {
+      ctx.translate(opts.translation[0], opts.translation[1]);
+    }
+    if (!isNullOrUndef(opts.rotation)) {
+      ctx.rotate(opts.rotation);
+    }
+    if (opts.color) {
+      ctx.fillStyle = opts.color;
+    }
+    if (opts.textAlign) {
+      ctx.textAlign = opts.textAlign;
+    }
+    if (opts.textBaseline) {
+      ctx.textBaseline = opts.textBaseline;
+    }
+  }
+  function decorateText(ctx, x, y, line, opts) {
+    if (opts.strikethrough || opts.underline) {
+      /**
+      * Now that IE11 support has been dropped, we can use more
+      * of the TextMetrics object. The actual bounding boxes
+      * are unflagged in Chrome, Firefox, Edge, and Safari so they
+      * can be safely used.
+      * See https://developer.mozilla.org/en-US/docs/Web/API/TextMetrics#Browser_compatibility
+      */
+      var metrics = ctx.measureText(line);
+      var left = x - metrics.actualBoundingBoxLeft;
+      var right = x + metrics.actualBoundingBoxRight;
+      var top = y - metrics.actualBoundingBoxAscent;
+      var bottom = y + metrics.actualBoundingBoxDescent;
+      var yDecoration = opts.strikethrough ? (top + bottom) / 2 : bottom;
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.beginPath();
+      ctx.lineWidth = opts.decorationWidth || 2;
+      ctx.moveTo(left, yDecoration);
+      ctx.lineTo(right, yDecoration);
+      ctx.stroke();
+    }
+  }
+  function drawBackdrop(ctx, opts) {
+    var oldColor = ctx.fillStyle;
+    ctx.fillStyle = opts.color;
+    ctx.fillRect(opts.left, opts.top, opts.width, opts.height);
+    ctx.fillStyle = oldColor;
+  }
+  /**
+   * Render text onto the canvas
+   */
   function renderText(ctx, text, x, y, font) {
     var opts = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
     var lines = isArray(text) ? text : [text];
@@ -2493,62 +2593,36 @@
       }
       ctx.fillText(line, x, y, opts.maxWidth);
       decorateText(ctx, x, y, line, opts);
-      y += font.lineHeight;
+      y += Number(font.lineHeight);
     }
     ctx.restore();
   }
-  function setRenderOpts(ctx, opts) {
-    if (opts.translation) {
-      ctx.translate(opts.translation[0], opts.translation[1]);
-    }
-    if (!isNullOrUndef(opts.rotation)) {
-      ctx.rotate(opts.rotation);
-    }
-    if (opts.color) {
-      ctx.fillStyle = opts.color;
-    }
-    if (opts.textAlign) {
-      ctx.textAlign = opts.textAlign;
-    }
-    if (opts.textBaseline) {
-      ctx.textBaseline = opts.textBaseline;
-    }
-  }
-  function decorateText(ctx, x, y, line, opts) {
-    if (opts.strikethrough || opts.underline) {
-      var metrics = ctx.measureText(line);
-      var left = x - metrics.actualBoundingBoxLeft;
-      var right = x + metrics.actualBoundingBoxRight;
-      var top = y - metrics.actualBoundingBoxAscent;
-      var bottom = y + metrics.actualBoundingBoxDescent;
-      var yDecoration = opts.strikethrough ? (top + bottom) / 2 : bottom;
-      ctx.strokeStyle = ctx.fillStyle;
-      ctx.beginPath();
-      ctx.lineWidth = opts.decorationWidth || 2;
-      ctx.moveTo(left, yDecoration);
-      ctx.lineTo(right, yDecoration);
-      ctx.stroke();
-    }
-  }
-  function drawBackdrop(ctx, opts) {
-    var oldColor = ctx.fillStyle;
-    ctx.fillStyle = opts.color;
-    ctx.fillRect(opts.left, opts.top, opts.width, opts.height);
-    ctx.fillStyle = oldColor;
-  }
+  /**
+   * Add a path of a rectangle with rounded corners to the current sub-path
+   * @param ctx - Context
+   * @param rect - Bounding rect
+   */
   function addRoundedRectPath(ctx, rect) {
     var x = rect.x,
       y = rect.y,
       w = rect.w,
       h = rect.h,
       radius = rect.radius;
+    // top left arc
     ctx.arc(x + radius.topLeft, y + radius.topLeft, radius.topLeft, -HALF_PI, PI, true);
+    // line from top left to bottom left
     ctx.lineTo(x, y + h - radius.bottomLeft);
+    // bottom left arc
     ctx.arc(x + radius.bottomLeft, y + h - radius.bottomLeft, radius.bottomLeft, PI, HALF_PI, true);
+    // line from bottom left to bottom right
     ctx.lineTo(x + w - radius.bottomRight, y + h);
+    // bottom right arc
     ctx.arc(x + w - radius.bottomRight, y + h - radius.bottomRight, radius.bottomRight, HALF_PI, 0, true);
+    // line from bottom right to top right
     ctx.lineTo(x + w, y + radius.topRight);
+    // top right arc
     ctx.arc(x + w - radius.topRight, y + radius.topRight, radius.topRight, 0, -HALF_PI, true);
+    // line from top right to top left
     ctx.lineTo(x + radius.topLeft, y);
   }
   var LINE_HEIGHT = /^(normal|(\d+(?:\.\d+)?)(px|em|%)?)$/;
@@ -2733,52 +2807,94 @@
   function createContext(parentContext, context) {
     return Object.assign(Object.create(parentContext), context);
   }
+
+  /**
+   * Creates a Proxy for resolving raw values for options.
+   * @param scopes - The option scopes to look for values, in resolution order
+   * @param prefixes - The prefixes for values, in resolution order.
+   * @param rootScopes - The root option scopes
+   * @param fallback - Parent scopes fallback
+   * @param getTarget - callback for getting the target for changed values
+   * @returns Proxy
+   * @private
+   */
   function _createResolver(scopes) {
     var _cache;
     var prefixes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [''];
-    var rootScopes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : scopes;
+    var rootScopes = arguments.length > 2 ? arguments[2] : undefined;
     var fallback = arguments.length > 3 ? arguments[3] : undefined;
     var getTarget = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : function () {
       return scopes[0];
     };
-    if (!defined(fallback)) {
+    var finalRootScopes = rootScopes || scopes;
+    if (typeof fallback === 'undefined') {
       fallback = _resolve('_fallback', scopes);
     }
-    var cache = (_cache = {}, _defineProperty$w(_cache, Symbol.toStringTag, 'Object'), _defineProperty$w(_cache, "_cacheable", true), _defineProperty$w(_cache, "_scopes", scopes), _defineProperty$w(_cache, "_rootScopes", rootScopes), _defineProperty$w(_cache, "_fallback", fallback), _defineProperty$w(_cache, "_getTarget", getTarget), _defineProperty$w(_cache, "override", function override(scope) {
-      return _createResolver([scope].concat(_toConsumableArray(scopes)), prefixes, rootScopes, fallback);
+    var cache = (_cache = {}, _defineProperty$w(_cache, Symbol.toStringTag, 'Object'), _defineProperty$w(_cache, "_cacheable", true), _defineProperty$w(_cache, "_scopes", scopes), _defineProperty$w(_cache, "_rootScopes", finalRootScopes), _defineProperty$w(_cache, "_fallback", fallback), _defineProperty$w(_cache, "_getTarget", getTarget), _defineProperty$w(_cache, "override", function override(scope) {
+      return _createResolver([scope].concat(_toConsumableArray(scopes)), prefixes, finalRootScopes, fallback);
     }), _cache);
     return new Proxy(cache, {
+      /**
+      * A trap for the delete operator.
+      */
       deleteProperty: function deleteProperty(target, prop) {
-        delete target[prop];
-        delete target._keys;
-        delete scopes[0][prop];
+        delete target[prop]; // remove from cache
+        delete target._keys; // remove cached keys
+        delete scopes[0][prop]; // remove from top level scope
         return true;
       },
+      /**
+      * A trap for getting property values.
+      */
       get: function get(target, prop) {
         return _cached(target, prop, function () {
           return _resolveWithPrefixes(prop, prefixes, scopes, target);
         });
       },
+      /**
+      * A trap for Object.getOwnPropertyDescriptor.
+      * Also used by Object.hasOwnProperty.
+      */
       getOwnPropertyDescriptor: function getOwnPropertyDescriptor(target, prop) {
         return Reflect.getOwnPropertyDescriptor(target._scopes[0], prop);
       },
+      /**
+      * A trap for Object.getPrototypeOf.
+      */
       getPrototypeOf: function getPrototypeOf() {
         return Reflect.getPrototypeOf(scopes[0]);
       },
+      /**
+      * A trap for the in operator.
+      */
       has: function has(target, prop) {
         return getKeysFromAllScopes(target).includes(prop);
       },
+      /**
+      * A trap for Object.getOwnPropertyNames and Object.getOwnPropertySymbols.
+      */
       ownKeys: function ownKeys(target) {
         return getKeysFromAllScopes(target);
       },
+      /**
+      * A trap for setting property values.
+      */
       set: function set(target, prop, value) {
         var storage = target._storage || (target._storage = getTarget());
-        target[prop] = storage[prop] = value;
-        delete target._keys;
+        target[prop] = storage[prop] = value; // set to top level scope + cache
+        delete target._keys; // remove cached keys
         return true;
       }
     });
   }
+  /**
+   * Returns an Proxy for resolving option values with context.
+   * @param proxy - The Proxy returned by `_createResolver`
+   * @param context - Context object for scriptable/indexable options
+   * @param subProxy - The proxy provided for scriptable options
+   * @param descriptorDefaults - Defaults for descriptors
+   * @private
+   */
   function _attachContext(proxy, context, subProxy, descriptorDefaults) {
     var cache = {
       _cacheable: false,
@@ -2795,38 +2911,63 @@
       }
     };
     return new Proxy(cache, {
+      /**
+      * A trap for the delete operator.
+      */
       deleteProperty: function deleteProperty(target, prop) {
-        delete target[prop];
-        delete proxy[prop];
+        delete target[prop]; // remove from cache
+        delete proxy[prop]; // remove from proxy
         return true;
       },
+      /**
+      * A trap for getting property values.
+      */
       get: function get(target, prop, receiver) {
         return _cached(target, prop, function () {
           return _resolveWithContext(target, prop, receiver);
         });
       },
+      /**
+      * A trap for Object.getOwnPropertyDescriptor.
+      * Also used by Object.hasOwnProperty.
+      */
       getOwnPropertyDescriptor: function getOwnPropertyDescriptor(target, prop) {
         return target._descriptors.allKeys ? Reflect.has(proxy, prop) ? {
           enumerable: true,
           configurable: true
         } : undefined : Reflect.getOwnPropertyDescriptor(proxy, prop);
       },
+      /**
+      * A trap for Object.getPrototypeOf.
+      */
       getPrototypeOf: function getPrototypeOf() {
         return Reflect.getPrototypeOf(proxy);
       },
+      /**
+      * A trap for the in operator.
+      */
       has: function has(target, prop) {
         return Reflect.has(proxy, prop);
       },
+      /**
+      * A trap for Object.getOwnPropertyNames and Object.getOwnPropertySymbols.
+      */
       ownKeys: function ownKeys() {
         return Reflect.ownKeys(proxy);
       },
+      /**
+      * A trap for setting property values.
+      */
       set: function set(target, prop, value) {
-        proxy[prop] = value;
-        delete target[prop];
+        proxy[prop] = value; // set to proxy
+        delete target[prop]; // remove from cache
         return true;
       }
     });
   }
+  /**
+   * @private
+   */
   function _descriptors(proxy) {
     var defaults = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
       scriptable: true,
@@ -2861,6 +3002,7 @@
       return target[prop];
     }
     var value = resolve();
+    // cache the resolved value
     target[prop] = value;
     return value;
   }
@@ -2869,7 +3011,8 @@
       _context = target._context,
       _subProxy = target._subProxy,
       descriptors = target._descriptors;
-    var value = _proxy[prop];
+    var value = _proxy[prop]; // resolve from proxy
+    // resolve with context
     if (isFunction(value) && descriptors.isScriptable(prop)) {
       value = _resolveScriptable(prop, value, target, receiver);
     }
@@ -2877,11 +3020,12 @@
       value = _resolveArray(prop, value, target, descriptors.isIndexable);
     }
     if (needsSubResolver(prop, value)) {
+      // if the resolved value is an object, create a sub resolver for it
       value = _attachContext(value, _context, _subProxy && _subProxy[prop], descriptors);
     }
     return value;
   }
-  function _resolveScriptable(prop, value, target, receiver) {
+  function _resolveScriptable(prop, getValue, target, receiver) {
     var _proxy = target._proxy,
       _context = target._context,
       _subProxy = target._subProxy,
@@ -2890,9 +3034,10 @@
       throw new Error('Recursion detected: ' + Array.from(_stack).join('->') + '->' + prop);
     }
     _stack.add(prop);
-    value = value(_context, _subProxy || receiver);
+    var value = getValue(_context, _subProxy || receiver);
     _stack["delete"](prop);
     if (needsSubResolver(prop, value)) {
+      // When scriptable option returns an object, create a resolver on that.
       value = createSubResolver(_proxy._scopes, _proxy, prop, value);
     }
     return value;
@@ -2902,9 +3047,10 @@
       _context = target._context,
       _subProxy = target._subProxy,
       descriptors = target._descriptors;
-    if (defined(_context.index) && isIndexable(prop)) {
-      value = value[_context.index % value.length];
+    if (typeof _context.index !== 'undefined' && isIndexable(prop)) {
+      return value[_context.index % value.length];
     } else if (isObject(value[0])) {
+      // Array of objects, return array or resolvers
       var arr = value;
       var scopes = _proxy._scopes.filter(function (s) {
         return s !== arr;
@@ -2942,10 +3088,14 @@
         if (scope) {
           set.add(scope);
           var fallback = resolveFallback(scope._fallback, key, value);
-          if (defined(fallback) && fallback !== key && fallback !== parentFallback) {
+          if (typeof fallback !== 'undefined' && fallback !== key && fallback !== parentFallback) {
+            // When we reach the descriptor that defines a new _fallback, return that.
+            // The fallback will resume to that new scope.
             return fallback;
           }
-        } else if (scope === false && defined(parentFallback) && key !== parentFallback) {
+        } else if (scope === false && typeof parentFallback !== 'undefined' && key !== parentFallback) {
+          // Fallback to `false` results to `false`, when falling back to different key.
+          // For example `interaction` from `hover` or `plugins.tooltip` and `animation` from `animations`
           return null;
         }
       }
@@ -2966,7 +3116,7 @@
     if (key === null) {
       return false;
     }
-    if (defined(fallback) && fallback !== prop) {
+    if (typeof fallback !== 'undefined' && fallback !== prop) {
       key = addScopesFromKey(set, allScopes, fallback, key, value);
       if (key === null) {
         return false;
@@ -2989,6 +3139,7 @@
     }
     var target = parent[prop];
     if (isArray(target) && isObject(value)) {
+      // For array of objects, the object is used to store updated values
       return value;
     }
     return target || {};
@@ -3001,7 +3152,7 @@
       for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
         var prefix = _step7.value;
         value = _resolve(readKey(prefix, prop), scopes);
-        if (defined(value)) {
+        if (typeof value !== 'undefined') {
           return needsSubResolver(prop, value) ? createSubResolver(scopes, proxy, prop, value) : value;
         }
       }
@@ -3021,7 +3172,7 @@
           continue;
         }
         var value = scope[key];
-        if (defined(value)) {
+        if (typeof value !== 'undefined') {
           return value;
         }
       }
@@ -3912,7 +4063,20 @@
     };
   }
   function styleChanged(style, prevStyle) {
-    return prevStyle && JSON.stringify(style) !== JSON.stringify(prevStyle);
+    if (!prevStyle) {
+      return false;
+    }
+    var cache = [];
+    var replacer = function replacer(key, value) {
+      if (!isPatternOrGradient(value)) {
+        return value;
+      }
+      if (!cache.includes(value)) {
+        cache.push(value);
+      }
+      return cache.indexOf(value);
+    };
+    return JSON.stringify(style, replacer) !== JSON.stringify(prevStyle, replacer);
   }
 
   var Animator = /*#__PURE__*/function () {
@@ -6238,7 +6402,7 @@
       return name !== 'spacing';
     },
     _indexable: function _indexable(name) {
-      return name !== 'spacing';
+      return name !== 'spacing' && !name.startsWith('borderDash') && !name.startsWith('hoverBorderDash');
     }
   });
   _defineProperty$w(DoughnutController, "overrides", {
@@ -6875,8 +7039,8 @@
     BubbleController: BubbleController,
     DoughnutController: DoughnutController,
     LineController: LineController,
-    PolarAreaController: PolarAreaController,
     PieController: PieController,
+    PolarAreaController: PolarAreaController,
     RadarController: RadarController,
     ScatterController: ScatterController
   });
@@ -6898,6 +7062,7 @@
   var DateAdapterBase = /*#__PURE__*/function () {
     function DateAdapterBase(options) {
       _classCallCheck$x(this, DateAdapterBase);
+      _defineProperty$w(this, "options", void 0);
       this.options = options || {};
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -7418,18 +7583,18 @@
           stack.placed += width;
           y = box.bottom;
         } else {
-          var height1 = chartArea.h * weight;
-          var width1 = stack.size || box.width;
+          var _height = chartArea.h * weight;
+          var _width = stack.size || box.width;
           if (defined(stack.start)) {
             x = stack.start;
           }
           if (box.fullSize) {
-            setBoxDims(box, x, userPadding.top, width1, params.outerHeight - userPadding.bottom - userPadding.top);
+            setBoxDims(box, x, userPadding.top, _width, params.outerHeight - userPadding.bottom - userPadding.top);
           } else {
-            setBoxDims(box, x, chartArea.top + stack.placed, width1, height1);
+            setBoxDims(box, x, chartArea.top + stack.placed, _width, _height);
           }
           stack.start = x;
-          stack.placed += height1;
+          stack.placed += _height;
           x = box.right;
         }
       }
@@ -7912,7 +8077,11 @@
   var Element = /*#__PURE__*/function () {
     function Element() {
       _classCallCheck$x(this, Element);
+      _defineProperty$w(this, "x", void 0);
+      _defineProperty$w(this, "y", void 0);
       _defineProperty$w(this, "active", false);
+      _defineProperty$w(this, "options", void 0);
+      _defineProperty$w(this, "$animations", void 0);
     }
     _createClass$x(Element, [{
       key: "tooltipPosition",
@@ -8064,6 +8233,9 @@
   var offsetFromEdge = function offsetFromEdge(scale, edge, offset) {
     return edge === 'top' || edge === 'left' ? scale[edge] + offset : scale[edge] - offset;
   };
+  var getTicksLimit = function getTicksLimit(ticksLength, maxTicksLimit) {
+    return Math.min(maxTicksLimit || ticksLength, ticksLength);
+  };
   function sample(arr, numItems) {
     var result = [];
     var increment = arr.length / numItems;
@@ -8168,9 +8340,9 @@
       maxWidth = right - left;
     } else {
       if (isObject(position)) {
-        var positionAxisID1 = Object.keys(position)[0];
-        var value1 = position[positionAxisID1];
-        titleX = scales[positionAxisID1].getPixelForValue(value1) - width + offset;
+        var _positionAxisID = Object.keys(position)[0];
+        var _value = position[_positionAxisID];
+        titleX = scales[_positionAxisID].getPixelForValue(_value) - width + offset;
       } else if (position === 'center') {
         titleX = (chartArea.left + chartArea.right) / 2 - width + offset;
       } else {
@@ -8515,7 +8687,7 @@
       value: function calculateLabelRotation() {
         var options = this.options;
         var tickOpts = options.ticks;
-        var numTicks = this.ticks.length;
+        var numTicks = getTicksLimit(this.ticks.length, options.ticks.maxTicksLimit);
         var minRotation = tickOpts.minRotation || 0;
         var maxRotation = tickOpts.maxRotation;
         var labelRotation = minRotation;
@@ -8703,21 +8875,22 @@
           if (sampleSize < ticks.length) {
             ticks = sample(ticks, sampleSize);
           }
-          this._labelSizes = labelSizes = this._computeLabelSizes(ticks, ticks.length);
+          this._labelSizes = labelSizes = this._computeLabelSizes(ticks, ticks.length, this.options.ticks.maxTicksLimit);
         }
         return labelSizes;
       }
     }, {
       key: "_computeLabelSizes",
-      value: function _computeLabelSizes(ticks, length) {
+      value: function _computeLabelSizes(ticks, length, maxTicksLimit) {
         var ctx = this.ctx,
           caches = this._longestTextCache;
         var widths = [];
         var heights = [];
+        var increment = Math.floor(length / getTicksLimit(length, maxTicksLimit));
         var widestLabelSize = 0;
         var highestLabelSize = 0;
         var i, j, jlen, label, tickFont, fontString, cache, lineHeight, width, height, nestedLabel;
-        for (i = 0; i < length; ++i) {
+        for (i = 0; i < length; i += increment) {
           label = ticks[i].label;
           tickFont = this._resolveTickFontOptions(i);
           ctx.font = fontString = tickFont.string;
@@ -8906,9 +9079,9 @@
           if (position === 'center') {
             borderValue = alignBorderValue((chartArea.left + chartArea.right) / 2);
           } else if (isObject(position)) {
-            var positionAxisID1 = Object.keys(position)[0];
-            var value1 = position[positionAxisID1];
-            borderValue = alignBorderValue(this.chart.scales[positionAxisID1].getPixelForValue(value1));
+            var _positionAxisID2 = Object.keys(position)[0];
+            var _value2 = position[_positionAxisID2];
+            borderValue = alignBorderValue(this.chart.scales[_positionAxisID2].getPixelForValue(_value2));
           }
           tx1 = borderValue - axisHalfWidth;
           tx2 = tx1 - tl;
@@ -8993,9 +9166,9 @@
           textAlign = ret.textAlign;
           x = ret.x;
         } else if (position === 'right') {
-          var ret1 = this._getYAxisLabelAlignment(tl);
-          textAlign = ret1.textAlign;
-          x = ret1.x;
+          var _ret = this._getYAxisLabelAlignment(tl);
+          textAlign = _ret.textAlign;
+          x = _ret.x;
         } else if (axis === 'x') {
           if (position === 'center') {
             y = (chartArea.top + chartArea.bottom) / 2 + tickAndPadding;
@@ -9009,9 +9182,9 @@
           if (position === 'center') {
             x = (chartArea.left + chartArea.right) / 2 - tickAndPadding;
           } else if (isObject(position)) {
-            var positionAxisID1 = Object.keys(position)[0];
-            var value1 = position[positionAxisID1];
-            x = this.chart.scales[positionAxisID1].getPixelForValue(value1);
+            var _positionAxisID3 = Object.keys(position)[0];
+            var _value3 = position[_positionAxisID3];
+            x = this.chart.scales[_positionAxisID3].getPixelForValue(_value3);
           }
           textAlign = this._getYAxisLabelAlignment(tl).textAlign;
         }
@@ -9840,8 +10013,8 @@
       plugins.push(registry.getPlugin(keys[i]));
     }
     var local = config.plugins || [];
-    for (var i1 = 0; i1 < local.length; i1++) {
-      var plugin = local[i1];
+    for (var _i2 = 0; _i2 < local.length; _i2++) {
+      var plugin = local[_i2];
       if (plugins.indexOf(plugin) === -1) {
         plugins.push(plugin);
         localIds[plugin.id] = true;
@@ -9922,6 +10095,11 @@
   function getDefaultScaleIDFromAxis(axis, indexAxis) {
     return axis === indexAxis ? '_index_' : '_value_';
   }
+  function idMatchesAxis(id) {
+    if (id === 'x' || id === 'y' || id === 'r') {
+      return id;
+    }
+  }
   function axisFromPosition(position) {
     if (position === 'top' || position === 'bottom') {
       return 'x';
@@ -9930,15 +10108,39 @@
       return 'y';
     }
   }
-  function determineAxis(id, scaleOptions) {
-    if (id === 'x' || id === 'y' || id === 'r') {
+  function determineAxis(id) {
+    if (idMatchesAxis(id)) {
       return id;
     }
-    id = scaleOptions.axis || axisFromPosition(scaleOptions.position) || id.length > 1 && determineAxis(id[0].toLowerCase(), scaleOptions);
-    if (id) {
-      return id;
+    for (var _len11 = arguments.length, scaleOptions = new Array(_len11 > 1 ? _len11 - 1 : 0), _key11 = 1; _key11 < _len11; _key11++) {
+      scaleOptions[_key11 - 1] = arguments[_key11];
     }
-    throw new Error("Cannot determine type of '".concat(name, "' axis. Please provide 'axis' or 'position' option."));
+    for (var _i3 = 0, _scaleOptions = scaleOptions; _i3 < _scaleOptions.length; _i3++) {
+      var opts = _scaleOptions[_i3];
+      var axis = opts.axis || axisFromPosition(opts.position) || id.length > 1 && idMatchesAxis(id[0].toLowerCase());
+      if (axis) {
+        return axis;
+      }
+    }
+    throw new Error("Cannot determine type of '".concat(id, "' axis. Please provide 'axis' or 'position' option."));
+  }
+  function getAxisFromDataset(id, axis, dataset) {
+    if (dataset[axis + 'AxisID'] === id) {
+      return {
+        axis: axis
+      };
+    }
+  }
+  function retrieveAxisFromDatasets(id, config) {
+    if (config.data && config.data.datasets) {
+      var boundDs = config.data.datasets.filter(function (d) {
+        return d.xAxisID === id || d.yAxisID === id;
+      });
+      if (boundDs.length) {
+        return getAxisFromDataset(id, 'x', boundDs[0]) || getAxisFromDataset(id, 'y', boundDs[0]);
+      }
+    }
+    return {};
   }
   function mergeScaleConfig(config, options) {
     var chartDefaults = overrides[config.type] || {
@@ -9955,7 +10157,7 @@
       if (scaleConf._proxy) {
         return console.warn("Ignoring resolver passed as options for scale: ".concat(id));
       }
-      var axis = determineAxis(id, scaleConf);
+      var axis = determineAxis(id, scaleConf, retrieveAxisFromDatasets(id, config), defaults.scales[scaleConf.type]);
       var defaultId = getDefaultScaleIDFromAxis(axis, chartIndexAxis);
       var defaultScaleOptions = chartDefaults.scales || {};
       scales[id] = mergeIf(Object.create(null), [{
@@ -10251,7 +10453,7 @@
     }
     return false;
   }
-  var version = "4.2.0";
+  var version = "4.3.0";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -10292,8 +10494,8 @@
   };
   function moveNumericKeys(obj, start, move) {
     var keys = Object.keys(obj);
-    for (var _i2 = 0, _keys = keys; _i2 < _keys.length; _i2++) {
-      var key = _keys[_i2];
+    for (var _i4 = 0, _keys = keys; _i4 < _keys.length; _i4++) {
+      var key = _keys[_i4];
       var intKey = +key;
       if (intKey >= start) {
         var value = obj[key];
@@ -10325,7 +10527,7 @@
       };
     }
   }
-  var Chart$1 = /*#__PURE__*/function () {
+  var Chart = /*#__PURE__*/function () {
     function Chart(item, userConfig) {
       var _this12 = this;
       _classCallCheck$x(this, Chart);
@@ -10802,9 +11004,9 @@
         for (var i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
           this.getDatasetMeta(i).controller.configure();
         }
-        for (var i1 = 0, ilen1 = this.data.datasets.length; i1 < ilen1; ++i1) {
-          this._updateDataset(i1, isFunction(mode) ? mode({
-            datasetIndex: i1
+        for (var _i5 = 0, _ilen = this.data.datasets.length; _i5 < _ilen; ++_i5) {
+          this._updateDataset(_i5, isFunction(mode) ? mode({
+            datasetIndex: _i5
           }) : mode);
         }
         this.notifyPlugins('afterDatasetsUpdate', {
@@ -11334,14 +11536,14 @@
     }]);
     return Chart;
   }();
-  _defineProperty$w(Chart$1, "defaults", defaults);
-  _defineProperty$w(Chart$1, "instances", instances);
-  _defineProperty$w(Chart$1, "overrides", overrides);
-  _defineProperty$w(Chart$1, "registry", registry);
-  _defineProperty$w(Chart$1, "version", version);
-  _defineProperty$w(Chart$1, "getChart", getChart);
+  _defineProperty$w(Chart, "defaults", defaults);
+  _defineProperty$w(Chart, "instances", instances);
+  _defineProperty$w(Chart, "overrides", overrides);
+  _defineProperty$w(Chart, "registry", registry);
+  _defineProperty$w(Chart, "version", version);
+  _defineProperty$w(Chart, "getChart", getChart);
   function invalidatePlugins() {
-    return each(Chart$1.instances, function (chart) {
+    return each(Chart.instances, function (chart) {
       return chart._plugins.invalidate();
     });
   }
@@ -11470,8 +11672,8 @@
       ctx.lineTo(p4.x, p4.y);
       // The corner segment from point 4 to point 5
       if (innerEnd > 0) {
-        var pCenter1 = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x, y);
-        ctx.arc(pCenter1.x, pCenter1.y, innerEnd, endAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
+        var _pCenter = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x, y);
+        ctx.arc(_pCenter.x, _pCenter.y, innerEnd, endAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
       }
       // The inner arc from point 5 to point b to point 6
       var innerMidAdjustedAngle = (endAngle - innerEnd / innerRadius + (startAngle + innerStart / innerRadius)) / 2;
@@ -11479,16 +11681,16 @@
       ctx.arc(x, y, innerRadius, innerMidAdjustedAngle, startAngle + innerStart / innerRadius, true);
       // The corner segment from point 6 to point 7
       if (innerStart > 0) {
-        var pCenter2 = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x, y);
-        ctx.arc(pCenter2.x, pCenter2.y, innerStart, innerStartAdjustedAngle + Math.PI, startAngle - HALF_PI);
+        var _pCenter2 = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x, y);
+        ctx.arc(_pCenter2.x, _pCenter2.y, innerStart, innerStartAdjustedAngle + Math.PI, startAngle - HALF_PI);
       }
       // The line from point 7 to point 8
       var p8 = rThetaToXY(outerStartAdjustedRadius, startAngle, x, y);
       ctx.lineTo(p8.x, p8.y);
       // The corner segment from point 8 to point 1
       if (outerStart > 0) {
-        var pCenter3 = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x, y);
-        ctx.arc(pCenter3.x, pCenter3.y, outerStart, startAngle - HALF_PI, outerStartAdjustedAngle);
+        var _pCenter3 = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x, y);
+        ctx.arc(_pCenter3.x, _pCenter3.y, outerStart, startAngle - HALF_PI, outerStartAdjustedAngle);
       }
     } else {
       ctx.moveTo(x, y);
@@ -11525,11 +11727,15 @@
       circumference = element.circumference,
       options = element.options;
     var borderWidth = options.borderWidth,
-      borderJoinStyle = options.borderJoinStyle;
+      borderJoinStyle = options.borderJoinStyle,
+      borderDash = options.borderDash,
+      borderDashOffset = options.borderDashOffset;
     var inner = options.borderAlign === 'inner';
     if (!borderWidth) {
       return;
     }
+    ctx.setLineDash(borderDash || []);
+    ctx.lineDashOffset = borderDashOffset;
     if (inner) {
       ctx.lineWidth = borderWidth * 2;
       ctx.lineJoin = borderJoinStyle || 'round';
@@ -11562,6 +11768,13 @@
       var _this23;
       _classCallCheck$x(this, ArcElement);
       _this23 = _super12.call(this);
+      _defineProperty$w(_assertThisInitialized$w(_this23), "circumference", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this23), "endAngle", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this23), "fullCircles", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this23), "innerRadius", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this23), "outerRadius", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this23), "pixelMargin", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this23), "startAngle", void 0);
       _this23.options = undefined;
       _this23.circumference = undefined;
       _this23.startAngle = undefined;
@@ -11591,7 +11804,7 @@
           innerRadius = _this$getProps2.innerRadius,
           outerRadius = _this$getProps2.outerRadius,
           circumference = _this$getProps2.circumference;
-        var rAdjust = this.options.spacing / 2;
+        var rAdjust = (this.options.spacing + this.options.borderWidth) / 2;
         var _circumference = valueOrDefault(circumference, endAngle - startAngle);
         var betweenAngles = _circumference >= TAU || _angleBetween(angle, startAngle, endAngle);
         var withinRadius = _isBetween(distance, innerRadius + rAdjust, outerRadius + rAdjust);
@@ -11600,7 +11813,7 @@
     }, {
       key: "getCenterPoint",
       value: function getCenterPoint(useFinalPosition) {
-        var _this$getProps3 = this.getProps(['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius', 'circumference'], useFinalPosition),
+        var _this$getProps3 = this.getProps(['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius'], useFinalPosition),
           x = _this$getProps3.x,
           y = _this$getProps3.y,
           startAngle = _this$getProps3.startAngle,
@@ -11653,6 +11866,8 @@
   _defineProperty$w(ArcElement, "defaults", {
     borderAlign: 'center',
     borderColor: '#fff',
+    borderDash: [],
+    borderDashOffset: 0,
     borderJoinStyle: undefined,
     borderRadius: 0,
     borderWidth: 2,
@@ -11663,6 +11878,12 @@
   });
   _defineProperty$w(ArcElement, "defaultRoutes", {
     backgroundColor: 'backgroundColor'
+  });
+  _defineProperty$w(ArcElement, "descriptors", {
+    _scriptable: true,
+    _indexable: function _indexable(name) {
+      return name !== 'borderDash';
+    }
   });
   function setStyle(ctx, options) {
     var style = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : options;
@@ -12028,18 +12249,13 @@
   var PointElement = /*#__PURE__*/function (_Element4) {
     _inherits$w(PointElement, _Element4);
     var _super14 = _createSuper$w(PointElement);
-    /**
-    * @type {any}
-    */
-
-    /**
-    * @type {any}
-    */
-
     function PointElement(cfg) {
       var _this25;
       _classCallCheck$x(this, PointElement);
       _this25 = _super14.call(this);
+      _defineProperty$w(_assertThisInitialized$w(_this25), "parsed", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this25), "skip", void 0);
+      _defineProperty$w(_assertThisInitialized$w(_this25), "stop", void 0);
       _this25.options = undefined;
       _this25.parsed = undefined;
       _this25.skip = undefined;
@@ -12111,6 +12327,9 @@
     return PointElement;
   }(Element);
   _defineProperty$w(PointElement, "id", 'point');
+  /**
+  * @type {any}
+  */
   _defineProperty$w(PointElement, "defaults", {
     borderWidth: 1,
     hitRadius: 1,
@@ -12120,6 +12339,9 @@
     radius: 3,
     rotation: 0
   });
+  /**
+  * @type {any}
+  */
   _defineProperty$w(PointElement, "defaultRoutes", {
     backgroundColor: 'backgroundColor',
     borderColor: 'borderColor'
@@ -12331,9 +12553,9 @@
   var elements = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ArcElement: ArcElement,
+    BarElement: BarElement,
     LineElement: LineElement,
-    PointElement: PointElement,
-    BarElement: BarElement
+    PointElement: PointElement
   });
   var BORDER_COLORS = ['rgb(54, 162, 235)', 'rgb(255, 99, 132)', 'rgb(255, 159, 64)', 'rgb(255, 205, 86)', 'rgb(75, 192, 192)', 'rgb(153, 102, 255)', 'rgb(201, 203, 207)' // grey
   ];
@@ -12512,6 +12734,9 @@
       delete dataset._decimated;
       delete dataset._data;
       Object.defineProperty(dataset, 'data', {
+        configurable: true,
+        enumerable: true,
+        writable: true,
         value: data
       });
     }
@@ -13517,15 +13742,15 @@
             _step24;
           try {
             for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
-              var hitbox1 = _step24.value;
-              if (hitbox1.col !== col) {
-                col = hitbox1.col;
+              var _hitbox = _step24.value;
+              if (_hitbox.col !== col) {
+                col = _hitbox.col;
                 top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
               }
-              hitbox1.top = top;
-              hitbox1.left += this.left + padding;
-              hitbox1.left = rtlHelper.leftForLtr(rtlHelper.x(hitbox1.left), hitbox1.width);
-              top += hitbox1.height + padding;
+              _hitbox.top = top;
+              _hitbox.left += this.left + padding;
+              _hitbox.left = rtlHelper.leftForLtr(rtlHelper.x(_hitbox.left), _hitbox.width);
+              top += _hitbox.height + padding;
             }
           } catch (err) {
             _iterator24.e(err);
@@ -14744,11 +14969,10 @@
     }, {
       key: "_drawColorBox",
       value: function _drawColorBox(ctx, pt, i, rtlHelper, options) {
-        var labelColors = this.labelColors[i];
+        var labelColor = this.labelColors[i];
         var labelPointStyle = this.labelPointStyles[i];
         var boxHeight = options.boxHeight,
-          boxWidth = options.boxWidth,
-          boxPadding = options.boxPadding;
+          boxWidth = options.boxWidth;
         var bodyFont = toFont(options.bodyFont);
         var colorX = getAlignedX(this, 'left', options);
         var rtlColorX = rtlHelper.x(colorX);
@@ -14766,17 +14990,17 @@
           ctx.strokeStyle = options.multiKeyBackground;
           ctx.fillStyle = options.multiKeyBackground;
           drawPoint(ctx, drawOptions, centerX, centerY);
-          ctx.strokeStyle = labelColors.borderColor;
-          ctx.fillStyle = labelColors.backgroundColor;
+          ctx.strokeStyle = labelColor.borderColor;
+          ctx.fillStyle = labelColor.backgroundColor;
           drawPoint(ctx, drawOptions, centerX, centerY);
         } else {
-          ctx.lineWidth = isObject(labelColors.borderWidth) ? Math.max.apply(Math, _toConsumableArray(Object.values(labelColors.borderWidth))) : labelColors.borderWidth || 1;
-          ctx.strokeStyle = labelColors.borderColor;
-          ctx.setLineDash(labelColors.borderDash || []);
-          ctx.lineDashOffset = labelColors.borderDashOffset || 0;
-          var outerX = rtlHelper.leftForLtr(rtlColorX, boxWidth - boxPadding);
-          var innerX = rtlHelper.leftForLtr(rtlHelper.xPlus(rtlColorX, 1), boxWidth - boxPadding - 2);
-          var borderRadius = toTRBLCorners(labelColors.borderRadius);
+          ctx.lineWidth = isObject(labelColor.borderWidth) ? Math.max.apply(Math, _toConsumableArray(Object.values(labelColor.borderWidth))) : labelColor.borderWidth || 1;
+          ctx.strokeStyle = labelColor.borderColor;
+          ctx.setLineDash(labelColor.borderDash || []);
+          ctx.lineDashOffset = labelColor.borderDashOffset || 0;
+          var outerX = rtlHelper.leftForLtr(rtlColorX, boxWidth);
+          var innerX = rtlHelper.leftForLtr(rtlHelper.xPlus(rtlColorX, 1), boxWidth - 2);
+          var borderRadius = toTRBLCorners(labelColor.borderRadius);
           if (Object.values(borderRadius).some(function (v) {
             return v !== 0;
           })) {
@@ -14791,7 +15015,7 @@
             });
             ctx.fill();
             ctx.stroke();
-            ctx.fillStyle = labelColors.backgroundColor;
+            ctx.fillStyle = labelColor.backgroundColor;
             ctx.beginPath();
             addRoundedRectPath(ctx, {
               x: innerX,
@@ -14805,7 +15029,7 @@
             ctx.fillStyle = options.multiKeyBackground;
             ctx.fillRect(outerX, colorY, boxWidth, boxHeight);
             ctx.strokeRect(outerX, colorY, boxWidth, boxHeight);
-            ctx.fillStyle = labelColors.backgroundColor;
+            ctx.fillStyle = labelColor.backgroundColor;
             ctx.fillRect(innerX, colorY + 1, boxWidth - 2, boxHeight - 2);
           }
         }
@@ -15456,8 +15680,12 @@
       }
     }
     for (; j < numSpaces; ++j) {
+      var tickValue = Math.round((niceMin + j * spacing) * factor) / factor;
+      if (maxDefined && tickValue > max) {
+        break;
+      }
       ticks.push({
-        value: Math.round((niceMin + j * spacing) * factor) / factor
+        value: tickValue
       });
     }
     if (maxDefined && includeBounds && niceMax !== max) {
@@ -15957,29 +16185,74 @@
       limits.b = Math.max(limits.b, orig.b + y);
     }
   }
+  function createPointLabelItem(scale, index, itemOpts) {
+    var outerDistance = scale.drawingArea;
+    var extra = itemOpts.extra,
+      additionalAngle = itemOpts.additionalAngle,
+      padding = itemOpts.padding,
+      size = itemOpts.size;
+    var pointLabelPosition = scale.getPointPosition(index, outerDistance + extra + padding, additionalAngle);
+    var angle = Math.round(toDegrees(_normalizeAngle(pointLabelPosition.angle + HALF_PI)));
+    var y = yForAngle(pointLabelPosition.y, size.h, angle);
+    var textAlign = getTextAlignForAngle(angle);
+    var left = leftForTextAlign(pointLabelPosition.x, size.w, textAlign);
+    return {
+      visible: true,
+      x: pointLabelPosition.x,
+      y: y,
+      textAlign: textAlign,
+      left: left,
+      top: y,
+      right: left + size.w,
+      bottom: y + size.h
+    };
+  }
+  function isNotOverlapped(item, area) {
+    if (!area) {
+      return true;
+    }
+    var left = item.left,
+      top = item.top,
+      right = item.right,
+      bottom = item.bottom;
+    var apexesInArea = _isPointInArea({
+      x: left,
+      y: top
+    }, area) || _isPointInArea({
+      x: left,
+      y: bottom
+    }, area) || _isPointInArea({
+      x: right,
+      y: top
+    }, area) || _isPointInArea({
+      x: right,
+      y: bottom
+    }, area);
+    return !apexesInArea;
+  }
   function buildPointLabelItems(scale, labelSizes, padding) {
     var items = [];
     var valueCount = scale._pointLabels.length;
     var opts = scale.options;
-    var extra = getTickBackdropHeight(opts) / 2;
-    var outerDistance = scale.drawingArea;
-    var additionalAngle = opts.pointLabels.centerPointLabels ? PI / valueCount : 0;
+    var _opts$pointLabels = opts.pointLabels,
+      centerPointLabels = _opts$pointLabels.centerPointLabels,
+      display = _opts$pointLabels.display;
+    var itemOpts = {
+      extra: getTickBackdropHeight(opts) / 2,
+      additionalAngle: centerPointLabels ? PI / valueCount : 0
+    };
+    var area;
     for (var i = 0; i < valueCount; i++) {
-      var pointLabelPosition = scale.getPointPosition(i, outerDistance + extra + padding[i], additionalAngle);
-      var angle = Math.round(toDegrees(_normalizeAngle(pointLabelPosition.angle + HALF_PI)));
-      var size = labelSizes[i];
-      var y = yForAngle(pointLabelPosition.y, size.h, angle);
-      var textAlign = getTextAlignForAngle(angle);
-      var left = leftForTextAlign(pointLabelPosition.x, size.w, textAlign);
-      items.push({
-        x: pointLabelPosition.x,
-        y: y,
-        textAlign: textAlign,
-        left: left,
-        top: y,
-        right: left + size.w,
-        bottom: y + size.h
-      });
+      itemOpts.padding = padding[i];
+      itemOpts.size = labelSizes[i];
+      var item = createPointLabelItem(scale, i, itemOpts);
+      items.push(item);
+      if (display === 'auto') {
+        item.visible = isNotOverlapped(item, area);
+        if (item.visible) {
+          area = item;
+        }
+      }
     }
     return items;
   }
@@ -16007,45 +16280,51 @@
     }
     return y;
   }
+  function drawPointLabelBox(ctx, opts, item) {
+    var left = item.left,
+      top = item.top,
+      right = item.right,
+      bottom = item.bottom;
+    var backdropColor = opts.backdropColor;
+    if (!isNullOrUndef(backdropColor)) {
+      var borderRadius = toTRBLCorners(opts.borderRadius);
+      var padding = toPadding(opts.backdropPadding);
+      ctx.fillStyle = backdropColor;
+      var backdropLeft = left - padding.left;
+      var backdropTop = top - padding.top;
+      var backdropWidth = right - left + padding.width;
+      var backdropHeight = bottom - top + padding.height;
+      if (Object.values(borderRadius).some(function (v) {
+        return v !== 0;
+      })) {
+        ctx.beginPath();
+        addRoundedRectPath(ctx, {
+          x: backdropLeft,
+          y: backdropTop,
+          w: backdropWidth,
+          h: backdropHeight,
+          radius: borderRadius
+        });
+        ctx.fill();
+      } else {
+        ctx.fillRect(backdropLeft, backdropTop, backdropWidth, backdropHeight);
+      }
+    }
+  }
   function drawPointLabels(scale, labelCount) {
     var ctx = scale.ctx,
       pointLabels = scale.options.pointLabels;
     for (var i = labelCount - 1; i >= 0; i--) {
-      var optsAtIndex = pointLabels.setContext(scale.getPointLabelContext(i));
-      var plFont = toFont(optsAtIndex.font);
-      var _scale$_pointLabelIte = scale._pointLabelItems[i],
-        x = _scale$_pointLabelIte.x,
-        y = _scale$_pointLabelIte.y,
-        textAlign = _scale$_pointLabelIte.textAlign,
-        left = _scale$_pointLabelIte.left,
-        top = _scale$_pointLabelIte.top,
-        right = _scale$_pointLabelIte.right,
-        bottom = _scale$_pointLabelIte.bottom;
-      var backdropColor = optsAtIndex.backdropColor;
-      if (!isNullOrUndef(backdropColor)) {
-        var borderRadius = toTRBLCorners(optsAtIndex.borderRadius);
-        var padding = toPadding(optsAtIndex.backdropPadding);
-        ctx.fillStyle = backdropColor;
-        var backdropLeft = left - padding.left;
-        var backdropTop = top - padding.top;
-        var backdropWidth = right - left + padding.width;
-        var backdropHeight = bottom - top + padding.height;
-        if (Object.values(borderRadius).some(function (v) {
-          return v !== 0;
-        })) {
-          ctx.beginPath();
-          addRoundedRectPath(ctx, {
-            x: backdropLeft,
-            y: backdropTop,
-            w: backdropWidth,
-            h: backdropHeight,
-            radius: borderRadius
-          });
-          ctx.fill();
-        } else {
-          ctx.fillRect(backdropLeft, backdropTop, backdropWidth, backdropHeight);
-        }
+      var item = scale._pointLabelItems[i];
+      if (!item.visible) {
+        continue;
       }
+      var optsAtIndex = pointLabels.setContext(scale.getPointLabelContext(i));
+      drawPointLabelBox(ctx, optsAtIndex, item);
+      var plFont = toFont(optsAtIndex.font);
+      var x = item.x,
+        y = item.y,
+        textAlign = item.textAlign;
       renderText(ctx, scale._pointLabels[i], x, y + plFont.lineHeight / 2, plFont, {
         color: optsAtIndex.color,
         textAlign: textAlign,
@@ -17003,8 +17282,7 @@
   });
   var registerables = [controllers, elements, plugins, scales];
 
-  Chart$1.register.apply(Chart$1, _toConsumableArray(registerables));
-  var Chart = Chart$1;
+  Chart.register.apply(Chart, _toConsumableArray(registerables));
 
   var helpers = /*#__PURE__*/Object.freeze({
     __proto__: null,

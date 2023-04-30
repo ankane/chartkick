@@ -1,3 +1,7 @@
+## 5.0.2 (unreleased)
+
+- Updated Chart.js to 4.3.0
+
 ## 5.0.1 (2023-01-19)
 
 - Updated Chartkick.js to 5.0.1
