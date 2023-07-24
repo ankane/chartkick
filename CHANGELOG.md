@@ -1,4 +1,4 @@
-## 5.0.3 (unreleased)
+## 5.0.3 (2023-07-24)
 
 - Updated Chart.js to 4.3.1
 
