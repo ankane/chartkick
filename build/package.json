@@ -14,9 +14,9 @@
     "rollup": "^3.9.1"
   },
   "dependencies": {
-    "chart.js": "4.3.0",
+    "chart.js": "4.3.1",
     "@kurkle/color": "0.3.2",
     "chartjs-adapter-date-fns": "3.0.0",
-    "date-fns": "2.29.3"
+    "date-fns": "2.30.0"
   }
 }
