@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.3.1
+ * Chart.js v4.4.0
  * https://www.chartjs.org
  * (c) 2023 Chart.js Contributors
  * Released under the MIT License
@@ -2027,6 +2027,7 @@
       reverse: false,
       beginAtZero: false,
       bounds: 'ticks',
+      clip: true,
       grace: 0,
       grid: {
         display: true,
@@ -2609,7 +2610,7 @@
       h = rect.h,
       radius = rect.radius;
     // top left arc
-    ctx.arc(x + radius.topLeft, y + radius.topLeft, radius.topLeft, -HALF_PI, PI, true);
+    ctx.arc(x + radius.topLeft, y + radius.topLeft, radius.topLeft, 1.5 * PI, PI, true);
     // line from top left to bottom left
     ctx.lineTo(x, y + h - radius.bottomLeft);
     // bottom left arc
@@ -6476,7 +6477,7 @@
         line._chart = this.chart;
         line._datasetIndex = this.index;
         line._decimated = !!_dataset._decimated;
-        line.points = points.slice(Math.max(this._drawStart - 1, 0), this._drawStart + this._drawCount);
+        line.points = points;
         var options = this.resolveDatasetElementOptions(mode);
         if (!this.options.showLine) {
           options.borderWidth = 0;
@@ -10459,7 +10460,7 @@
     }
     return false;
   }
-  var version = "4.3.1";
+  var version = "4.4.0";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -10521,17 +10522,21 @@
     }
     return e;
   }
-  function getDatasetArea(meta) {
+  function getSizeForArea(scale, chartArea, field) {
+    return scale.options.clip ? scale[field] : chartArea[field];
+  }
+  function getDatasetArea(meta, chartArea) {
     var xScale = meta.xScale,
       yScale = meta.yScale;
     if (xScale && yScale) {
       return {
-        left: xScale.left,
-        right: xScale.right,
-        top: yScale.top,
-        bottom: yScale.bottom
+        left: getSizeForArea(xScale, chartArea, 'left'),
+        right: getSizeForArea(xScale, chartArea, 'right'),
+        top: getSizeForArea(yScale, chartArea, 'top'),
+        bottom: getSizeForArea(yScale, chartArea, 'bottom')
       };
     }
+    return chartArea;
   }
   var Chart = /*#__PURE__*/function () {
     function Chart(item, userConfig) {
@@ -11124,7 +11129,7 @@
         var ctx = this.ctx;
         var clip = meta._clip;
         var useClip = !clip.disabled;
-        var area = getDatasetArea(meta) || this.chartArea;
+        var area = getDatasetArea(meta, this.chartArea);
         var args = {
           meta: meta,
           index: meta.index,
