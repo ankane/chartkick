@@ -10,7 +10,7 @@ Create beautiful JavaScript charts with one line of Ruby. No more fighting with 
 
 :two_hearts: A perfect companion to [Groupdate](https://github.com/ankane/groupdate), [Hightop](https://github.com/ankane/hightop), and [ActiveMedian](https://github.com/ankane/active_median)
 
-[![Build Status](https://github.com/ankane/chartkick/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ankane/chartkick/actions)
+[![Build Status](https://github.com/ankane/chartkick/actions/workflows/build.yml/badge.svg)](https://github.com/ankane/chartkick/actions)
 
 ## Quick Start
 
