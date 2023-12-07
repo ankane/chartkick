@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.4.0
+ * Chart.js v4.4.1
  * https://www.chartjs.org
  * (c) 2023 Chart.js Contributors
  * Released under the MIT License
@@ -26,62 +26,62 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Chart = factory());
 })(this, (function () { 'use strict';
 
-  function _iterableToArrayLimit(arr, i) {
-    var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];
-    if (null != _i) {
-      var _s,
-        _e,
-        _x,
-        _r,
-        _arr = [],
-        _n = !0,
-        _d = !1;
+  function _iterableToArrayLimit(r, l) {
+    var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (null != t) {
+      var e,
+        n,
+        i,
+        u,
+        a = [],
+        f = !0,
+        o = !1;
       try {
-        if (_x = (_i = _i.call(arr)).next, 0 === i) {
-          if (Object(_i) !== _i) return;
-          _n = !1;
-        } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0);
-      } catch (err) {
-        _d = !0, _e = err;
+        if (i = (t = t.call(r)).next, 0 === l) {
+          if (Object(t) !== t) return;
+          f = !1;
+        } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
+      } catch (r) {
+        o = !0, n = r;
       } finally {
         try {
-          if (!_n && null != _i.return && (_r = _i.return(), Object(_r) !== _r)) return;
+          if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
         } finally {
-          if (_d) throw _e;
+          if (o) throw n;
         }
       }
-      return _arr;
+      return a;
     }
   }
-  function ownKeys(object, enumerableOnly) {
-    var keys = Object.keys(object);
+  function ownKeys(e, r) {
+    var t = Object.keys(e);
     if (Object.getOwnPropertySymbols) {
-      var symbols = Object.getOwnPropertySymbols(object);
-      enumerableOnly && (symbols = symbols.filter(function (sym) {
-        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-      })), keys.push.apply(keys, symbols);
+      var o = Object.getOwnPropertySymbols(e);
+      r && (o = o.filter(function (r) {
+        return Object.getOwnPropertyDescriptor(e, r).enumerable;
+      })), t.push.apply(t, o);
     }
-    return keys;
+    return t;
   }
-  function _objectSpread2(target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = null != arguments[i] ? arguments[i] : {};
-      i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
-        _defineProperty$1(target, key, source[key]);
-      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+  function _objectSpread2(e) {
+    for (var r = 1; r < arguments.length; r++) {
+      var t = null != arguments[r] ? arguments[r] : {};
+      r % 2 ? ownKeys(Object(t), !0).forEach(function (r) {
+        _defineProperty$1(e, r, t[r]);
+      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) {
+        Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r));
       });
     }
-    return target;
+    return e;
   }
-  function _typeof$1(obj) {
+  function _typeof$1(o) {
     "@babel/helpers - typeof";
 
-    return _typeof$1 = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
-      return typeof obj;
-    } : function (obj) {
-      return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    }, _typeof$1(obj);
+    return _typeof$1 = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+      return typeof o;
+    } : function (o) {
+      return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+    }, _typeof$1(o);
   }
   function _classCallCheck$1(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -1403,7 +1403,6 @@
     if (angle < -0.5 * PI) {
       angle += TAU; // make sure the returned angle is in the range of (-PI/2, 3PI/2]
     }
-
     return {
       angle: angle,
       distance: radialDistanceFromCenter
@@ -2194,14 +2193,13 @@
     }, {
       key: "route",
       value: function route(scope, name, targetScope, targetName) {
-        var _Object$definePropert;
         var scopeObject = getScope$1(this, scope);
         var targetScopeObject = getScope$1(this, targetScope);
         var privateName = '_' + name;
-        Object.defineProperties(scopeObject, (_Object$definePropert = {}, _defineProperty$1(_Object$definePropert, privateName, {
+        Object.defineProperties(scopeObject, _defineProperty$1(_defineProperty$1({}, privateName, {
           value: scopeObject[name],
           writable: true
-        }), _defineProperty$1(_Object$definePropert, name, {
+        }), name, {
           enumerable: true,
           get: function get() {
             var local = this[privateName];
@@ -2214,7 +2212,7 @@
           set: function set(value) {
             this[privateName] = value;
           }
-        }), _Object$definePropert));
+        }));
       }
     }, {
       key: "apply",
@@ -2820,7 +2818,6 @@
    * @private
    */
   function _createResolver(scopes) {
-    var _cache;
     var prefixes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [''];
     var rootScopes = arguments.length > 2 ? arguments[2] : undefined;
     var fallback = arguments.length > 3 ? arguments[3] : undefined;
@@ -2831,9 +2828,9 @@
     if (typeof fallback === 'undefined') {
       fallback = _resolve('_fallback', scopes);
     }
-    var cache = (_cache = {}, _defineProperty$1(_cache, Symbol.toStringTag, 'Object'), _defineProperty$1(_cache, "_cacheable", true), _defineProperty$1(_cache, "_scopes", scopes), _defineProperty$1(_cache, "_rootScopes", finalRootScopes), _defineProperty$1(_cache, "_fallback", fallback), _defineProperty$1(_cache, "_getTarget", getTarget), _defineProperty$1(_cache, "override", function override(scope) {
+    var cache = _defineProperty$1(_defineProperty$1(_defineProperty$1(_defineProperty$1(_defineProperty$1(_defineProperty$1(_defineProperty$1({}, Symbol.toStringTag, 'Object'), "_cacheable", true), "_scopes", scopes), "_rootScopes", finalRootScopes), "_fallback", fallback), "_getTarget", getTarget), "override", function override(scope) {
       return _createResolver([scope].concat(_toConsumableArray(scopes)), prefixes, finalRootScopes, fallback);
-    }), _cache);
+    });
     return new Proxy(cache, {
       /**
       * A trap for the delete operator.
@@ -3634,8 +3631,10 @@
           return false;
         }
       };
-      window.addEventListener('test', null, options);
-      window.removeEventListener('test', null, options);
+      if (_isDomSupported()) {
+        window.addEventListener('test', null, options);
+        window.removeEventListener('test', null, options);
+      }
     } catch (e) {
       // continue regardless of error
     }
@@ -4922,9 +4921,8 @@
         var parsed = new Array(count);
         var i, ilen, index;
         for (i = 0, ilen = count; i < ilen; ++i) {
-          var _parsed$i;
           index = i + start;
-          parsed[i] = (_parsed$i = {}, _defineProperty$1(_parsed$i, iAxis, singleScale || iScale.parse(labels[index], index)), _defineProperty$1(_parsed$i, vAxis, vScale.parse(data[index], index)), _parsed$i);
+          parsed[i] = _defineProperty$1(_defineProperty$1({}, iAxis, singleScale || iScale.parse(labels[index], index)), vAxis, vScale.parse(data[index], index));
         }
         return parsed;
       }
@@ -9276,6 +9274,13 @@
               case 'right':
                 left -= width;
                 break;
+              case 'inner':
+                if (i === ilen - 1) {
+                  left -= width;
+                } else if (i > 0) {
+                  left -= width / 2;
+                }
+                break;
             }
             backdrop = {
               left: left,
@@ -10433,9 +10438,9 @@
     return cached;
   }
   var hasFunction = function hasFunction(value) {
-    return isObject(value) && Object.getOwnPropertyNames(value).reduce(function (acc, key) {
-      return acc || isFunction(value[key]);
-    }, false);
+    return isObject(value) && Object.getOwnPropertyNames(value).some(function (key) {
+      return isFunction(value[key]);
+    });
   };
   function needContext(proxy, names) {
     var _descriptors2 = _descriptors(proxy),
@@ -10460,7 +10465,7 @@
     }
     return false;
   }
-  var version = "4.4.0";
+  var version = "4.4.1";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -15285,12 +15290,15 @@
     }, {
       key: "_getActiveElements",
       value: function _getActiveElements(e, lastActive, replay, inChartArea) {
+        var _this35 = this;
         var options = this.options;
         if (e.type === 'mouseout') {
           return [];
         }
         if (!inChartArea) {
-          return lastActive;
+          return lastActive.filter(function (i) {
+            return _this35.chart.data.datasets[i.datasetIndex] && _this35.chart.getDatasetMeta(i.datasetIndex).controller.getParsed(i.index) !== undefined;
+          });
         }
         var active = this.chart.getElementsAtEventForMode(e, options.mode, options, replay);
         if (options.reverse) {
@@ -15477,13 +15485,13 @@
     _inherits$1(CategoryScale, _Scale);
     var _super19 = _createSuper$1(CategoryScale);
     function CategoryScale(cfg) {
-      var _this35;
+      var _this36;
       _classCallCheck$1(this, CategoryScale);
-      _this35 = _super19.call(this, cfg);
-      _this35._startValue = undefined;
-      _this35._valueRange = 0;
-      _this35._addedLabels = [];
-      return _this35;
+      _this36 = _super19.call(this, cfg);
+      _this36._startValue = undefined;
+      _this36._valueRange = 0;
+      _this36._addedLabels = [];
+      return _this36;
     }
     _createClass$1(CategoryScale, [{
       key: "init",
@@ -15726,15 +15734,15 @@
     _inherits$1(LinearScaleBase, _Scale2);
     var _super20 = _createSuper$1(LinearScaleBase);
     function LinearScaleBase(cfg) {
-      var _this36;
+      var _this37;
       _classCallCheck$1(this, LinearScaleBase);
-      _this36 = _super20.call(this, cfg);
-      _this36.start = undefined;
-      _this36.end = undefined;
-      _this36._startValue = undefined;
-      _this36._endValue = undefined;
-      _this36._valueRange = 0;
-      return _this36;
+      _this37 = _super20.call(this, cfg);
+      _this37.start = undefined;
+      _this37.end = undefined;
+      _this37._startValue = undefined;
+      _this37._endValue = undefined;
+      _this37._valueRange = 0;
+      return _this37;
     }
     _createClass$1(LinearScaleBase, [{
       key: "parse",
@@ -15984,14 +15992,14 @@
     _inherits$1(LogarithmicScale, _Scale3);
     var _super22 = _createSuper$1(LogarithmicScale);
     function LogarithmicScale(cfg) {
-      var _this37;
+      var _this38;
       _classCallCheck$1(this, LogarithmicScale);
-      _this37 = _super22.call(this, cfg);
-      _this37.start = undefined;
-      _this37.end = undefined;
-      _this37._startValue = undefined;
-      _this37._valueRange = 0;
-      return _this37;
+      _this38 = _super22.call(this, cfg);
+      _this38.start = undefined;
+      _this38.end = undefined;
+      _this38._startValue = undefined;
+      _this38._valueRange = 0;
+      return _this38;
     }
     _createClass$1(LogarithmicScale, [{
       key: "parse",
@@ -16386,15 +16394,15 @@
     _inherits$1(RadialLinearScale, _LinearScaleBase2);
     var _super23 = _createSuper$1(RadialLinearScale);
     function RadialLinearScale(cfg) {
-      var _this38;
+      var _this39;
       _classCallCheck$1(this, RadialLinearScale);
-      _this38 = _super23.call(this, cfg);
-      _this38.xCenter = undefined;
-      _this38.yCenter = undefined;
-      _this38.drawingArea = undefined;
-      _this38._pointLabels = [];
-      _this38._pointLabelItems = [];
-      return _this38;
+      _this39 = _super23.call(this, cfg);
+      _this39.xCenter = undefined;
+      _this39.yCenter = undefined;
+      _this39.drawingArea = undefined;
+      _this39._pointLabels = [];
+      _this39._pointLabelItems = [];
+      return _this39;
     }
     _createClass$1(RadialLinearScale, [{
       key: "setDimensions",
@@ -16424,13 +16432,13 @@
     }, {
       key: "generateTickLabels",
       value: function generateTickLabels(ticks) {
-        var _this39 = this;
+        var _this40 = this;
         LinearScaleBase.prototype.generateTickLabels.call(this, ticks);
         this._pointLabels = this.getLabels().map(function (value, index) {
-          var label = callback(_this39.options.pointLabels.callback, [value, index], _this39);
+          var label = callback(_this40.options.pointLabels.callback, [value, index], _this40);
           return label || label === 0 ? label : '';
         }).filter(function (v, i) {
-          return _this39.chart.getDataVisibility(i);
+          return _this40.chart.getDataVisibility(i);
         });
       }
     }, {
@@ -16543,7 +16551,7 @@
     }, {
       key: "drawGrid",
       value: function drawGrid() {
-        var _this40 = this;
+        var _this41 = this;
         var ctx = this.ctx;
         var opts = this.options;
         var angleLines = opts.angleLines,
@@ -16557,11 +16565,11 @@
         if (grid.display) {
           this.ticks.forEach(function (tick, index) {
             if (index !== 0) {
-              offset = _this40.getDistanceFromCenterForValue(tick.value);
-              var context = _this40.getContext(index);
+              offset = _this41.getDistanceFromCenterForValue(tick.value);
+              var context = _this41.getContext(index);
               var optsAtIndex = grid.setContext(context);
               var optsAtIndexBorder = border.setContext(context);
-              drawRadiusLine(_this40, optsAtIndex, offset, labelCount, optsAtIndexBorder);
+              drawRadiusLine(_this41, optsAtIndex, offset, labelCount, optsAtIndexBorder);
             }
           });
         }
@@ -16594,7 +16602,7 @@
     }, {
       key: "drawLabels",
       value: function drawLabels() {
-        var _this41 = this;
+        var _this42 = this;
         var ctx = this.ctx;
         var opts = this.options;
         var tickOpts = opts.ticks;
@@ -16612,9 +16620,9 @@
           if (index === 0 && !opts.reverse) {
             return;
           }
-          var optsAtIndex = tickOpts.setContext(_this41.getContext(index));
+          var optsAtIndex = tickOpts.setContext(_this42.getContext(index));
           var tickFont = toFont(optsAtIndex.font);
-          offset = _this41.getDistanceFromCenterForValue(_this41.ticks[index].value);
+          offset = _this42.getDistanceFromCenterForValue(_this42.ticks[index].value);
           if (optsAtIndex.showLabelBackdrop) {
             ctx.font = tickFont.string;
             width = ctx.measureText(tick.label).width;
@@ -16823,20 +16831,20 @@
     _inherits$1(TimeScale, _Scale4);
     var _super24 = _createSuper$1(TimeScale);
     function TimeScale(props) {
-      var _this42;
+      var _this43;
       _classCallCheck$1(this, TimeScale);
-      _this42 = _super24.call(this, props);
-      _this42._cache = {
+      _this43 = _super24.call(this, props);
+      _this43._cache = {
         data: [],
         labels: [],
         all: []
       };
-      _this42._unit = 'day';
-      _this42._majorUnit = undefined;
-      _this42._offsets = {};
-      _this42._normalized = false;
-      _this42._parseOpts = undefined;
-      return _this42;
+      _this43._unit = 'day';
+      _this43._majorUnit = undefined;
+      _this43._offsets = {};
+      _this43._normalized = false;
+      _this43._parseOpts = undefined;
+      return _this43;
     }
     _createClass$1(TimeScale, [{
       key: "init",
@@ -17195,13 +17203,13 @@
     _inherits$1(TimeSeriesScale, _TimeScale);
     var _super25 = _createSuper$1(TimeSeriesScale);
     function TimeSeriesScale(props) {
-      var _this43;
+      var _this44;
       _classCallCheck$1(this, TimeSeriesScale);
-      _this43 = _super25.call(this, props);
-      _this43._table = [];
-      _this43._minPos = undefined;
-      _this43._tableRange = undefined;
-      return _this43;
+      _this44 = _super25.call(this, props);
+      _this44._table = [];
+      _this44._minPos = undefined;
+      _this44._tableRange = undefined;
+      return _this44;
     }
     _createClass$1(TimeSeriesScale, [{
       key: "initOffsets",
@@ -17436,14 +17444,14 @@
     valueOrDefault: valueOrDefault
   });
 
-  function _typeof(obj) {
+  function _typeof(o) {
     "@babel/helpers - typeof";
 
-    return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
-      return typeof obj;
-    } : function (obj) {
-      return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    }, _typeof(obj);
+    return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+      return typeof o;
+    } : function (o) {
+      return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
+    }, _typeof(o);
   }
 
   function toInteger(dirtyNumber) {
@@ -18254,7 +18262,6 @@
       return value < 0 ? Math.ceil(value) : Math.floor(value);
     } // Math.trunc is not supported by IE
   };
-
   var defaultRoundingMethod = 'trunc';
   function getRoundingMethod(method) {
     return method ? roundingMap[method] : roundingMap[defaultRoundingMethod];
@@ -21275,7 +21282,6 @@
     // 0 to 999, -0 to -999
     fourDigitsSigned: /^-?\d{1,4}/ // 0 to 9999, -0 to -9999
   };
-
   var timezonePatterns = {
     basicOptionalMinutes: /^([+-])(\d{2})(\d{2})?|Z/,
     basic: /^([+-])(\d{2})(\d{2})|Z/,
