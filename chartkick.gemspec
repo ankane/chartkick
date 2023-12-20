@@ -14,4 +14,6 @@ Gem::Specification.new do |spec|
   spec.require_path  = "lib"
 
   spec.required_ruby_version = ">= 2.7"
+
+  spec.metadata["changelog_uri"] = "https://github.com/ankane/chartkick/blob/master/CHANGELOG.md"
 end
