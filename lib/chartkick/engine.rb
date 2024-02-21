@@ -6,6 +6,7 @@ module Chartkick
     initializer "chartkick.importmap" do |app|
       if defined?(Importmap)
         app.config.assets.precompile << "chartkick.js"
+        app.config.assets.precompile << "chartkick.min.js"
         app.config.assets.precompile << "Chart.bundle.js"
       end
     end
