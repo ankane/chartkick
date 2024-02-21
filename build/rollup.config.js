@@ -1,5 +1,6 @@
 import babel from "@rollup/plugin-babel";
 import resolve from "@rollup/plugin-node-resolve";
+import terser from '@rollup/plugin-terser';
 
 // use same banner as projects
 // https://unpkg.com/chart.js@4.4.1
@@ -43,7 +44,8 @@ export default [
       babel({
         babelHelpers: "bundled",
         presets: [["@babel/preset-env"]]
-      })
+      }),
+      terser()
     ]
   }
 ];
