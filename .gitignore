@@ -17,4 +17,3 @@ test/version_tmp
 tmp
 node_modules
 package-lock.json
-.idea
