@@ -32,7 +32,7 @@ This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other char
 In `config/importmap.rb`, add:
 
 ```ruby
-pin "chartkick", to: "chartkick.js"
+pin "chartkick", to: "chartkick.min.js"
 pin "Chart.bundle", to: "Chart.bundle.js"
 ```
 
@@ -455,7 +455,7 @@ In your layout or views, add:
 For Importmap (Rails 7 default), in `config/importmap.rb`, add:
 
 ```ruby
-pin "chartkick", to: "chartkick.js"
+pin "chartkick", to: "chartkick.min.js"
 ```
 
 And in `app/javascript/application.js`, add:
@@ -501,7 +501,7 @@ bin/importmap pin highcharts --download
 And in `config/importmap.rb`, add:
 
 ```ruby
-pin "chartkick", to: "chartkick.js"
+pin "chartkick", to: "chartkick.min.js"
 ```
 
 And in `app/javascript/application.js`, add:
