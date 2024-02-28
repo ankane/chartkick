@@ -1,7 +1,7 @@
 /*!
- * Chart.js v4.4.1
+ * Chart.js v4.4.2
  * https://www.chartjs.org
- * (c) 2023 Chart.js Contributors
+ * (c) 2024 Chart.js Contributors
  * Released under the MIT License
  *
  * @kurkle/color v0.3.2
@@ -7825,10 +7825,14 @@
     passive: true
   } : false;
   function addListener(node, type, listener) {
-    node.addEventListener(type, listener, eventListenerOptions);
+    if (node) {
+      node.addEventListener(type, listener, eventListenerOptions);
+    }
   }
   function removeListener(chart, type, listener) {
-    chart.canvas.removeEventListener(type, listener, eventListenerOptions);
+    if (chart && chart.canvas) {
+      chart.canvas.removeEventListener(type, listener, eventListenerOptions);
+    }
   }
   function fromNativeEvent(event, chart) {
     var type = EVENT_TYPES[event.type] || event.type;
@@ -10465,7 +10469,7 @@
     }
     return false;
   }
-  var version = "4.4.1";
+  var version = "4.4.2";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -14357,20 +14361,23 @@
         return false;
       }
       var i, len;
-      var x = 0;
+      var xSet = new Set();
       var y = 0;
       var count = 0;
       for (i = 0, len = items.length; i < len; ++i) {
         var el = items[i].element;
         if (el && el.hasValue()) {
           var pos = el.tooltipPosition();
-          x += pos.x;
+          xSet.add(pos.x);
           y += pos.y;
           ++count;
         }
       }
+      var xAverage = _toConsumableArray(xSet).reduce(function (a, b) {
+        return a + b;
+      }) / xSet.size;
       return {
-        x: x / count,
+        x: xAverage,
         y: y / count
       };
     },
@@ -16564,7 +16571,7 @@
         }
         if (grid.display) {
           this.ticks.forEach(function (tick, index) {
-            if (index !== 0) {
+            if (index !== 0 || index === 0 && _this41.min < 0) {
               offset = _this41.getDistanceFromCenterForValue(tick.value);
               var context = _this41.getContext(index);
               var optsAtIndex = grid.setContext(context);
@@ -16617,7 +16624,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         this.ticks.forEach(function (tick, index) {
-          if (index === 0 && !opts.reverse) {
+          if (index === 0 && _this42.min >= 0 && !opts.reverse) {
             return;
           }
           var optsAtIndex = tickOpts.setContext(_this42.getContext(index));
