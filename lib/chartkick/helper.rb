@@ -34,6 +34,26 @@ module Chartkick
 
     private
 
+    # It removes style tag from html and replaced with class name with same property to work with CSP
+    def inline_styles_replace_with_class(html, element_id)
+      docs = Nokogiri::HTML.fragment(html)
+      style_attrs = docs.css('div')[0]["style"]
+      docs.css('*').remove_attr('style')
+
+      div_element = docs.css('div')
+      chart_class_name = "#{div_element.first["id"].to_s}-styles"
+      class_element = div_element.first["class"].to_s
+      if class_element.empty?
+        class_element = "#{chart_class_name}"
+      else
+        class_element += " #{chart_class_name}"
+      end
+
+      docs.css('div')[0]["id"] = element_id
+      html = docs.to_html(save_with: Nokogiri::XML::Node::SaveOptions::AS_XML)
+      [html, style_attrs, chart_class_name]
+    end
+
     # don't break out options since need to merge with default options
     def chartkick_chart(klass, data_source, **options)
       options = Chartkick::Utils.deep_merge(Chartkick.options, options)
@@ -74,6 +94,8 @@ module Chartkick
         loading: options[:loading] || "Loading..."
       }
 
+      option_element_id = html_vars[:id]
+
       [:height, :width].each do |k|
         # limit to alphanumeric and % for simplicity
         # this prevents things like calc() but safety is the priority
@@ -89,6 +111,9 @@ module Chartkick
       end
 
       html = (options.delete(:html) || %(<div id="%{id}" style="height: %{height}; width: %{width}; text-align: center; color: #999; line-height: %{height}; font-size: 14px; font-family: 'Lucida Grande', 'Lucida Sans Unicode', Verdana, Arial, Helvetica, sans-serif;">%{loading}</div>)) % html_vars
+
+      html, style_attrs, chart_class_name = inline_styles_replace_with_class(html, option_element_id)
+      chart_class_name = ".#{chart_class_name}{#{style_attrs}}"
 
       # js vars
       js_vars = {
@@ -115,6 +140,13 @@ module Chartkick
           (function() {
             if (document.documentElement.hasAttribute("data-turbolinks-preview")) return;
             if (document.documentElement.hasAttribute("data-turbo-preview")) return;
+
+            var head = document.head || document.getElementsByTagName('head')[0];
+            var styleTag = document.createElement("style");
+            styleTag.setAttribute("type", "text/css");
+            styleTag.setAttribute("nonce", "#{nonce}");
+            head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode("#{chart_class_name}"));
 
             var createChart = function() { #{createjs} };
             if ("Chartkick" in window) {
