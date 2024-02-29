@@ -119,6 +119,7 @@ module Chartkick
             var createChart = function() { #{createjs} };
             if ("Chartkick" in window) {
               createChart();
+              window.addEventListener("turbo:load", createChart, {once: true});
             } else {
               window.addEventListener("chartkick:load", createChart, true);
             }
