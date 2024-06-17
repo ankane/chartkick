@@ -13,5 +13,5 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["*.{md,txt}", "{lib,licenses,vendor}/**/*"]
   spec.require_path  = "lib"
 
-  spec.required_ruby_version = ">= 2.7"
+  spec.required_ruby_version = ">= 3.1"
 end
