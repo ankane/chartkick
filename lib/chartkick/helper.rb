@@ -78,7 +78,7 @@ module Chartkick
         # limit to alphanumeric and % for simplicity
         # this prevents things like calc() but safety is the priority
         # dot does not need escaped in square brackets
-        raise ArgumentError, "Invalid #{k}" unless html_vars[k] =~ /\A[a-zA-Z0-9%.]*\z/
+        raise ArgumentError, "Invalid #{k}" unless /\A[a-zA-Z0-9%.]*\z/.match?(html_vars[k])
       end
 
       html_vars.each_key do |k|
