@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.4.3
+ * Chart.js v4.4.4
  * https://www.chartjs.org
  * (c) 2024 Chart.js Contributors
  * Released under the MIT License
@@ -26,8 +26,119 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Chart = factory());
 })(this, (function () { 'use strict';
 
+  function _arrayLikeToArray$1(r, a) {
+    (null == a || a > r.length) && (a = r.length);
+    for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+    return n;
+  }
+  function _arrayWithHoles(r) {
+    if (Array.isArray(r)) return r;
+  }
+  function _arrayWithoutHoles(r) {
+    if (Array.isArray(r)) return _arrayLikeToArray$1(r);
+  }
+  function _assertThisInitialized$1(e) {
+    if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    return e;
+  }
   function _callSuper(t, o, e) {
     return o = _getPrototypeOf$1(o), _possibleConstructorReturn$1(t, _isNativeReflectConstruct$1() ? Reflect.construct(o, e || [], _getPrototypeOf$1(t).constructor) : o.apply(t, e));
+  }
+  function _classCallCheck$1(a, n) {
+    if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
+  }
+  function _defineProperties$1(e, r) {
+    for (var t = 0; t < r.length; t++) {
+      var o = r[t];
+      o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o);
+    }
+  }
+  function _createClass$1(e, r, t) {
+    return r && _defineProperties$1(e.prototype, r), t && _defineProperties$1(e, t), Object.defineProperty(e, "prototype", {
+      writable: !1
+    }), e;
+  }
+  function _createForOfIteratorHelper$1(r, e) {
+    var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (!t) {
+      if (Array.isArray(r) || (t = _unsupportedIterableToArray$1(r)) || e && r && "number" == typeof r.length) {
+        t && (r = t);
+        var n = 0,
+          F = function () {};
+        return {
+          s: F,
+          n: function () {
+            return n >= r.length ? {
+              done: !0
+            } : {
+              done: !1,
+              value: r[n++]
+            };
+          },
+          e: function (r) {
+            throw r;
+          },
+          f: F
+        };
+      }
+      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    var o,
+      a = !0,
+      u = !1;
+    return {
+      s: function () {
+        t = t.call(r);
+      },
+      n: function () {
+        var r = t.next();
+        return a = r.done, r;
+      },
+      e: function (r) {
+        u = !0, o = r;
+      },
+      f: function () {
+        try {
+          a || null == t.return || t.return();
+        } finally {
+          if (u) throw o;
+        }
+      }
+    };
+  }
+  function _defineProperty$1(e, r, t) {
+    return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+      value: t,
+      enumerable: !0,
+      configurable: !0,
+      writable: !0
+    }) : e[r] = t, e;
+  }
+  function _get() {
+    return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) {
+      var p = _superPropBase(e, t);
+      if (p) {
+        var n = Object.getOwnPropertyDescriptor(p, t);
+        return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value;
+      }
+    }, _get.apply(null, arguments);
+  }
+  function _getPrototypeOf$1(t) {
+    return _getPrototypeOf$1 = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) {
+      return t.__proto__ || Object.getPrototypeOf(t);
+    }, _getPrototypeOf$1(t);
+  }
+  function _inherits$1(t, e) {
+    if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function");
+    t.prototype = Object.create(e && e.prototype, {
+      constructor: {
+        value: t,
+        writable: !0,
+        configurable: !0
+      }
+    }), Object.defineProperty(t, "prototype", {
+      writable: !1
+    }), e && _setPrototypeOf$1(t, e);
   }
   function _isNativeReflectConstruct$1() {
     try {
@@ -36,6 +147,9 @@
     return (_isNativeReflectConstruct$1 = function () {
       return !!t;
     })();
+  }
+  function _iterableToArray(r) {
+    if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r);
   }
   function _iterableToArrayLimit(r, l) {
     var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
@@ -64,6 +178,12 @@
       return a;
     }
   }
+  function _nonIterableRest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
   function ownKeys(e, r) {
     var t = Object.keys(e);
     if (Object.getOwnPropertySymbols) {
@@ -84,6 +204,32 @@
       });
     }
     return e;
+  }
+  function _possibleConstructorReturn$1(t, e) {
+    if (e && ("object" == typeof e || "function" == typeof e)) return e;
+    if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined");
+    return _assertThisInitialized$1(t);
+  }
+  function _setPrototypeOf$1(t, e) {
+    return _setPrototypeOf$1 = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) {
+      return t.__proto__ = e, t;
+    }, _setPrototypeOf$1(t, e);
+  }
+  function _slicedToArray(r, e) {
+    return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray$1(r, e) || _nonIterableRest();
+  }
+  function _superPropBase(t, o) {
+    for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf$1(t)););
+    return t;
+  }
+  function _superPropGet(t, e, r, o) {
+    var p = _get(_getPrototypeOf$1(1 & o ? t.prototype : t), e, r);
+    return 2 & o ? function (t) {
+      return p.apply(r, t);
+    } : p;
+  }
+  function _toConsumableArray(r) {
+    return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray$1(r) || _nonIterableSpread();
   }
   function _toPrimitive(t, r) {
     if ("object" != typeof t || !t) return t;
@@ -108,192 +254,12 @@
       return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
     }, _typeof$1(o);
   }
-  function _classCallCheck$1(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
+  function _unsupportedIterableToArray$1(r, a) {
+    if (r) {
+      if ("string" == typeof r) return _arrayLikeToArray$1(r, a);
+      var t = {}.toString.call(r).slice(8, -1);
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray$1(r, a) : void 0;
     }
-  }
-  function _defineProperties$1(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
-    }
-  }
-  function _createClass$1(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties$1(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties$1(Constructor, staticProps);
-    Object.defineProperty(Constructor, "prototype", {
-      writable: false
-    });
-    return Constructor;
-  }
-  function _defineProperty$1(obj, key, value) {
-    key = _toPropertyKey(key);
-    if (key in obj) {
-      Object.defineProperty(obj, key, {
-        value: value,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      });
-    } else {
-      obj[key] = value;
-    }
-    return obj;
-  }
-  function _inherits$1(subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) {
-      throw new TypeError("Super expression must either be null or a function");
-    }
-    subClass.prototype = Object.create(superClass && superClass.prototype, {
-      constructor: {
-        value: subClass,
-        writable: true,
-        configurable: true
-      }
-    });
-    Object.defineProperty(subClass, "prototype", {
-      writable: false
-    });
-    if (superClass) _setPrototypeOf$1(subClass, superClass);
-  }
-  function _getPrototypeOf$1(o) {
-    _getPrototypeOf$1 = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
-    return _getPrototypeOf$1(o);
-  }
-  function _setPrototypeOf$1(o, p) {
-    _setPrototypeOf$1 = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
-    return _setPrototypeOf$1(o, p);
-  }
-  function _assertThisInitialized$1(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
-  }
-  function _possibleConstructorReturn$1(self, call) {
-    if (call && (typeof call === "object" || typeof call === "function")) {
-      return call;
-    } else if (call !== void 0) {
-      throw new TypeError("Derived constructors may only return object or undefined");
-    }
-    return _assertThisInitialized$1(self);
-  }
-  function _superPropBase(object, property) {
-    while (!Object.prototype.hasOwnProperty.call(object, property)) {
-      object = _getPrototypeOf$1(object);
-      if (object === null) break;
-    }
-    return object;
-  }
-  function _get() {
-    if (typeof Reflect !== "undefined" && Reflect.get) {
-      _get = Reflect.get.bind();
-    } else {
-      _get = function _get(target, property, receiver) {
-        var base = _superPropBase(target, property);
-        if (!base) return;
-        var desc = Object.getOwnPropertyDescriptor(base, property);
-        if (desc.get) {
-          return desc.get.call(arguments.length < 3 ? target : receiver);
-        }
-        return desc.value;
-      };
-    }
-    return _get.apply(this, arguments);
-  }
-  function _slicedToArray(arr, i) {
-    return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray$1(arr, i) || _nonIterableRest();
-  }
-  function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray$1(arr) || _nonIterableSpread();
-  }
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) return _arrayLikeToArray$1(arr);
-  }
-  function _arrayWithHoles(arr) {
-    if (Array.isArray(arr)) return arr;
-  }
-  function _iterableToArray(iter) {
-    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
-  }
-  function _unsupportedIterableToArray$1(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray$1(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen);
-  }
-  function _arrayLikeToArray$1(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-    return arr2;
-  }
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-  function _nonIterableRest() {
-    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-  function _createForOfIteratorHelper$1(o, allowArrayLike) {
-    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
-    if (!it) {
-      if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") {
-        if (it) o = it;
-        var i = 0;
-        var F = function () {};
-        return {
-          s: F,
-          n: function () {
-            if (i >= o.length) return {
-              done: true
-            };
-            return {
-              done: false,
-              value: o[i++]
-            };
-          },
-          e: function (e) {
-            throw e;
-          },
-          f: F
-        };
-      }
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-    var normalCompletion = true,
-      didErr = false,
-      err;
-    return {
-      s: function () {
-        it = it.call(o);
-      },
-      n: function () {
-        var step = it.next();
-        normalCompletion = step.done;
-        return step;
-      },
-      e: function (e) {
-        didErr = true;
-        err = e;
-      },
-      f: function () {
-        try {
-          if (!normalCompletion && it.return != null) it.return();
-        } finally {
-          if (didErr) throw err;
-        }
-      }
-    };
   }
 
   /*!
@@ -5641,7 +5607,7 @@
     }, {
       key: "updateRangeFromParsed",
       value: function updateRangeFromParsed(range, scale, parsed, stack) {
-        _get(_getPrototypeOf$1(BarController.prototype), "updateRangeFromParsed", this).call(this, range, scale, parsed, stack);
+        _superPropGet(BarController, "updateRangeFromParsed", this, 3)([range, scale, parsed, stack]);
         var custom = parsed._custom;
         if (custom && scale === this._cachedMeta.vScale) {
           range.min = Math.min(range.min, custom.min);
@@ -5671,7 +5637,7 @@
       key: "initialize",
       value: function initialize() {
         this.enableOptionSharing = true;
-        _get(_getPrototypeOf$1(BarController.prototype), "initialize", this).call(this);
+        _superPropGet(BarController, "initialize", this, 3)([]);
         var meta = this._cachedMeta;
         meta.stack = this.getDataset().stack;
       }
@@ -5728,8 +5694,12 @@
         });
         var stacked = iScale.options.stacked;
         var stacks = [];
+        var currentParsed = this._cachedMeta.controller.getParsed(dataIndex);
+        var iScaleValue = currentParsed && currentParsed[iScale.axis];
         var skipNull = function skipNull(meta) {
-          var parsed = meta.controller.getParsed(dataIndex);
+          var parsed = meta._parsed.find(function (item) {
+            return item[iScale.axis] === iScaleValue;
+          });
           var val = parsed && parsed[meta.vScale.axis];
           if (isNullOrUndef(val) || isNaN(val)) {
             return true;
@@ -5941,12 +5911,12 @@
       key: "initialize",
       value: function initialize() {
         this.enableOptionSharing = true;
-        _get(_getPrototypeOf$1(BubbleController.prototype), "initialize", this).call(this);
+        _superPropGet(BubbleController, "initialize", this, 3)([]);
       }
     }, {
       key: "parsePrimitiveData",
       value: function parsePrimitiveData(meta, data, start, count) {
-        var parsed = _get(_getPrototypeOf$1(BubbleController.prototype), "parsePrimitiveData", this).call(this, meta, data, start, count);
+        var parsed = _superPropGet(BubbleController, "parsePrimitiveData", this, 3)([meta, data, start, count]);
         for (var i = 0; i < parsed.length; i++) {
           parsed[i]._custom = this.resolveDataElementOptions(i + start).radius;
         }
@@ -5955,7 +5925,7 @@
     }, {
       key: "parseArrayData",
       value: function parseArrayData(meta, data, start, count) {
-        var parsed = _get(_getPrototypeOf$1(BubbleController.prototype), "parseArrayData", this).call(this, meta, data, start, count);
+        var parsed = _superPropGet(BubbleController, "parseArrayData", this, 3)([meta, data, start, count]);
         for (var i = 0; i < parsed.length; i++) {
           var item = data[start + i];
           parsed[i]._custom = valueOrDefault(item[2], this.resolveDataElementOptions(i + start).radius);
@@ -5965,7 +5935,7 @@
     }, {
       key: "parseObjectData",
       value: function parseObjectData(meta, data, start, count) {
-        var parsed = _get(_getPrototypeOf$1(BubbleController.prototype), "parseObjectData", this).call(this, meta, data, start, count);
+        var parsed = _superPropGet(BubbleController, "parseObjectData", this, 3)([meta, data, start, count]);
         for (var i = 0; i < parsed.length; i++) {
           var item = data[start + i];
           parsed[i]._custom = valueOrDefault(item && item.r && +item.r, this.resolveDataElementOptions(i + start).radius);
@@ -6036,7 +6006,7 @@
       key: "resolveDataElementOptions",
       value: function resolveDataElementOptions(index, mode) {
         var parsed = this.getParsed(index);
-        var values = _get(_getPrototypeOf$1(BubbleController.prototype), "resolveDataElementOptions", this).call(this, index, mode);
+        var values = _superPropGet(BubbleController, "resolveDataElementOptions", this, 3)([index, mode]);
         if (values.$shared) {
           values = Object.assign({}, values, {
             $shared: false
@@ -6430,7 +6400,7 @@
       value: function initialize() {
         this.enableOptionSharing = true;
         this.supportsDecimation = true;
-        _get(_getPrototypeOf$1(LineController.prototype), "initialize", this).call(this);
+        _superPropGet(LineController, "initialize", this, 3)([]);
       }
     }, {
       key: "update",
@@ -6532,7 +6502,7 @@
       value: function draw() {
         var meta = this._cachedMeta;
         meta.dataset.updateControlPoints(this.chart.chartArea, meta.iScale.axis);
-        _get(_getPrototypeOf$1(LineController.prototype), "draw", this).call(this);
+        _superPropGet(LineController, "draw", this, 3)([]);
       }
     }]);
   }(DatasetController);
@@ -6920,7 +6890,7 @@
         if (!this.datasetElementType && showLine) {
           this.datasetElementType = this.chart.registry.getElement('line');
         }
-        _get(_getPrototypeOf$1(ScatterController.prototype), "addElements", this).call(this);
+        _superPropGet(ScatterController, "addElements", this, 3)([]);
       }
     }, {
       key: "updateElements",
@@ -7240,7 +7210,7 @@
     var rangeMethod = axis === 'x' ? 'inXRange' : 'inYRange';
     var intersectsItem = false;
     evaluateInteractionItems(chart, axis, position, function (element, datasetIndex, index) {
-      if (element[rangeMethod](position[axis], useFinalPosition)) {
+      if (element[rangeMethod] && element[rangeMethod](position[axis], useFinalPosition)) {
         items.push({
           element: element,
           datasetIndex: datasetIndex,
@@ -10426,7 +10396,7 @@
     }
     return false;
   }
-  var version = "4.4.3";
+  var version = "4.4.4";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -11034,8 +11004,8 @@
           var _this$_resizeBeforeDr = this._resizeBeforeDraw,
             width = _this$_resizeBeforeDr.width,
             height = _this$_resizeBeforeDr.height;
-          this._resize(width, height);
           this._resizeBeforeDraw = null;
+          this._resize(width, height);
         }
         this.clear();
         if (this.width <= 0 || this.height <= 0) {
@@ -11325,8 +11295,8 @@
           }
         };
         var detached;
-        var attached = function attached() {
-          _remove('attach', attached);
+        var _attached = function attached() {
+          _remove('attach', _attached);
           _this19.attached = true;
           _this19.resize();
           _add('resize', listener);
@@ -11337,10 +11307,10 @@
           _remove('resize', listener);
           _this19._stop();
           _this19._resize(0, 0);
-          _add('attach', attached);
+          _add('attach', _attached);
         };
         if (platform.isAttached(this.canvas)) {
-          attached();
+          _attached();
         } else {
           detached();
         }
@@ -11781,7 +11751,8 @@
           circumference = _this$getProps2.circumference;
         var rAdjust = (this.options.spacing + this.options.borderWidth) / 2;
         var _circumference = valueOrDefault(circumference, endAngle - startAngle);
-        var betweenAngles = _circumference >= TAU || _angleBetween(angle, startAngle, endAngle);
+        var nonZeroBetween = _angleBetween(angle, startAngle, endAngle) && startAngle !== endAngle;
+        var betweenAngles = _circumference >= TAU || nonZeroBetween;
         var withinRadius = _isBetween(distance, innerRadius + rAdjust, outerRadius + rAdjust);
         return betweenAngles && withinRadius;
       }
@@ -14316,6 +14287,9 @@
           ++count;
         }
       }
+      if (count === 0 || xSet.size === 0) {
+        return false;
+      }
       var xAverage = _toConsumableArray(xSet).reduce(function (a, b) {
         return a + b;
       }) / xSet.size;
@@ -15464,7 +15438,7 @@
           }
           this._addedLabels = [];
         }
-        _get(_getPrototypeOf$1(CategoryScale.prototype), "init", this).call(this, scaleOptions);
+        _superPropGet(CategoryScale, "init", this, 3)([scaleOptions]);
       }
     }, {
       key: "parse",
@@ -15522,7 +15496,7 @@
     }, {
       key: "configure",
       value: function configure() {
-        _get(_getPrototypeOf$1(CategoryScale.prototype), "configure", this).call(this);
+        _superPropGet(CategoryScale, "configure", this, 3)([]);
         if (!this.isHorizontal()) {
           this._reversePixels = !this._reversePixels;
         }
@@ -15802,7 +15776,7 @@
         var ticks = this.ticks;
         var start = this.min;
         var end = this.max;
-        _get(_getPrototypeOf$1(LinearScaleBase.prototype), "configure", this).call(this);
+        _superPropGet(LinearScaleBase, "configure", this, 3)([]);
         if (this.options.offset && ticks.length) {
           var offset = (end - start) / Math.max(ticks.length - 1, 1) / 2;
           start -= offset;
@@ -16031,7 +16005,7 @@
       key: "configure",
       value: function configure() {
         var start = this.min;
-        _get(_getPrototypeOf$1(LogarithmicScale.prototype), "configure", this).call(this);
+        _superPropGet(LogarithmicScale, "configure", this, 3)([]);
         this._startValue = log10(start);
         this._valueRange = log10(this.max) - log10(start);
       }
@@ -16525,7 +16499,7 @@
             ctx.strokeStyle = color;
             ctx.setLineDash(optsAtIndex.borderDash);
             ctx.lineDashOffset = optsAtIndex.borderDashOffset;
-            offset = this.getDistanceFromCenterForValue(opts.ticks.reverse ? this.min : this.max);
+            offset = this.getDistanceFromCenterForValue(opts.reverse ? this.min : this.max);
             position = this.getPointPosition(i, offset);
             ctx.beginPath();
             ctx.moveTo(this.xCenter, this.yCenter);
@@ -16796,7 +16770,7 @@
           round: time.round,
           isoWeekday: time.isoWeekday
         };
-        _get(_getPrototypeOf$1(TimeScale.prototype), "init", this).call(this, scaleOpts);
+        _superPropGet(TimeScale, "init", this, 3)([scaleOpts]);
         this._normalized = opts.normalized;
       }
     }, {
@@ -16810,7 +16784,7 @@
     }, {
       key: "beforeLayout",
       value: function beforeLayout() {
-        _get(_getPrototypeOf$1(TimeScale.prototype), "beforeLayout", this).call(this);
+        _superPropGet(TimeScale, "beforeLayout", this, 3)([]);
         this._cache = {
           data: [],
           labels: [],
@@ -17153,7 +17127,7 @@
         var table = this._table = this.buildLookupTable(timestamps);
         this._minPos = interpolate(table, this.min);
         this._tableRange = interpolate(table, this.max) - this._minPos;
-        _get(_getPrototypeOf$1(TimeSeriesScale.prototype), "initOffsets", this).call(this, timestamps);
+        _superPropGet(TimeSeriesScale, "initOffsets", this, 3)([timestamps]);
       }
     }, {
       key: "buildLookupTable",
@@ -17196,7 +17170,7 @@
       value: function _generate() {
         var min = this.min;
         var max = this.max;
-        var timestamps = _get(_getPrototypeOf$1(TimeSeriesScale.prototype), "getDataTimestamps", this).call(this);
+        var timestamps = _superPropGet(TimeSeriesScale, "getDataTimestamps", this, 3)([]);
         if (!timestamps.includes(min) || !timestamps.length) {
           timestamps.splice(0, 0, min);
         }
@@ -20822,110 +20796,97 @@
     return target;
   }
 
-  function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-    return arr2;
+  function _arrayLikeToArray(r, a) {
+    (null == a || a > r.length) && (a = r.length);
+    for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e];
+    return n;
   }
 
-  function _unsupportedIterableToArray(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+  function _unsupportedIterableToArray(r, a) {
+    if (r) {
+      if ("string" == typeof r) return _arrayLikeToArray(r, a);
+      var t = {}.toString.call(r).slice(8, -1);
+      return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0;
+    }
   }
 
-  function _createForOfIteratorHelper(o, allowArrayLike) {
-    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
-    if (!it) {
-      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-        if (it) o = it;
-        var i = 0;
-        var F = function F() {};
+  function _createForOfIteratorHelper(r, e) {
+    var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+    if (!t) {
+      if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) {
+        t && (r = t);
+        var _n = 0,
+          F = function F() {};
         return {
           s: F,
           n: function n() {
-            if (i >= o.length) return {
-              done: true
-            };
-            return {
-              done: false,
-              value: o[i++]
+            return _n >= r.length ? {
+              done: !0
+            } : {
+              done: !1,
+              value: r[_n++]
             };
           },
-          e: function e(_e) {
-            throw _e;
+          e: function e(r) {
+            throw r;
           },
           f: F
         };
       }
       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
     }
-    var normalCompletion = true,
-      didErr = false,
-      err;
+    var o,
+      a = !0,
+      u = !1;
     return {
       s: function s() {
-        it = it.call(o);
+        t = t.call(r);
       },
       n: function n() {
-        var step = it.next();
-        normalCompletion = step.done;
-        return step;
+        var r = t.next();
+        return a = r.done, r;
       },
-      e: function e(_e2) {
-        didErr = true;
-        err = _e2;
+      e: function e(r) {
+        u = !0, o = r;
       },
       f: function f() {
         try {
-          if (!normalCompletion && it["return"] != null) it["return"]();
+          a || null == t["return"] || t["return"]();
         } finally {
-          if (didErr) throw err;
+          if (u) throw o;
         }
       }
     };
   }
 
-  function _assertThisInitialized(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
+  function _assertThisInitialized(e) {
+    if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    return e;
   }
 
-  function _setPrototypeOf(o, p) {
-    _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
-    return _setPrototypeOf(o, p);
+  function _setPrototypeOf(t, e) {
+    return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) {
+      return t.__proto__ = e, t;
+    }, _setPrototypeOf(t, e);
   }
 
-  function _inherits(subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) {
-      throw new TypeError("Super expression must either be null or a function");
-    }
-    subClass.prototype = Object.create(superClass && superClass.prototype, {
+  function _inherits(t, e) {
+    if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function");
+    t.prototype = Object.create(e && e.prototype, {
       constructor: {
-        value: subClass,
-        writable: true,
-        configurable: true
+        value: t,
+        writable: !0,
+        configurable: !0
       }
-    });
-    Object.defineProperty(subClass, "prototype", {
-      writable: false
-    });
-    if (superClass) _setPrototypeOf(subClass, superClass);
+    }), Object.defineProperty(t, "prototype", {
+      writable: !1
+    }), e && _setPrototypeOf(t, e);
   }
 
-  function _getPrototypeOf(o) {
-    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
-    return _getPrototypeOf(o);
+  function _getPrototypeOf(t) {
+    return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) {
+      return t.__proto__ || Object.getPrototypeOf(t);
+    }, _getPrototypeOf(t);
   }
 
   function _isNativeReflectConstruct() {
@@ -20937,34 +20898,27 @@
     })();
   }
 
-  function _possibleConstructorReturn(self, call) {
-    if (call && (_typeof(call) === "object" || typeof call === "function")) {
-      return call;
-    } else if (call !== void 0) {
-      throw new TypeError("Derived constructors may only return object or undefined");
-    }
-    return _assertThisInitialized(self);
+  function _possibleConstructorReturn(t, e) {
+    if (e && ("object" == _typeof(e) || "function" == typeof e)) return e;
+    if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined");
+    return _assertThisInitialized(t);
   }
 
-  function _createSuper(Derived) {
-    var hasNativeReflectConstruct = _isNativeReflectConstruct();
-    return function _createSuperInternal() {
-      var Super = _getPrototypeOf(Derived),
-        result;
-      if (hasNativeReflectConstruct) {
-        var NewTarget = _getPrototypeOf(this).constructor;
-        result = Reflect.construct(Super, arguments, NewTarget);
-      } else {
-        result = Super.apply(this, arguments);
-      }
-      return _possibleConstructorReturn(this, result);
+  function _createSuper(t) {
+    var r = _isNativeReflectConstruct();
+    return function () {
+      var e,
+        o = _getPrototypeOf(t);
+      if (r) {
+        var s = _getPrototypeOf(this).constructor;
+        e = Reflect.construct(o, arguments, s);
+      } else e = o.apply(this, arguments);
+      return _possibleConstructorReturn(this, e);
     };
   }
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
+  function _classCallCheck(a, n) {
+    if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
   }
 
   function toPrimitive(t, r) {
@@ -20983,37 +20937,25 @@
     return "symbol" == _typeof(i) ? i : i + "";
   }
 
-  function _defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, toPropertyKey(descriptor.key), descriptor);
+  function _defineProperties(e, r) {
+    for (var t = 0; t < r.length; t++) {
+      var o = r[t];
+      o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, toPropertyKey(o.key), o);
     }
   }
-  function _createClass(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties(Constructor, staticProps);
-    Object.defineProperty(Constructor, "prototype", {
-      writable: false
-    });
-    return Constructor;
+  function _createClass(e, r, t) {
+    return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", {
+      writable: !1
+    }), e;
   }
 
-  function _defineProperty(obj, key, value) {
-    key = toPropertyKey(key);
-    if (key in obj) {
-      Object.defineProperty(obj, key, {
-        value: value,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      });
-    } else {
-      obj[key] = value;
-    }
-    return obj;
+  function _defineProperty(e, r, t) {
+    return (r = toPropertyKey(r)) in e ? Object.defineProperty(e, r, {
+      value: t,
+      enumerable: !0,
+      configurable: !0,
+      writable: !0
+    }) : e[r] = t, e;
   }
 
   var TIMEZONE_UNIT_PRIORITY = 10;
