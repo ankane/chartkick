@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.4.4
+ * Chart.js v4.4.5
  * https://www.chartjs.org
  * (c) 2024 Chart.js Contributors
  * Released under the MIT License
@@ -222,10 +222,10 @@
     for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf$1(t)););
     return t;
   }
-  function _superPropGet(t, e, r, o) {
-    var p = _get(_getPrototypeOf$1(1 & o ? t.prototype : t), e, r);
-    return 2 & o ? function (t) {
-      return p.apply(r, t);
+  function _superPropGet(t, e, o, r) {
+    var p = _get(_getPrototypeOf$1(1 & r ? t.prototype : t), e, o);
+    return 2 & r && "function" == typeof p ? function (t) {
+      return p.apply(o, t);
     } : p;
   }
   function _toConsumableArray(r) {
@@ -4808,6 +4808,7 @@
         this._resyncElements(resetNewElements);
         if (stackChanged || oldStacked !== meta._stacked) {
           updateStacks(this, meta._parsed);
+          meta._stacked = isStacked(meta.vScale, meta);
         }
       }
     }, {
@@ -10396,7 +10397,7 @@
     }
     return false;
   }
-  var version = "4.4.4";
+  var version = "4.4.5";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -12550,6 +12551,9 @@
   function containsColorsDefinition(descriptor) {
     return descriptor && (descriptor.borderColor || descriptor.backgroundColor);
   }
+  function containsDefaultColorsDefenitions() {
+    return defaults.borderColor !== 'rgba(0,0,0,0.1)' || defaults.backgroundColor !== 'rgba(0,0,0,0.1)';
+  }
   var plugin_colors = {
     id: 'colors',
     defaults: {
@@ -12564,7 +12568,8 @@
         datasets = _chart$config.data.datasets,
         chartOptions = _chart$config.options;
       var elements = chartOptions.elements;
-      if (!options.forceOverride && (containsColorsDefinitions(datasets) || containsColorsDefinition(chartOptions) || elements && containsColorsDefinitions(elements))) {
+      var containsColorDefenition = containsColorsDefinitions(datasets) || containsColorsDefinition(chartOptions) || elements && containsColorsDefinitions(elements) || containsDefaultColorsDefenitions();
+      if (!options.forceOverride && containsColorDefenition) {
         return;
       }
       var colorizer = getColorizer(chart);
@@ -16289,7 +16294,7 @@
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = lineWidth;
-    ctx.setLineDash(borderOpts.dash);
+    ctx.setLineDash(borderOpts.dash || []);
     ctx.lineDashOffset = borderOpts.dashOffset;
     ctx.beginPath();
     pathRadiusLine(scale, radius, circular, labelCount);
