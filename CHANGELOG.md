@@ -379,3 +379,15 @@ Breaking changes
 ## 0.0.4 (2013-05-13)
 
 - Fix for `Uncaught ReferenceError: Chartkick is not defined` when chartkick.js is included in the `<head>`
+
+## 0.0.3 (2013-05-12)
+
+- Improved error messages
+
+## 0.0.2 (2013-05-10)
+
+- Added `min` and `max` options
+
+## 0.0.1 (2013-05-07)
+
+- First release
