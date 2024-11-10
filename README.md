@@ -510,7 +510,7 @@ And in `app/javascript/packs/application.js`, add:
 import "chartkick/highcharts"
 ```
 
-For Sprockets, download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts` (or use `yarn add highcharts` in Rails 5.1+), and in `app/assets/javascripts/application.js`, add:
+For Sprockets, download [highcharts.js](https://code.highcharts.com/highcharts.js) into `vendor/assets/javascripts` (or use `yarn add highcharts`), and in `app/assets/javascripts/application.js`, add:
 
 ```js
 //= require chartkick
