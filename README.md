@@ -21,7 +21,7 @@ gem "chartkick"
 Then follow the instructions for your JavaScript setup:
 
 - [Importmap](#importmap) (Rails 7+ default)
-- [esbuild, rollup.js, or Webpack](#esbuild-rollupjs-or-webpack)
+- [Bun, esbuild, rollup.js, or Webpack](#bun-esbuild-rollupjs-or-webpack)
 - [Sprockets](#sprockets)
 
 This sets up Chartkick with [Chart.js](https://www.chartjs.org/). For other charting libraries and frameworks, see [these instructions](#additional-charting-libraries).
@@ -42,11 +42,13 @@ import "chartkick"
 import "Chart.bundle"
 ```
 
-### esbuild, rollup.js, or Webpack
+### Bun, esbuild, rollup.js, or Webpack
 
 Run:
 
 ```sh
+bun add chartkick chart.js
+# or
 yarn add chartkick chart.js
 ```
 
@@ -449,9 +451,11 @@ And in `app/javascript/application.js`, add:
 import "chartkick"
 ```
 
-For esbuild, rollup.js, or Webpack, run:
+For Bun, esbuild, rollup.js, or Webpack, run:
 
 ```sh
+bun add chartkick
+# or
 yarn add chartkick
 ```
 
@@ -498,9 +502,11 @@ import Highcharts from "highcharts"
 window.Highcharts = Highcharts
 ```
 
-For esbuild, rollup.js, or Webpack, run:
+For Bun, esbuild, rollup.js, or Webpack, run:
 
 ```sh
+bun add chartkick highcharts
+# or
 yarn add chartkick highcharts
 ```
 
