@@ -628,24 +628,6 @@ Check out [how to configure CSP](https://github.com/ankane/chartkick/blob/master
 - [Make Easy Graphs and Charts on Rails with Chartkick](https://www.sitepoint.com/make-easy-graphs-and-charts-on-rails-with-chartkick/)
 - [Practical Graphs on Rails: Chartkick in Practice](https://www.sitepoint.com/graphs-on-rails-chartkick-in-practice/)
 
-## Upgrading
-
-### 5.0
-
-If you use Importmap or Sprockets, update the gem and you’re good to go!
-
-If you use esbuild, Webpack, or Webpacker, run:
-
-```sh
-yarn upgrade chartkick --latest
-```
-
-If you use Chart.js with esbuild, Webpack, or Webpacker, also run:
-
-```sh
-yarn upgrade chart.js --latest
-```
-
 ## History
 
 View the [changelog](https://github.com/ankane/chartkick/blob/master/CHANGELOG.md)
