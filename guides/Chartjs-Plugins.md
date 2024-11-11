@@ -8,7 +8,7 @@ For Importmaps, download the [UMD version](https://unpkg.com/chartjs-plugin-anno
 import "chartjs-plugin-annotation"
 ```
 
-For esbuild, rollup.js, Webpack, and Webpacker, install the NPM package and use:
+For Bun, esbuild, rollup.js, and Webpack, install the NPM package and use:
 
 ```javascript
 import { Chart } from "chart.js"
