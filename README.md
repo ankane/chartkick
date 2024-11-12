@@ -125,8 +125,8 @@ Multiple series
 
 ```erb
 <%= line_chart [
-  {name: "Workout", data: {"2021-01-01" => 3, "2021-01-02" => 4}},
-  {name: "Call parents", data: {"2021-01-01" => 5, "2021-01-02" => 3}}
+  {name: "Workout", data: {"2025-01-01" => 3, "2025-01-02" => 4}},
+  {name: "Call parents", data: {"2025-01-01" => 5, "2025-01-02" => 3}}
 ] %>
 ```
 
@@ -143,13 +143,13 @@ Data can be a hash, array, or URL.
 #### Hash
 
 ```erb
-<%= line_chart({"2021-01-01" => 2, "2021-01-02" => 3}) %>
+<%= line_chart({"2025-01-01" => 2, "2025-01-02" => 3}) %>
 ```
 
 #### Array
 
 ```erb
-<%= line_chart [["2021-01-01", 2], ["2021-01-02", 3]] %>
+<%= line_chart [["2025-01-01", 2], ["2025-01-02", 3]] %>
 ```
 
 #### URL
@@ -195,7 +195,7 @@ Min and max values
 Min and max for x-axis - *Chart.js*
 
 ```erb
-<%= line_chart data, xmin: "2021-01-01", xmax: "2022-01-01" %>
+<%= line_chart data, xmin: "2025-01-01", xmax: "2025-02-01" %>
 ```
 
 Colors
