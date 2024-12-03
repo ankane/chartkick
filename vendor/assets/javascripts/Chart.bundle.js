@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.4.6
+ * Chart.js v4.4.7
  * https://www.chartjs.org
  * (c) 2024 Chart.js Contributors
  * Released under the MIT License
@@ -222,10 +222,10 @@
     for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf$1(t)););
     return t;
   }
-  function _superPropGet(t, e, o, r) {
-    var p = _get(_getPrototypeOf$1(1 & r ? t.prototype : t), e, o);
+  function _superPropGet(t, o, e, r) {
+    var p = _get(_getPrototypeOf$1(1 & r ? t.prototype : t), o, e);
     return 2 & r && "function" == typeof p ? function (t) {
-      return p.apply(o, t);
+      return p.apply(e, t);
     } : p;
   }
   function _toConsumableArray(r) {
@@ -944,7 +944,7 @@
    * @since 2.7.0
    */
   function isNullOrUndef(value) {
-    return value === null || typeof value === 'undefined';
+    return value === null || value === undefined;
   }
   /**
    * Returns true if `value` is an array (including typed arrays), else returns false.
@@ -10402,7 +10402,7 @@
     }
     return false;
   }
-  var version = "4.4.6";
+  var version = "4.4.7";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
