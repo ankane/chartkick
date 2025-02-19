@@ -1,7 +1,7 @@
 /*!
- * Chart.js v4.4.7
+ * Chart.js v4.4.8
  * https://www.chartjs.org
- * (c) 2024 Chart.js Contributors
+ * (c) 2025 Chart.js Contributors
  * Released under the MIT License
  *
  * @kurkle/color v0.3.2
@@ -1300,8 +1300,14 @@
     }).pop();
     return result;
   }
+  /**
+   * Verifies that attempting to coerce n to string or number won't throw a TypeError.
+   */
+  function isNonPrimitive(n) {
+    return _typeof$1(n) === 'symbol' || _typeof$1(n) === 'object' && n !== null && !(Symbol.toPrimitive in n || 'toString' in n || 'valueOf' in n);
+  }
   function isNumber(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
+    return !isNonPrimitive(n) && !isNaN(parseFloat(n)) && isFinite(n);
   }
   function almostWhole(x, epsilon) {
     var rounded = Math.round(x);
@@ -1631,7 +1637,9 @@
     var count = pointCount;
     if (meta._sorted) {
       var iScale = meta.iScale,
+        vScale = meta.vScale,
         _parsed = meta._parsed;
+      var spanGaps = meta.dataset ? meta.dataset.options ? meta.dataset.options.spanGaps : null : null;
       var axis = iScale.axis;
       var _iScale$getUserBounds = iScale.getUserBounds(),
         min = _iScale$getUserBounds.min,
@@ -1639,18 +1647,32 @@
         minDefined = _iScale$getUserBounds.minDefined,
         maxDefined = _iScale$getUserBounds.maxDefined;
       if (minDefined) {
-        start = _limitValue(Math.min(
+        start = Math.min(
         // @ts-expect-error Need to type _parsed
         _lookupByKey(_parsed, axis, min).lo,
         // @ts-expect-error Need to fix types on _lookupByKey
-        animationsDisabled ? pointCount : _lookupByKey(points, axis, iScale.getPixelForValue(min)).lo), 0, pointCount - 1);
+        animationsDisabled ? pointCount : _lookupByKey(points, axis, iScale.getPixelForValue(min)).lo);
+        if (spanGaps) {
+          var distanceToDefinedLo = _parsed.slice(0, start + 1).reverse().findIndex(function (point) {
+            return !isNullOrUndef(point[vScale.axis]);
+          });
+          start -= Math.max(0, distanceToDefinedLo);
+        }
+        start = _limitValue(start, 0, pointCount - 1);
       }
       if (maxDefined) {
-        count = _limitValue(Math.max(
+        var end = Math.max(
         // @ts-expect-error Need to type _parsed
         _lookupByKey(_parsed, iScale.axis, max, true).hi + 1,
         // @ts-expect-error Need to fix types on _lookupByKey
-        animationsDisabled ? 0 : _lookupByKey(points, axis, iScale.getPixelForValue(max), true).hi + 1), start, pointCount) - start;
+        animationsDisabled ? 0 : _lookupByKey(points, axis, iScale.getPixelForValue(max), true).hi + 1);
+        if (spanGaps) {
+          var distanceToDefinedHi = _parsed.slice(end - 1).findIndex(function (point) {
+            return !isNullOrUndef(point[vScale.axis]);
+          });
+          end += Math.max(0, distanceToDefinedHi);
+        }
+        count = _limitValue(end, start, pointCount) - start;
       } else {
         count = pointCount - start;
       }
@@ -3360,14 +3382,8 @@
   }
 
   /**
-   * Note: typedefs are auto-exported, so use a made-up `dom` namespace where
-   * necessary to avoid duplicates with `export * from './helpers`; see
-   * https://github.com/microsoft/TypeScript/issues/46011
-   * @typedef { import('../core/core.controller.js').default } dom.Chart
-   * @typedef { import('../../types').ChartEvent } ChartEvent
-   */ /**
-      * @private
-      */
+   * @private
+   */
   function _isDomSupported() {
     return typeof window !== 'undefined' && typeof document !== 'undefined';
   }
@@ -7081,10 +7097,24 @@
       data = metaset.data,
       _sorted = metaset._sorted;
     var iScale = controller._cachedMeta.iScale;
+    var spanGaps = metaset.dataset ? metaset.dataset.options ? metaset.dataset.options.spanGaps : null : null;
     if (iScale && axis === iScale.axis && axis !== 'r' && _sorted && data.length) {
       var lookupMethod = iScale._reversePixels ? _rlookupByKey : _lookupByKey;
       if (!intersect) {
-        return lookupMethod(data, axis, value);
+        var result = lookupMethod(data, axis, value);
+        if (spanGaps) {
+          var vScale = controller._cachedMeta.vScale;
+          var _parsed = metaset._parsed;
+          var distanceToDefinedLo = _parsed.slice(0, result.lo + 1).reverse().findIndex(function (point) {
+            return !isNullOrUndef(point[vScale.axis]);
+          });
+          result.lo -= Math.max(0, distanceToDefinedLo);
+          var distanceToDefinedHi = _parsed.slice(result.hi).findIndex(function (point) {
+            return !isNullOrUndef(point[vScale.axis]);
+          });
+          result.hi += Math.max(0, distanceToDefinedHi);
+        }
+        return result;
       } else if (controller._sharedOptions) {
         var el = data[0];
         var range = typeof el.getRange === 'function' && el.getRange(axis);
@@ -10402,7 +10432,7 @@
     }
     return false;
   }
-  var version = "4.4.7";
+  var version = "4.4.8";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
