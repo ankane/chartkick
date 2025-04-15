@@ -1,3 +1,7 @@
+## 5.1.5 (unreleased)
+
+- Updated Chart.js to 4.4.9
+
 ## 5.1.4 (2025-02-19)
 
 - Updated Chart.js to 4.4.8

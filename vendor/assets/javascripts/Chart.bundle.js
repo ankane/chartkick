@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.4.8
+ * Chart.js v4.4.9
  * https://www.chartjs.org
  * (c) 2025 Chart.js Contributors
  * Released under the MIT License
@@ -4046,6 +4046,35 @@
       return cache.indexOf(value);
     };
     return JSON.stringify(style, replacer) !== JSON.stringify(prevStyle, replacer);
+  }
+  function getSizeForArea(scale, chartArea, field) {
+    return scale.options.clip ? scale[field] : chartArea[field];
+  }
+  function getDatasetArea(meta, chartArea) {
+    var xScale = meta.xScale,
+      yScale = meta.yScale;
+    if (xScale && yScale) {
+      return {
+        left: getSizeForArea(xScale, chartArea, 'left'),
+        right: getSizeForArea(xScale, chartArea, 'right'),
+        top: getSizeForArea(yScale, chartArea, 'top'),
+        bottom: getSizeForArea(yScale, chartArea, 'bottom')
+      };
+    }
+    return chartArea;
+  }
+  function getDatasetClipArea(chart, meta) {
+    var clip = meta._clip;
+    if (clip.disabled) {
+      return false;
+    }
+    var area = getDatasetArea(meta, chart.chartArea);
+    return {
+      left: clip.left === false ? 0 : area.left - (clip.left === true ? 0 : clip.left),
+      right: clip.right === false ? chart.width : area.right + (clip.right === true ? 0 : clip.right),
+      top: clip.top === false ? 0 : area.top - (clip.top === true ? 0 : clip.top),
+      bottom: clip.bottom === false ? chart.height : area.bottom + (clip.bottom === true ? 0 : clip.bottom)
+    };
   }
 
   var Animator = /*#__PURE__*/function () {
@@ -10432,7 +10461,7 @@
     }
     return false;
   }
-  var version = "4.4.8";
+  var version = "4.4.9";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -10493,22 +10522,6 @@
       return lastEvent;
     }
     return e;
-  }
-  function getSizeForArea(scale, chartArea, field) {
-    return scale.options.clip ? scale[field] : chartArea[field];
-  }
-  function getDatasetArea(meta, chartArea) {
-    var xScale = meta.xScale,
-      yScale = meta.yScale;
-    if (xScale && yScale) {
-      return {
-        left: getSizeForArea(xScale, chartArea, 'left'),
-        right: getSizeForArea(xScale, chartArea, 'right'),
-        top: getSizeForArea(yScale, chartArea, 'top'),
-        bottom: getSizeForArea(yScale, chartArea, 'bottom')
-      };
-    }
-    return chartArea;
   }
   var Chart = /*#__PURE__*/function () {
     function Chart(item, userConfig) {
@@ -11099,27 +11112,20 @@
       key: "_drawDataset",
       value: function _drawDataset(meta) {
         var ctx = this.ctx;
-        var clip = meta._clip;
-        var useClip = !clip.disabled;
-        var area = getDatasetArea(meta, this.chartArea);
         var args = {
           meta: meta,
           index: meta.index,
           cancelable: true
         };
+        var clip = getDatasetClipArea(this, meta);
         if (this.notifyPlugins('beforeDatasetDraw', args) === false) {
           return;
         }
-        if (useClip) {
-          clipArea(ctx, {
-            left: clip.left === false ? 0 : area.left - clip.left,
-            right: clip.right === false ? this.width : area.right + clip.right,
-            top: clip.top === false ? 0 : area.top - clip.top,
-            bottom: clip.bottom === false ? this.height : area.bottom + clip.bottom
-          });
+        if (clip) {
+          clipArea(ctx, clip);
         }
         meta.controller.draw();
-        if (useClip) {
+        if (clip) {
           unclipArea(ctx);
         }
         args.cancelable = false;
@@ -13241,7 +13247,9 @@
   }
   function _drawfill(ctx, source, area) {
     var target = _getTarget(source);
-    var line = source.line,
+    var chart = source.chart,
+      index = source.index,
+      line = source.line,
       scale = source.scale,
       axis = source.axis;
     var lineOpts = line.options;
@@ -13252,6 +13260,8 @@
       above = _ref9$above === void 0 ? color : _ref9$above,
       _ref9$below = _ref9.below,
       below = _ref9$below === void 0 ? color : _ref9$below;
+    var meta = chart.getDatasetMeta(index);
+    var clip = getDatasetClipArea(chart, meta);
     if (target && line.points.length) {
       clipArea(ctx, area);
       doFill(ctx, {
@@ -13261,7 +13271,8 @@
         below: below,
         area: area,
         scale: scale,
-        axis: axis
+        axis: axis,
+        clip: clip
       });
       unclipArea(ctx);
     }
@@ -13272,7 +13283,8 @@
       above = cfg.above,
       below = cfg.below,
       area = cfg.area,
-      scale = cfg.scale;
+      scale = cfg.scale,
+      clip = cfg.clip;
     var property = line._loop ? 'angle' : cfg.axis;
     ctx.save();
     if (property === 'x' && below !== above) {
@@ -13282,7 +13294,8 @@
         target: target,
         color: above,
         scale: scale,
-        property: property
+        property: property,
+        clip: clip
       });
       ctx.restore();
       ctx.save();
@@ -13293,7 +13306,8 @@
       target: target,
       color: below,
       scale: scale,
-      property: property
+      property: property,
+      clip: clip
     });
     ctx.restore();
   }
@@ -13342,7 +13356,8 @@
       target = cfg.target,
       property = cfg.property,
       color = cfg.color,
-      scale = cfg.scale;
+      scale = cfg.scale,
+      clip = cfg.clip;
     var segments = _segments(line, target, property);
     var _iterator22 = _createForOfIteratorHelper$1(segments),
       _step22;
@@ -13360,7 +13375,7 @@
         var notShape = target !== true;
         ctx.save();
         ctx.fillStyle = backgroundColor;
-        clipBounds(ctx, scale, notShape && _getBounds(property, start, end));
+        clipBounds(ctx, scale, clip, notShape && _getBounds(property, start, end));
         ctx.beginPath();
         var lineLoop = !!line.pathSegment(ctx, src);
         var loop = void 0;
@@ -13389,17 +13404,33 @@
       _iterator22.f();
     }
   }
-  function clipBounds(ctx, scale, bounds) {
-    var _scale$chart$chartAre = scale.chart.chartArea,
-      top = _scale$chart$chartAre.top,
-      bottom = _scale$chart$chartAre.bottom;
+  function clipBounds(ctx, scale, clip, bounds) {
+    var chartArea = scale.chart.chartArea;
     var _ref10 = bounds || {},
       property = _ref10.property,
       start = _ref10.start,
       end = _ref10.end;
-    if (property === 'x') {
+    if (property === 'x' || property === 'y') {
+      var left, top, right, bottom;
+      if (property === 'x') {
+        left = start;
+        top = chartArea.top;
+        right = end;
+        bottom = chartArea.bottom;
+      } else {
+        left = chartArea.left;
+        top = start;
+        right = chartArea.right;
+        bottom = end;
+      }
       ctx.beginPath();
-      ctx.rect(start, top, end - start, bottom - top);
+      if (clip) {
+        left = Math.max(left, clip.left);
+        right = Math.min(right, clip.right);
+        top = Math.max(top, clip.top);
+        bottom = Math.min(bottom, clip.bottom);
+      }
+      ctx.rect(left, top, right - left, bottom - top);
       ctx.clip();
     }
   }
@@ -17344,6 +17375,7 @@
     fontString: fontString,
     formatNumber: formatNumber,
     getAngleFromPoint: getAngleFromPoint,
+    getDatasetClipArea: getDatasetClipArea,
     getHoverColor: getHoverColor,
     getMaximumSize: getMaximumSize,
     getRelativePosition: getRelativePosition,
