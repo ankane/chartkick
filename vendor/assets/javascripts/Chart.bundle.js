@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.4.9
+ * Chart.js v4.5.0
  * https://www.chartjs.org
  * (c) 2025 Chart.js Contributors
  * Released under the MIT License
@@ -5787,6 +5787,39 @@
         return this._getStacks(undefined, index).length;
       }
     }, {
+      key: "_getAxisCount",
+      value: function _getAxisCount() {
+        return this._getAxis().length;
+      }
+    }, {
+      key: "getFirstScaleIdForIndexAxis",
+      value: function getFirstScaleIdForIndexAxis() {
+        var scales = this.chart.scales;
+        var indexScaleId = this.chart.options.indexAxis;
+        return Object.keys(scales).filter(function (key) {
+          return scales[key].axis === indexScaleId;
+        }).shift();
+      }
+    }, {
+      key: "_getAxis",
+      value: function _getAxis() {
+        var axis = {};
+        var firstScaleAxisId = this.getFirstScaleIdForIndexAxis();
+        var _iterator5 = _createForOfIteratorHelper$1(this.chart.data.datasets),
+          _step5;
+        try {
+          for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+            var dataset = _step5.value;
+            axis[valueOrDefault(this.chart.options.indexAxis === 'x' ? dataset.xAxisID : dataset.yAxisID, firstScaleAxisId)] = true;
+          }
+        } catch (err) {
+          _iterator5.e(err);
+        } finally {
+          _iterator5.f();
+        }
+        return Object.keys(axis);
+      }
+    }, {
       key: "_getStackIndex",
       value: function _getStackIndex(datasetIndex, name, dataIndex) {
         var stacks = this._getStacks(datasetIndex, dataIndex);
@@ -5890,10 +5923,13 @@
         var skipNull = options.skipNull;
         var maxBarThickness = valueOrDefault(options.maxBarThickness, Infinity);
         var center, size;
+        var axisCount = this._getAxisCount();
         if (ruler.grouped) {
           var stackCount = skipNull ? this._getStackCount(index) : ruler.stackCount;
-          var range = options.barThickness === 'flex' ? computeFlexCategoryTraits(index, ruler, options, stackCount) : computeFitCategoryTraits(index, ruler, options, stackCount);
-          var stackIndex = this._getStackIndex(this.index, this._cachedMeta.stack, skipNull ? index : undefined);
+          var range = options.barThickness === 'flex' ? computeFlexCategoryTraits(index, ruler, options, stackCount * axisCount) : computeFitCategoryTraits(index, ruler, options, stackCount * axisCount);
+          var axisID = this.chart.options.indexAxis === 'x' ? this.getDataset().xAxisID : this.getDataset().yAxisID;
+          var axisNumber = this._getAxis().indexOf(valueOrDefault(axisID, this.getFirstScaleIdForIndexAxis()));
+          var stackIndex = this._getStackIndex(this.index, this._cachedMeta.stack, skipNull ? index : undefined) + axisNumber;
           center = range.start + range.chunk * stackIndex + range.chunk / 2;
           size = Math.min(maxBarThickness, range.chunk * range.ratio);
         } else {
@@ -7398,11 +7434,11 @@
   }
   function buildStacks(layouts) {
     var stacks = {};
-    var _iterator5 = _createForOfIteratorHelper$1(layouts),
-      _step5;
+    var _iterator6 = _createForOfIteratorHelper$1(layouts),
+      _step6;
     try {
-      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-        var wrap = _step5.value;
+      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+        var wrap = _step6.value;
         var stack = wrap.stack,
           pos = wrap.pos,
           stackWeight = wrap.stackWeight;
@@ -7419,9 +7455,9 @@
         _stack.weight += stackWeight;
       }
     } catch (err) {
-      _iterator5.e(err);
+      _iterator6.e(err);
     } finally {
-      _iterator5.f();
+      _iterator6.f();
     }
     return stacks;
   }
@@ -7565,11 +7601,11 @@
     var userPadding = params.padding;
     var x = chartArea.x,
       y = chartArea.y;
-    var _iterator6 = _createForOfIteratorHelper$1(boxes),
-      _step6;
+    var _iterator7 = _createForOfIteratorHelper$1(boxes),
+      _step7;
     try {
-      for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-        var layout = _step6.value;
+      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+        var layout = _step7.value;
         var box = layout.box;
         var stack = stacks[layout.stack] || {
           count: 1,
@@ -7608,9 +7644,9 @@
         }
       }
     } catch (err) {
-      _iterator6.e(err);
+      _iterator7.e(err);
     } finally {
-      _iterator6.f();
+      _iterator7.f();
     }
     chartArea.x = x;
     chartArea.y = y;
@@ -7849,37 +7885,37 @@
     };
   }
   function nodeListContains(nodeList, canvas) {
-    var _iterator7 = _createForOfIteratorHelper$1(nodeList),
-      _step7;
+    var _iterator8 = _createForOfIteratorHelper$1(nodeList),
+      _step8;
     try {
-      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-        var node = _step7.value;
+      for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+        var node = _step8.value;
         if (node === canvas || node.contains(canvas)) {
           return true;
         }
       }
     } catch (err) {
-      _iterator7.e(err);
+      _iterator8.e(err);
     } finally {
-      _iterator7.f();
+      _iterator8.f();
     }
   }
   function createAttachObserver(chart, type, listener) {
     var canvas = chart.canvas;
     var observer = new MutationObserver(function (entries) {
       var trigger = false;
-      var _iterator8 = _createForOfIteratorHelper$1(entries),
-        _step8;
+      var _iterator9 = _createForOfIteratorHelper$1(entries),
+        _step9;
       try {
-        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-          var entry = _step8.value;
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var entry = _step9.value;
           trigger = trigger || nodeListContains(entry.addedNodes, canvas);
           trigger = trigger && !nodeListContains(entry.removedNodes, canvas);
         }
       } catch (err) {
-        _iterator8.e(err);
+        _iterator9.e(err);
       } finally {
-        _iterator8.f();
+        _iterator9.f();
       }
       if (trigger) {
         listener();
@@ -7895,18 +7931,18 @@
     var canvas = chart.canvas;
     var observer = new MutationObserver(function (entries) {
       var trigger = false;
-      var _iterator9 = _createForOfIteratorHelper$1(entries),
-        _step9;
+      var _iterator10 = _createForOfIteratorHelper$1(entries),
+        _step10;
       try {
-        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-          var entry = _step9.value;
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var entry = _step10.value;
           trigger = trigger || nodeListContains(entry.removedNodes, canvas);
           trigger = trigger && !nodeListContains(entry.addedNodes, canvas);
         }
       } catch (err) {
-        _iterator9.e(err);
+        _iterator10.e(err);
       } finally {
-        _iterator9.f();
+        _iterator10.f();
       }
       if (trigger) {
         listener();
@@ -9555,11 +9591,11 @@
           clipArea(ctx, area);
         }
         var items = this.getLabelItems(chartArea);
-        var _iterator10 = _createForOfIteratorHelper$1(items),
-          _step10;
+        var _iterator11 = _createForOfIteratorHelper$1(items),
+          _step11;
         try {
-          for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-            var item = _step10.value;
+          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+            var item = _step11.value;
             var renderTextOptions = item.options;
             var tickFont = item.font;
             var label = item.label;
@@ -9567,9 +9603,9 @@
             renderText(ctx, label, 0, y, tickFont, renderTextOptions);
           }
         } catch (err) {
-          _iterator10.e(err);
+          _iterator11.e(err);
         } finally {
-          _iterator10.f();
+          _iterator11.f();
         }
         if (area) {
           unclipArea(ctx);
@@ -9952,11 +9988,11 @@
       key: "_notify",
       value: function _notify(descriptors, chart, hook, args) {
         args = args || {};
-        var _iterator11 = _createForOfIteratorHelper$1(descriptors),
-          _step11;
+        var _iterator12 = _createForOfIteratorHelper$1(descriptors),
+          _step12;
         try {
-          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-            var descriptor = _step11.value;
+          for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+            var descriptor = _step12.value;
             var plugin = descriptor.plugin;
             var method = plugin[hook];
             var params = [chart, args, descriptor.options];
@@ -9965,9 +10001,9 @@
             }
           }
         } catch (err) {
-          _iterator11.e(err);
+          _iterator12.e(err);
         } finally {
-          _iterator11.f();
+          _iterator12.f();
         }
         return true;
       }
@@ -10048,11 +10084,11 @@
       localIds = _ref2.localIds;
     var result = [];
     var context = chart.getContext();
-    var _iterator12 = _createForOfIteratorHelper$1(plugins),
-      _step12;
+    var _iterator13 = _createForOfIteratorHelper$1(plugins),
+      _step13;
     try {
-      for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-        var plugin = _step12.value;
+      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+        var plugin = _step13.value;
         var id = plugin.id;
         var opts = getOpts(options[id], all);
         if (opts === null) {
@@ -10067,9 +10103,9 @@
         });
       }
     } catch (err) {
-      _iterator12.e(err);
+      _iterator13.e(err);
     } finally {
-      _iterator12.f();
+      _iterator13.f();
     }
     return result;
   }
@@ -10388,17 +10424,17 @@
           var subResolver = this.createResolver(scopes, context, subPrefixes);
           options = _attachContext(resolver, context, subResolver);
         }
-        var _iterator13 = _createForOfIteratorHelper$1(names),
-          _step13;
+        var _iterator14 = _createForOfIteratorHelper$1(names),
+          _step14;
         try {
-          for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-            var prop = _step13.value;
+          for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+            var prop = _step14.value;
             result[prop] = options[prop];
           }
         } catch (err) {
-          _iterator13.e(err);
+          _iterator14.e(err);
         } finally {
-          _iterator13.f();
+          _iterator14.f();
         }
         return result;
       }
@@ -10442,11 +10478,11 @@
     var _descriptors2 = _descriptors(proxy),
       isScriptable = _descriptors2.isScriptable,
       isIndexable = _descriptors2.isIndexable;
-    var _iterator14 = _createForOfIteratorHelper$1(names),
-      _step14;
+    var _iterator15 = _createForOfIteratorHelper$1(names),
+      _step15;
     try {
-      for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-        var prop = _step14.value;
+      for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+        var prop = _step15.value;
         var scriptable = isScriptable(prop);
         var indexable = isIndexable(prop);
         var value = (indexable || scriptable) && proxy[prop];
@@ -10455,13 +10491,13 @@
         }
       }
     } catch (err) {
-      _iterator14.e(err);
+      _iterator15.e(err);
     } finally {
-      _iterator14.f();
+      _iterator15.f();
     }
     return false;
   }
-  var version = "4.4.9";
+  var version = "4.5.0";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -10911,21 +10947,21 @@
       value: function _updateHiddenIndices() {
         var _hiddenIndices = this._hiddenIndices;
         var changes = this._getUniformDataChanges() || [];
-        var _iterator15 = _createForOfIteratorHelper$1(changes),
-          _step15;
+        var _iterator16 = _createForOfIteratorHelper$1(changes),
+          _step16;
         try {
-          for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-            var _step15$value = _step15.value,
-              method = _step15$value.method,
-              start = _step15$value.start,
-              count = _step15$value.count;
+          for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+            var _step16$value = _step16.value,
+              method = _step16$value.method,
+              start = _step16$value.start,
+              count = _step16$value.count;
             var move = method === '_removeElements' ? -count : count;
             moveNumericKeys(_hiddenIndices, start, move);
           }
         } catch (err) {
-          _iterator15.e(err);
+          _iterator16.e(err);
         } finally {
-          _iterator15.f();
+          _iterator16.f();
         }
       }
     }, {
@@ -11535,6 +11571,40 @@
       return chart._plugins.invalidate();
     });
   }
+  function clipSelf(ctx, element, endAngle) {
+    var startAngle = element.startAngle,
+      x = element.x,
+      y = element.y,
+      outerRadius = element.outerRadius,
+      innerRadius = element.innerRadius,
+      options = element.options;
+    var borderWidth = options.borderWidth,
+      borderJoinStyle = options.borderJoinStyle;
+    var outerAngleClip = Math.min(borderWidth / outerRadius, _normalizeAngle(startAngle - endAngle));
+    ctx.beginPath();
+    ctx.arc(x, y, outerRadius - borderWidth / 2, startAngle + outerAngleClip / 2, endAngle - outerAngleClip / 2);
+    if (innerRadius > 0) {
+      var innerAngleClip = Math.min(borderWidth / innerRadius, _normalizeAngle(startAngle - endAngle));
+      ctx.arc(x, y, innerRadius + borderWidth / 2, endAngle - innerAngleClip / 2, startAngle + innerAngleClip / 2, true);
+    } else {
+      var clipWidth = Math.min(borderWidth / 2, outerRadius * _normalizeAngle(startAngle - endAngle));
+      if (borderJoinStyle === 'round') {
+        ctx.arc(x, y, clipWidth, endAngle - PI / 2, startAngle + PI / 2, true);
+      } else if (borderJoinStyle === 'bevel') {
+        var r = 2 * clipWidth * clipWidth;
+        var endX = -r * Math.cos(endAngle + PI / 2) + x;
+        var endY = -r * Math.sin(endAngle + PI / 2) + y;
+        var startX = r * Math.cos(startAngle + PI / 2) + x;
+        var startY = r * Math.sin(startAngle + PI / 2) + y;
+        ctx.lineTo(endX, endY);
+        ctx.lineTo(startX, startY);
+      }
+    }
+    ctx.closePath();
+    ctx.moveTo(0, 0);
+    ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.clip('evenodd');
+  }
   function clipArc(ctx, element, endAngle) {
     var startAngle = element.startAngle,
       pixelMargin = element.pixelMargin,
@@ -11717,7 +11787,8 @@
     var borderWidth = options.borderWidth,
       borderJoinStyle = options.borderJoinStyle,
       borderDash = options.borderDash,
-      borderDashOffset = options.borderDashOffset;
+      borderDashOffset = options.borderDashOffset,
+      borderRadius = options.borderRadius;
     var inner = options.borderAlign === 'inner';
     if (!borderWidth) {
       return;
@@ -11743,6 +11814,9 @@
     }
     if (inner) {
       clipArc(ctx, element, endAngle);
+    }
+    if (options.selfJoin && endAngle - startAngle >= PI && borderRadius === 0 && borderJoinStyle !== 'miter') {
+      clipSelf(ctx, element, endAngle);
     }
     if (!fullCircles) {
       pathArc(ctx, element, offset, spacing, endAngle, circular);
@@ -11861,7 +11935,8 @@
     offset: 0,
     spacing: 0,
     angle: undefined,
-    circular: true
+    circular: true,
+    selfJoin: false
   });
   _defineProperty$1(ArcElement, "defaultRoutes", {
     backgroundColor: 'backgroundColor'
@@ -12027,11 +12102,11 @@
     var segments = line.segments,
       options = line.options;
     var segmentMethod = _getSegmentMethod(line);
-    var _iterator16 = _createForOfIteratorHelper$1(segments),
-      _step16;
+    var _iterator17 = _createForOfIteratorHelper$1(segments),
+      _step17;
     try {
-      for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-        var segment = _step16.value;
+      for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+        var segment = _step17.value;
         setStyle(ctx, options, segment.style);
         ctx.beginPath();
         if (segmentMethod(ctx, line, segment, {
@@ -12043,9 +12118,9 @@
         ctx.stroke();
       }
     } catch (err) {
-      _iterator16.e(err);
+      _iterator17.e(err);
     } finally {
-      _iterator16.f();
+      _iterator17.f();
     }
   }
   var usePath2D = typeof Path2D === 'function';
@@ -12167,20 +12242,20 @@
         var loop = this._loop;
         start = start || 0;
         count = count || this.points.length - start;
-        var _iterator17 = _createForOfIteratorHelper$1(segments),
-          _step17;
+        var _iterator18 = _createForOfIteratorHelper$1(segments),
+          _step18;
         try {
-          for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
-            var segment = _step17.value;
+          for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+            var segment = _step18.value;
             loop &= segmentMethod(ctx, this, segment, {
               start: start,
               end: start + count - 1
             });
           }
         } catch (err) {
-          _iterator17.e(err);
+          _iterator18.e(err);
         } finally {
-          _iterator17.f();
+          _iterator18.f();
         }
         return !!loop;
       }
@@ -12829,11 +12904,11 @@
     var points = line.points;
     var tpoints = target.points;
     var parts = [];
-    var _iterator18 = _createForOfIteratorHelper$1(segments),
-      _step18;
+    var _iterator19 = _createForOfIteratorHelper$1(segments),
+      _step19;
     try {
-      for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
-        var segment = _step18.value;
+      for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+        var segment = _step19.value;
         var start = segment.start,
           end = segment.end;
         end = _findSegmentEnd(start, end, points);
@@ -12848,18 +12923,18 @@
           continue;
         }
         var targetSegments = _boundSegments(target, bounds);
-        var _iterator19 = _createForOfIteratorHelper$1(targetSegments),
-          _step19;
+        var _iterator20 = _createForOfIteratorHelper$1(targetSegments),
+          _step20;
         try {
-          for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
-            var tgt = _step19.value;
+          for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
+            var tgt = _step20.value;
             var subBounds = _getBounds(property, tpoints[tgt.start], tpoints[tgt.end], tgt.loop);
             var fillSources = _boundSegment(segment, points, subBounds);
-            var _iterator20 = _createForOfIteratorHelper$1(fillSources),
-              _step20;
+            var _iterator21 = _createForOfIteratorHelper$1(fillSources),
+              _step21;
             try {
-              for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
-                var fillSource = _step20.value;
+              for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
+                var fillSource = _step21.value;
                 parts.push({
                   source: fillSource,
                   target: tgt,
@@ -12868,21 +12943,21 @@
                 });
               }
             } catch (err) {
-              _iterator20.e(err);
+              _iterator21.e(err);
             } finally {
-              _iterator20.f();
+              _iterator21.f();
             }
           }
         } catch (err) {
-          _iterator19.e(err);
+          _iterator20.e(err);
         } finally {
-          _iterator19.f();
+          _iterator20.f();
         }
       }
     } catch (err) {
-      _iterator18.e(err);
+      _iterator19.e(err);
     } finally {
-      _iterator18.f();
+      _iterator19.f();
     }
     return parts;
   }
@@ -13287,24 +13362,41 @@
       clip = cfg.clip;
     var property = line._loop ? 'angle' : cfg.axis;
     ctx.save();
-    if (property === 'x' && below !== above) {
-      clipVertical(ctx, target, area.top);
-      fill(ctx, {
-        line: line,
-        target: target,
-        color: above,
-        scale: scale,
-        property: property,
-        clip: clip
-      });
-      ctx.restore();
-      ctx.save();
-      clipVertical(ctx, target, area.bottom);
+    var fillColor = below;
+    if (below !== above) {
+      if (property === 'x') {
+        clipVertical(ctx, target, area.top);
+        fill(ctx, {
+          line: line,
+          target: target,
+          color: above,
+          scale: scale,
+          property: property,
+          clip: clip
+        });
+        ctx.restore();
+        ctx.save();
+        clipVertical(ctx, target, area.bottom);
+      } else if (property === 'y') {
+        clipHorizontal(ctx, target, area.left);
+        fill(ctx, {
+          line: line,
+          target: target,
+          color: below,
+          scale: scale,
+          property: property,
+          clip: clip
+        });
+        ctx.restore();
+        ctx.save();
+        clipHorizontal(ctx, target, area.right);
+        fillColor = above;
+      }
     }
     fill(ctx, {
       line: line,
       target: target,
-      color: below,
+      color: fillColor,
       scale: scale,
       property: property,
       clip: clip
@@ -13317,11 +13409,11 @@
     var first = true;
     var lineLoop = false;
     ctx.beginPath();
-    var _iterator21 = _createForOfIteratorHelper$1(segments),
-      _step21;
+    var _iterator22 = _createForOfIteratorHelper$1(segments),
+      _step22;
     try {
-      for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
-        var segment = _step21.value;
+      for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
+        var segment = _step22.value;
         var start = segment.start,
           end = segment.end;
         var firstPoint = points[start];
@@ -13343,11 +13435,51 @@
         }
       }
     } catch (err) {
-      _iterator21.e(err);
+      _iterator22.e(err);
     } finally {
-      _iterator21.f();
+      _iterator22.f();
     }
     ctx.lineTo(target.first().x, clipY);
+    ctx.closePath();
+    ctx.clip();
+  }
+  function clipHorizontal(ctx, target, clipX) {
+    var segments = target.segments,
+      points = target.points;
+    var first = true;
+    var lineLoop = false;
+    ctx.beginPath();
+    var _iterator23 = _createForOfIteratorHelper$1(segments),
+      _step23;
+    try {
+      for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
+        var segment = _step23.value;
+        var start = segment.start,
+          end = segment.end;
+        var firstPoint = points[start];
+        var lastPoint = points[_findSegmentEnd(start, end, points)];
+        if (first) {
+          ctx.moveTo(firstPoint.x, firstPoint.y);
+          first = false;
+        } else {
+          ctx.lineTo(clipX, firstPoint.y);
+          ctx.lineTo(firstPoint.x, firstPoint.y);
+        }
+        lineLoop = !!target.pathSegment(ctx, segment, {
+          move: lineLoop
+        });
+        if (lineLoop) {
+          ctx.closePath();
+        } else {
+          ctx.lineTo(clipX, lastPoint.y);
+        }
+      }
+    } catch (err) {
+      _iterator23.e(err);
+    } finally {
+      _iterator23.f();
+    }
+    ctx.lineTo(clipX, target.first().y);
     ctx.closePath();
     ctx.clip();
   }
@@ -13359,15 +13491,15 @@
       scale = cfg.scale,
       clip = cfg.clip;
     var segments = _segments(line, target, property);
-    var _iterator22 = _createForOfIteratorHelper$1(segments),
-      _step22;
+    var _iterator24 = _createForOfIteratorHelper$1(segments),
+      _step24;
     try {
-      for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
-        var _step22$value = _step22.value,
-          src = _step22$value.source,
-          tgt = _step22$value.target,
-          start = _step22$value.start,
-          end = _step22$value.end;
+      for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+        var _step24$value = _step24.value,
+          src = _step24$value.source,
+          tgt = _step24$value.target,
+          start = _step24$value.start,
+          end = _step24$value.end;
         var _src$style = src.style,
           _src$style2 = _src$style === void 0 ? {} : _src$style,
           _src$style2$backgroun = _src$style2.backgroundColor,
@@ -13399,9 +13531,9 @@
         ctx.restore();
       }
     } catch (err) {
-      _iterator22.e(err);
+      _iterator24.e(err);
     } finally {
-      _iterator22.f();
+      _iterator24.f();
     }
   }
   function clipBounds(ctx, scale, clip, bounds) {
@@ -13725,11 +13857,11 @@
         if (this.isHorizontal()) {
           var row = 0;
           var left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
-          var _iterator23 = _createForOfIteratorHelper$1(hitboxes),
-            _step23;
+          var _iterator25 = _createForOfIteratorHelper$1(hitboxes),
+            _step25;
           try {
-            for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
-              var hitbox = _step23.value;
+            for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+              var hitbox = _step25.value;
               if (row !== hitbox.row) {
                 row = hitbox.row;
                 left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
@@ -13739,18 +13871,18 @@
               left += hitbox.width + padding;
             }
           } catch (err) {
-            _iterator23.e(err);
+            _iterator25.e(err);
           } finally {
-            _iterator23.f();
+            _iterator25.f();
           }
         } else {
           var col = 0;
           var top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
-          var _iterator24 = _createForOfIteratorHelper$1(hitboxes),
-            _step24;
+          var _iterator26 = _createForOfIteratorHelper$1(hitboxes),
+            _step26;
           try {
-            for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
-              var _hitbox = _step24.value;
+            for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
+              var _hitbox = _step26.value;
               if (_hitbox.col !== col) {
                 col = _hitbox.col;
                 top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
@@ -13761,9 +13893,9 @@
               top += _hitbox.height + padding;
             }
           } catch (err) {
-            _iterator24.e(err);
+            _iterator26.e(err);
           } finally {
-            _iterator24.f();
+            _iterator26.f();
           }
         }
       }
@@ -15491,21 +15623,21 @@
         var added = this._addedLabels;
         if (added.length) {
           var labels = this.getLabels();
-          var _iterator25 = _createForOfIteratorHelper$1(added),
-            _step25;
+          var _iterator27 = _createForOfIteratorHelper$1(added),
+            _step27;
           try {
-            for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
-              var _step25$value = _step25.value,
-                _index3 = _step25$value.index,
-                label = _step25$value.label;
+            for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
+              var _step27$value = _step27.value,
+                _index3 = _step27$value.index,
+                label = _step27$value.label;
               if (labels[_index3] === label) {
                 labels.splice(_index3, 1);
               }
             }
           } catch (err) {
-            _iterator25.e(err);
+            _iterator27.e(err);
           } finally {
-            _iterator25.f();
+            _iterator27.f();
           }
           this._addedLabels = [];
         }
