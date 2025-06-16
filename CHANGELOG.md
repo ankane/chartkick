@@ -1,6 +1,7 @@
 ## 5.2.0 (unreleased)
 
 - Updated Chart.js to 4.5.0
+- Dropped support for Ruby < 3.2
 
 ## 5.1.5 (2025-04-15)
 
