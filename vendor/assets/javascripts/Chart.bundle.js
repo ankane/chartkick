@@ -1,5 +1,5 @@
 /*!
- * Chart.js v4.5.0
+ * Chart.js v4.5.1
  * https://www.chartjs.org
  * (c) 2025 Chart.js Contributors
  * Released under the MIT License
@@ -3169,19 +3169,19 @@
     try {
       for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
         var scope = _step9.value;
-        var _iterator10 = _createForOfIteratorHelper$1(Object.keys(scope).filter(function (k) {
+        var _iterator0 = _createForOfIteratorHelper$1(Object.keys(scope).filter(function (k) {
             return !k.startsWith('_');
           })),
-          _step10;
+          _step0;
         try {
-          for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-            var key = _step10.value;
+          for (_iterator0.s(); !(_step0 = _iterator0.n()).done;) {
+            var key = _step0.value;
             set.add(key);
           }
         } catch (err) {
-          _iterator10.e(err);
+          _iterator0.e(err);
         } finally {
-          _iterator10.f();
+          _iterator0.f();
         }
       }
     } catch (err) {
@@ -3565,10 +3565,10 @@
    */
   function retinaScale(chart, forceRatio, forceStyle) {
     var pixelRatio = forceRatio || 1;
-    var deviceHeight = Math.floor(chart.height * pixelRatio);
-    var deviceWidth = Math.floor(chart.width * pixelRatio);
-    chart.height = Math.floor(chart.height);
-    chart.width = Math.floor(chart.width);
+    var deviceHeight = round1(chart.height * pixelRatio);
+    var deviceWidth = round1(chart.width * pixelRatio);
+    chart.height = round1(chart.height);
+    chart.width = round1(chart.width);
     var canvas = chart.canvas;
     // If no style has been set on the canvas, the render size is used as display size,
     // making the chart visually bigger, so let's enforce it to the "correct" values.
@@ -3985,11 +3985,11 @@
         start = e % count;
       }
     }
-    var _iterator11 = _createForOfIteratorHelper$1(segments),
-      _step11;
+    var _iterator1 = _createForOfIteratorHelper$1(segments),
+      _step1;
     try {
-      for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-        var segment = _step11.value;
+      for (_iterator1.s(); !(_step1 = _iterator1.n()).done;) {
+        var segment = _step1.value;
         start = spanGaps ? start : segment.start;
         var prev = points[start % count];
         var style = void 0;
@@ -4014,9 +4014,9 @@
         }
       }
     } catch (err) {
-      _iterator11.e(err);
+      _iterator1.e(err);
     } finally {
-      _iterator11.f();
+      _iterator1.f();
     }
     return result;
   }
@@ -6447,21 +6447,29 @@
         labels: {
           generateLabels: function generateLabels(chart) {
             var data = chart.data;
+            var _chart$legend$options2 = chart.legend.options.labels,
+              pointStyle = _chart$legend$options2.pointStyle,
+              textAlign = _chart$legend$options2.textAlign,
+              color = _chart$legend$options2.color,
+              useBorderRadius = _chart$legend$options2.useBorderRadius,
+              borderRadius = _chart$legend$options2.borderRadius;
             if (data.labels.length && data.datasets.length) {
-              var _chart$legend$options2 = chart.legend.options.labels,
-                pointStyle = _chart$legend$options2.pointStyle,
-                color = _chart$legend$options2.color;
               return data.labels.map(function (label, i) {
                 var meta = chart.getDatasetMeta(0);
                 var style = meta.controller.getStyle(i);
                 return {
                   text: label,
                   fillStyle: style.backgroundColor,
-                  strokeStyle: style.borderColor,
                   fontColor: color,
-                  lineWidth: style.borderWidth,
-                  pointStyle: pointStyle,
                   hidden: !chart.getDataVisibility(i),
+                  lineDash: style.borderDash,
+                  lineDashOffset: style.borderDashOffset,
+                  lineJoin: style.borderJoinStyle,
+                  lineWidth: style.borderWidth,
+                  strokeStyle: style.borderColor,
+                  textAlign: textAlign,
+                  pointStyle: pointStyle,
+                  borderRadius: useBorderRadius && (borderRadius || style.borderRadius),
                   index: i
                 };
               });
@@ -7931,18 +7939,18 @@
     var canvas = chart.canvas;
     var observer = new MutationObserver(function (entries) {
       var trigger = false;
-      var _iterator10 = _createForOfIteratorHelper$1(entries),
-        _step10;
+      var _iterator0 = _createForOfIteratorHelper$1(entries),
+        _step0;
       try {
-        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-          var entry = _step10.value;
+        for (_iterator0.s(); !(_step0 = _iterator0.n()).done;) {
+          var entry = _step0.value;
           trigger = trigger || nodeListContains(entry.removedNodes, canvas);
           trigger = trigger && !nodeListContains(entry.addedNodes, canvas);
         }
       } catch (err) {
-        _iterator10.e(err);
+        _iterator0.e(err);
       } finally {
-        _iterator10.f();
+        _iterator0.f();
       }
       if (trigger) {
         listener();
@@ -9549,9 +9557,9 @@
       value: function drawBorder() {
         var chart = this.chart,
           ctx = this.ctx,
-          _this$options10 = this.options,
-          border = _this$options10.border,
-          grid = _this$options10.grid;
+          _this$options0 = this.options,
+          border = _this$options0.border,
+          grid = _this$options0.grid;
         var borderOpts = border.setContext(this.getContext());
         var axisWidth = border.display ? borderOpts.width : 0;
         if (!axisWidth) {
@@ -9591,11 +9599,11 @@
           clipArea(ctx, area);
         }
         var items = this.getLabelItems(chartArea);
-        var _iterator11 = _createForOfIteratorHelper$1(items),
-          _step11;
+        var _iterator1 = _createForOfIteratorHelper$1(items),
+          _step1;
         try {
-          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-            var item = _step11.value;
+          for (_iterator1.s(); !(_step1 = _iterator1.n()).done;) {
+            var item = _step1.value;
             var renderTextOptions = item.options;
             var tickFont = item.font;
             var label = item.label;
@@ -9603,9 +9611,9 @@
             renderText(ctx, label, 0, y, tickFont, renderTextOptions);
           }
         } catch (err) {
-          _iterator11.e(err);
+          _iterator1.e(err);
         } finally {
-          _iterator11.f();
+          _iterator1.f();
         }
         if (area) {
           unclipArea(ctx);
@@ -9615,10 +9623,10 @@
       key: "drawTitle",
       value: function drawTitle() {
         var ctx = this.ctx,
-          _this$options11 = this.options,
-          position = _this$options11.position,
-          title = _this$options11.title,
-          reverse = _this$options11.reverse;
+          _this$options1 = this.options,
+          position = _this$options1.position,
+          title = _this$options1.title,
+          reverse = _this$options1.reverse;
         if (!title.display) {
           return;
         }
@@ -9663,7 +9671,7 @@
     }, {
       key: "_layers",
       value: function _layers() {
-        var _this10 = this;
+        var _this0 = this;
         var opts = this.options;
         var tz = opts.ticks && opts.ticks.z || 0;
         var gz = valueOrDefault(opts.grid && opts.grid.z, -1);
@@ -9672,26 +9680,26 @@
           return [{
             z: tz,
             draw: function draw(chartArea) {
-              _this10.draw(chartArea);
+              _this0.draw(chartArea);
             }
           }];
         }
         return [{
           z: gz,
           draw: function draw(chartArea) {
-            _this10.drawBackground();
-            _this10.drawGrid(chartArea);
-            _this10.drawTitle();
+            _this0.drawBackground();
+            _this0.drawGrid(chartArea);
+            _this0.drawTitle();
           }
         }, {
           z: bz,
           draw: function draw() {
-            _this10.drawBorder();
+            _this0.drawBorder();
           }
         }, {
           z: tz,
           draw: function draw(chartArea) {
-            _this10.drawLabels(chartArea);
+            _this0.drawLabels(chartArea);
           }
         }];
       }
@@ -9912,23 +9920,23 @@
     }, {
       key: "removeScales",
       value: function removeScales() {
-        for (var _len10 = arguments.length, args = new Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-          args[_key10] = arguments[_key10];
+        for (var _len0 = arguments.length, args = new Array(_len0), _key0 = 0; _key0 < _len0; _key0++) {
+          args[_key0] = arguments[_key0];
         }
         this._each('unregister', args, this.scales);
       }
     }, {
       key: "_each",
       value: function _each(method, args, typedRegistry) {
-        var _this11 = this;
+        var _this1 = this;
         _toConsumableArray(args).forEach(function (arg) {
-          var reg = typedRegistry || _this11._getRegistryForType(arg);
-          if (typedRegistry || reg.isForType(arg) || reg === _this11.plugins && arg.id) {
-            _this11._exec(method, reg, arg);
+          var reg = typedRegistry || _this1._getRegistryForType(arg);
+          if (typedRegistry || reg.isForType(arg) || reg === _this1.plugins && arg.id) {
+            _this1._exec(method, reg, arg);
           } else {
             each(arg, function (item) {
-              var itemReg = typedRegistry || _this11._getRegistryForType(item);
-              _this11._exec(method, itemReg, item);
+              var itemReg = typedRegistry || _this1._getRegistryForType(item);
+              _this1._exec(method, itemReg, item);
             });
           }
         });
@@ -9967,7 +9975,7 @@
   var PluginService = /*#__PURE__*/function () {
     function PluginService() {
       _classCallCheck$1(this, PluginService);
-      this._init = [];
+      this._init = undefined;
     }
     return _createClass$1(PluginService, [{
       key: "notify",
@@ -9976,11 +9984,15 @@
           this._init = this._createDescriptors(chart, true);
           this._notify(this._init, chart, 'install');
         }
+        if (this._init === undefined) {
+          return;
+        }
         var descriptors = filter ? this._descriptors(chart).filter(filter) : this._descriptors(chart);
         var result = this._notify(descriptors, chart, hook, args);
         if (hook === 'afterDestroy') {
           this._notify(descriptors, chart, 'stop');
           this._notify(this._init, chart, 'uninstall');
+          this._init = undefined;
         }
         return result;
       }
@@ -9988,11 +10000,11 @@
       key: "_notify",
       value: function _notify(descriptors, chart, hook, args) {
         args = args || {};
-        var _iterator12 = _createForOfIteratorHelper$1(descriptors),
-          _step12;
+        var _iterator10 = _createForOfIteratorHelper$1(descriptors),
+          _step10;
         try {
-          for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-            var descriptor = _step12.value;
+          for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+            var descriptor = _step10.value;
             var plugin = descriptor.plugin;
             var method = plugin[hook];
             var params = [chart, args, descriptor.options];
@@ -10001,9 +10013,9 @@
             }
           }
         } catch (err) {
-          _iterator12.e(err);
+          _iterator10.e(err);
         } finally {
-          _iterator12.f();
+          _iterator10.f();
         }
         return true;
       }
@@ -10084,11 +10096,11 @@
       localIds = _ref2.localIds;
     var result = [];
     var context = chart.getContext();
-    var _iterator13 = _createForOfIteratorHelper$1(plugins),
-      _step13;
+    var _iterator11 = _createForOfIteratorHelper$1(plugins),
+      _step11;
     try {
-      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-        var plugin = _step13.value;
+      for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+        var plugin = _step11.value;
         var id = plugin.id;
         var opts = getOpts(options[id], all);
         if (opts === null) {
@@ -10103,9 +10115,9 @@
         });
       }
     } catch (err) {
-      _iterator13.e(err);
+      _iterator11.e(err);
     } finally {
-      _iterator13.f();
+      _iterator11.f();
     }
     return result;
   }
@@ -10157,8 +10169,8 @@
     if (idMatchesAxis(id)) {
       return id;
     }
-    for (var _len11 = arguments.length, scaleOptions = new Array(_len11 > 1 ? _len11 - 1 : 0), _key11 = 1; _key11 < _len11; _key11++) {
-      scaleOptions[_key11 - 1] = arguments[_key11];
+    for (var _len1 = arguments.length, scaleOptions = new Array(_len1 > 1 ? _len1 - 1 : 0), _key1 = 1; _key1 < _len1; _key1++) {
+      scaleOptions[_key1 - 1] = arguments[_key1];
     }
     for (var _i3 = 0, _scaleOptions = scaleOptions; _i3 < _scaleOptions.length; _i3++) {
       var opts = _scaleOptions[_i3];
@@ -10424,17 +10436,17 @@
           var subResolver = this.createResolver(scopes, context, subPrefixes);
           options = _attachContext(resolver, context, subResolver);
         }
-        var _iterator14 = _createForOfIteratorHelper$1(names),
-          _step14;
+        var _iterator12 = _createForOfIteratorHelper$1(names),
+          _step12;
         try {
-          for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-            var prop = _step14.value;
+          for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+            var prop = _step12.value;
             result[prop] = options[prop];
           }
         } catch (err) {
-          _iterator14.e(err);
+          _iterator12.e(err);
         } finally {
-          _iterator14.f();
+          _iterator12.f();
         }
         return result;
       }
@@ -10478,11 +10490,11 @@
     var _descriptors2 = _descriptors(proxy),
       isScriptable = _descriptors2.isScriptable,
       isIndexable = _descriptors2.isIndexable;
-    var _iterator15 = _createForOfIteratorHelper$1(names),
-      _step15;
+    var _iterator13 = _createForOfIteratorHelper$1(names),
+      _step13;
     try {
-      for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-        var prop = _step15.value;
+      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+        var prop = _step13.value;
         var scriptable = isScriptable(prop);
         var indexable = isIndexable(prop);
         var value = (indexable || scriptable) && proxy[prop];
@@ -10491,13 +10503,13 @@
         }
       }
     } catch (err) {
-      _iterator15.e(err);
+      _iterator13.e(err);
     } finally {
-      _iterator15.f();
+      _iterator13.f();
     }
     return false;
   }
-  var version = "4.5.0";
+  var version = "4.5.1";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -10561,7 +10573,7 @@
   }
   var Chart = /*#__PURE__*/function () {
     function Chart(item, userConfig) {
-      var _this12 = this;
+      var _this10 = this;
       _classCallCheck$1(this, Chart);
       var config = this.config = new Config(userConfig);
       var initialCanvas = getCanvas(item);
@@ -10602,7 +10614,7 @@
       this._animationsDisabled = undefined;
       this.$context = undefined;
       this._doResize = debounce(function (mode) {
-        return _this12.update(mode);
+        return _this10.update(mode);
       }, options.resizeDelay || 0);
       this._dataChanges = [];
       instances[this.id] = this;
@@ -10620,9 +10632,9 @@
     return _createClass$1(Chart, [{
       key: "aspectRatio",
       get: function get() {
-        var _this$options12 = this.options,
-          aspectRatio = _this$options12.aspectRatio,
-          maintainAspectRatio = _this$options12.maintainAspectRatio,
+        var _this$options10 = this.options,
+          aspectRatio = _this$options10.aspectRatio,
+          maintainAspectRatio = _this$options10.maintainAspectRatio,
           width = this.width,
           height = this.height,
           _aspectRatio = this._aspectRatio;
@@ -10729,7 +10741,7 @@
     }, {
       key: "buildOrUpdateScales",
       value: function buildOrUpdateScales() {
-        var _this13 = this;
+        var _this11 = this;
         var options = this.options;
         var scaleOpts = options.scales;
         var scales = this.scales;
@@ -10768,8 +10780,8 @@
             scale = new scaleClass({
               id: id,
               type: scaleType,
-              ctx: _this13.ctx,
-              chart: _this13
+              ctx: _this11.ctx,
+              chart: _this11
             });
             scales[scale.id] = scale;
           }
@@ -10781,8 +10793,8 @@
           }
         });
         each(scales, function (scale) {
-          layouts.configure(_this13, scale, scale.options);
-          layouts.addBox(_this13, scale);
+          layouts.configure(_this11, scale, scale.options);
+          layouts.addBox(_this11, scale);
         });
       }
     }, {
@@ -10805,7 +10817,7 @@
     }, {
       key: "_removeUnreferencedMetasets",
       value: function _removeUnreferencedMetasets() {
-        var _this14 = this;
+        var _this12 = this;
         var metasets = this._metasets,
           datasets = this.data.datasets;
         if (metasets.length > datasets.length) {
@@ -10815,7 +10827,7 @@
           if (datasets.filter(function (x) {
             return x === meta._dataset;
           }).length === 0) {
-            _this14._destroyDatasetMeta(index);
+            _this12._destroyDatasetMeta(index);
           }
         });
       }
@@ -10862,9 +10874,9 @@
     }, {
       key: "_resetElements",
       value: function _resetElements() {
-        var _this15 = this;
+        var _this13 = this;
         each(this.data.datasets, function (dataset, datasetIndex) {
-          _this15.getDatasetMeta(datasetIndex).controller.reset();
+          _this13.getDatasetMeta(datasetIndex).controller.reset();
         }, this);
       }
     }, {
@@ -10924,9 +10936,9 @@
     }, {
       key: "_updateScales",
       value: function _updateScales() {
-        var _this16 = this;
+        var _this14 = this;
         each(this.scales, function (scale) {
-          layouts.removeBox(_this16, scale);
+          layouts.removeBox(_this14, scale);
         });
         this.ensureScalesHaveIDs();
         this.buildOrUpdateScales();
@@ -10947,21 +10959,21 @@
       value: function _updateHiddenIndices() {
         var _hiddenIndices = this._hiddenIndices;
         var changes = this._getUniformDataChanges() || [];
-        var _iterator16 = _createForOfIteratorHelper$1(changes),
-          _step16;
+        var _iterator14 = _createForOfIteratorHelper$1(changes),
+          _step14;
         try {
-          for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-            var _step16$value = _step16.value,
-              method = _step16$value.method,
-              start = _step16$value.start,
-              count = _step16$value.count;
+          for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+            var _step14$value = _step14.value,
+              method = _step14$value.method,
+              start = _step14$value.start,
+              count = _step14$value.count;
             var move = method === '_removeElements' ? -count : count;
             moveNumericKeys(_hiddenIndices, start, move);
           }
         } catch (err) {
-          _iterator16.e(err);
+          _iterator14.e(err);
         } finally {
-          _iterator16.f();
+          _iterator14.f();
         }
       }
     }, {
@@ -10999,7 +11011,7 @@
     }, {
       key: "_updateLayout",
       value: function _updateLayout(minPadding) {
-        var _this17 = this;
+        var _this15 = this;
         if (this.notifyPlugins('beforeLayout', {
           cancelable: true
         }) === false) {
@@ -11010,14 +11022,14 @@
         var noArea = area.width <= 0 || area.height <= 0;
         this._layers = [];
         each(this.boxes, function (box) {
-          var _this17$_layers;
+          var _this15$_layers;
           if (noArea && box.position === 'chartArea') {
             return;
           }
           if (box.configure) {
             box.configure();
           }
-          (_this17$_layers = _this17._layers).push.apply(_this17$_layers, _toConsumableArray(box._layers()));
+          (_this15$_layers = _this15._layers).push.apply(_this15$_layers, _toConsumableArray(box._layers()));
         }, this);
         this._layers.forEach(function (item, index) {
           item._idx = index;
@@ -11332,17 +11344,17 @@
     }, {
       key: "bindUserEvents",
       value: function bindUserEvents() {
-        var _this18 = this;
+        var _this16 = this;
         var listeners = this._listeners;
         var platform = this.platform;
         var _add = function _add(type, listener) {
-          platform.addEventListener(_this18, type, listener);
+          platform.addEventListener(_this16, type, listener);
           listeners[type] = listener;
         };
         var listener = function listener(e, x, y) {
           e.offsetX = x;
           e.offsetY = y;
-          _this18._eventHandler(e);
+          _this16._eventHandler(e);
         };
         each(this.options.events, function (type) {
           return _add(type, listener);
@@ -11351,40 +11363,40 @@
     }, {
       key: "bindResponsiveEvents",
       value: function bindResponsiveEvents() {
-        var _this19 = this;
+        var _this17 = this;
         if (!this._responsiveListeners) {
           this._responsiveListeners = {};
         }
         var listeners = this._responsiveListeners;
         var platform = this.platform;
         var _add = function _add(type, listener) {
-          platform.addEventListener(_this19, type, listener);
+          platform.addEventListener(_this17, type, listener);
           listeners[type] = listener;
         };
         var _remove = function _remove(type, listener) {
           if (listeners[type]) {
-            platform.removeEventListener(_this19, type, listener);
+            platform.removeEventListener(_this17, type, listener);
             delete listeners[type];
           }
         };
         var listener = function listener(width, height) {
-          if (_this19.canvas) {
-            _this19.resize(width, height);
+          if (_this17.canvas) {
+            _this17.resize(width, height);
           }
         };
         var detached;
         var _attached = function attached() {
           _remove('attach', _attached);
-          _this19.attached = true;
-          _this19.resize();
+          _this17.attached = true;
+          _this17.resize();
           _add('resize', listener);
           _add('detach', detached);
         };
         detached = function detached() {
-          _this19.attached = false;
+          _this17.attached = false;
           _remove('resize', listener);
-          _this19._stop();
-          _this19._resize(0, 0);
+          _this17._stop();
+          _this17._resize(0, 0);
           _add('attach', _attached);
         };
         if (platform.isAttached(this.canvas)) {
@@ -11396,13 +11408,13 @@
     }, {
       key: "unbindEvents",
       value: function unbindEvents() {
-        var _this20 = this;
+        var _this18 = this;
         each(this._listeners, function (listener, type) {
-          _this20.platform.removeEventListener(_this20, type, listener);
+          _this18.platform.removeEventListener(_this18, type, listener);
         });
         this._listeners = {};
         each(this._responsiveListeners, function (listener, type) {
-          _this20.platform.removeEventListener(_this20, type, listener);
+          _this18.platform.removeEventListener(_this18, type, listener);
         });
         this._responsiveListeners = undefined;
       }
@@ -11431,12 +11443,12 @@
     }, {
       key: "setActiveElements",
       value: function setActiveElements(activeElements) {
-        var _this21 = this;
+        var _this19 = this;
         var lastActive = this._active || [];
         var active = activeElements.map(function (_ref4) {
           var datasetIndex = _ref4.datasetIndex,
             index = _ref4.index;
-          var meta = _this21.getDatasetMeta(datasetIndex);
+          var meta = _this19.getDatasetMeta(datasetIndex);
           if (!meta) {
             throw new Error('No dataset found at index ' + datasetIndex);
           }
@@ -11488,7 +11500,7 @@
     }, {
       key: "_eventHandler",
       value: function _eventHandler(e, replay) {
-        var _this22 = this;
+        var _this20 = this;
         var args = {
           event: e,
           replay: replay,
@@ -11496,7 +11508,7 @@
           inChartArea: this.isPointInArea(e)
         };
         var eventFilter = function eventFilter(plugin) {
-          return (plugin.options.events || _this22.options.events).includes(e["native"].type);
+          return (plugin.options.events || _this20.options.events).includes(e["native"].type);
         };
         if (this.notifyPlugins('beforeEvent', args, eventFilter) === false) {
           return;
@@ -11825,28 +11837,28 @@
   }
   var ArcElement = /*#__PURE__*/function (_Element3) {
     function ArcElement(cfg) {
-      var _this23;
+      var _this21;
       _classCallCheck$1(this, ArcElement);
-      _this23 = _callSuper(this, ArcElement);
-      _defineProperty$1(_this23, "circumference", void 0);
-      _defineProperty$1(_this23, "endAngle", void 0);
-      _defineProperty$1(_this23, "fullCircles", void 0);
-      _defineProperty$1(_this23, "innerRadius", void 0);
-      _defineProperty$1(_this23, "outerRadius", void 0);
-      _defineProperty$1(_this23, "pixelMargin", void 0);
-      _defineProperty$1(_this23, "startAngle", void 0);
-      _this23.options = undefined;
-      _this23.circumference = undefined;
-      _this23.startAngle = undefined;
-      _this23.endAngle = undefined;
-      _this23.innerRadius = undefined;
-      _this23.outerRadius = undefined;
-      _this23.pixelMargin = 0;
-      _this23.fullCircles = 0;
+      _this21 = _callSuper(this, ArcElement);
+      _defineProperty$1(_this21, "circumference", void 0);
+      _defineProperty$1(_this21, "endAngle", void 0);
+      _defineProperty$1(_this21, "fullCircles", void 0);
+      _defineProperty$1(_this21, "innerRadius", void 0);
+      _defineProperty$1(_this21, "outerRadius", void 0);
+      _defineProperty$1(_this21, "pixelMargin", void 0);
+      _defineProperty$1(_this21, "startAngle", void 0);
+      _this21.options = undefined;
+      _this21.circumference = undefined;
+      _this21.startAngle = undefined;
+      _this21.endAngle = undefined;
+      _this21.innerRadius = undefined;
+      _this21.outerRadius = undefined;
+      _this21.pixelMargin = 0;
+      _this21.fullCircles = 0;
       if (cfg) {
-        Object.assign(_this23, cfg);
+        Object.assign(_this21, cfg);
       }
-      return _this23;
+      return _this21;
     }
     _inherits$1(ArcElement, _Element3);
     return _createClass$1(ArcElement, [{
@@ -11882,9 +11894,9 @@
           endAngle = _this$getProps3.endAngle,
           innerRadius = _this$getProps3.innerRadius,
           outerRadius = _this$getProps3.outerRadius;
-        var _this$options13 = this.options,
-          offset = _this$options13.offset,
-          spacing = _this$options13.spacing;
+        var _this$options11 = this.options,
+          offset = _this$options11.offset,
+          spacing = _this$options11.spacing;
         var halfAngle = (startAngle + endAngle) / 2;
         var halfRadius = (innerRadius + outerRadius + spacing + offset) / 2;
         return {
@@ -12102,11 +12114,11 @@
     var segments = line.segments,
       options = line.options;
     var segmentMethod = _getSegmentMethod(line);
-    var _iterator17 = _createForOfIteratorHelper$1(segments),
-      _step17;
+    var _iterator15 = _createForOfIteratorHelper$1(segments),
+      _step15;
     try {
-      for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
-        var segment = _step17.value;
+      for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+        var segment = _step15.value;
         setStyle(ctx, options, segment.style);
         ctx.beginPath();
         if (segmentMethod(ctx, line, segment, {
@@ -12118,9 +12130,9 @@
         ctx.stroke();
       }
     } catch (err) {
-      _iterator17.e(err);
+      _iterator15.e(err);
     } finally {
-      _iterator17.f();
+      _iterator15.f();
     }
   }
   var usePath2D = typeof Path2D === 'function';
@@ -12133,24 +12145,24 @@
   }
   var LineElement = /*#__PURE__*/function (_Element4) {
     function LineElement(cfg) {
-      var _this24;
+      var _this22;
       _classCallCheck$1(this, LineElement);
-      _this24 = _callSuper(this, LineElement);
-      _this24.animated = true;
-      _this24.options = undefined;
-      _this24._chart = undefined;
-      _this24._loop = undefined;
-      _this24._fullLoop = undefined;
-      _this24._path = undefined;
-      _this24._points = undefined;
-      _this24._segments = undefined;
-      _this24._decimated = false;
-      _this24._pointsUpdated = false;
-      _this24._datasetIndex = undefined;
+      _this22 = _callSuper(this, LineElement);
+      _this22.animated = true;
+      _this22.options = undefined;
+      _this22._chart = undefined;
+      _this22._loop = undefined;
+      _this22._fullLoop = undefined;
+      _this22._path = undefined;
+      _this22._points = undefined;
+      _this22._segments = undefined;
+      _this22._decimated = false;
+      _this22._pointsUpdated = false;
+      _this22._datasetIndex = undefined;
       if (cfg) {
-        Object.assign(_this24, cfg);
+        Object.assign(_this22, cfg);
       }
-      return _this24;
+      return _this22;
     }
     _inherits$1(LineElement, _Element4);
     return _createClass$1(LineElement, [{
@@ -12242,20 +12254,20 @@
         var loop = this._loop;
         start = start || 0;
         count = count || this.points.length - start;
-        var _iterator18 = _createForOfIteratorHelper$1(segments),
-          _step18;
+        var _iterator16 = _createForOfIteratorHelper$1(segments),
+          _step16;
         try {
-          for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
-            var segment = _step18.value;
+          for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+            var segment = _step16.value;
             loop &= segmentMethod(ctx, this, segment, {
               start: start,
               end: start + count - 1
             });
           }
         } catch (err) {
-          _iterator18.e(err);
+          _iterator16.e(err);
         } finally {
-          _iterator18.f();
+          _iterator16.f();
         }
         return !!loop;
       }
@@ -12308,20 +12320,20 @@
   }
   var PointElement = /*#__PURE__*/function (_Element5) {
     function PointElement(cfg) {
-      var _this25;
+      var _this23;
       _classCallCheck$1(this, PointElement);
-      _this25 = _callSuper(this, PointElement);
-      _defineProperty$1(_this25, "parsed", void 0);
-      _defineProperty$1(_this25, "skip", void 0);
-      _defineProperty$1(_this25, "stop", void 0);
-      _this25.options = undefined;
-      _this25.parsed = undefined;
-      _this25.skip = undefined;
-      _this25.stop = undefined;
+      _this23 = _callSuper(this, PointElement);
+      _defineProperty$1(_this23, "parsed", void 0);
+      _defineProperty$1(_this23, "skip", void 0);
+      _defineProperty$1(_this23, "stop", void 0);
+      _this23.options = undefined;
+      _this23.parsed = undefined;
+      _this23.skip = undefined;
+      _this23.stop = undefined;
       if (cfg) {
-        Object.assign(_this25, cfg);
+        Object.assign(_this23, cfg);
       }
-      return _this25;
+      return _this23;
     }
     _inherits$1(PointElement, _Element5);
     return _createClass$1(PointElement, [{
@@ -12518,28 +12530,28 @@
   }
   var BarElement = /*#__PURE__*/function (_Element6) {
     function BarElement(cfg) {
-      var _this26;
+      var _this24;
       _classCallCheck$1(this, BarElement);
-      _this26 = _callSuper(this, BarElement);
-      _this26.options = undefined;
-      _this26.horizontal = undefined;
-      _this26.base = undefined;
-      _this26.width = undefined;
-      _this26.height = undefined;
-      _this26.inflateAmount = undefined;
+      _this24 = _callSuper(this, BarElement);
+      _this24.options = undefined;
+      _this24.horizontal = undefined;
+      _this24.base = undefined;
+      _this24.width = undefined;
+      _this24.height = undefined;
+      _this24.inflateAmount = undefined;
       if (cfg) {
-        Object.assign(_this26, cfg);
+        Object.assign(_this24, cfg);
       }
-      return _this26;
+      return _this24;
     }
     _inherits$1(BarElement, _Element6);
     return _createClass$1(BarElement, [{
       key: "draw",
       value: function draw(ctx) {
         var inflateAmount = this.inflateAmount,
-          _this$options14 = this.options,
-          borderColor = _this$options14.borderColor,
-          backgroundColor = _this$options14.backgroundColor;
+          _this$options12 = this.options,
+          borderColor = _this$options12.borderColor,
+          backgroundColor = _this$options12.backgroundColor;
         var _boundingRects = boundingRects(this),
           inner = _boundingRects.inner,
           outer = _boundingRects.outer;
@@ -12904,11 +12916,11 @@
     var points = line.points;
     var tpoints = target.points;
     var parts = [];
-    var _iterator19 = _createForOfIteratorHelper$1(segments),
-      _step19;
+    var _iterator17 = _createForOfIteratorHelper$1(segments),
+      _step17;
     try {
-      for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
-        var segment = _step19.value;
+      for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+        var segment = _step17.value;
         var start = segment.start,
           end = segment.end;
         end = _findSegmentEnd(start, end, points);
@@ -12923,18 +12935,18 @@
           continue;
         }
         var targetSegments = _boundSegments(target, bounds);
-        var _iterator20 = _createForOfIteratorHelper$1(targetSegments),
-          _step20;
+        var _iterator18 = _createForOfIteratorHelper$1(targetSegments),
+          _step18;
         try {
-          for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
-            var tgt = _step20.value;
+          for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+            var tgt = _step18.value;
             var subBounds = _getBounds(property, tpoints[tgt.start], tpoints[tgt.end], tgt.loop);
             var fillSources = _boundSegment(segment, points, subBounds);
-            var _iterator21 = _createForOfIteratorHelper$1(fillSources),
-              _step21;
+            var _iterator19 = _createForOfIteratorHelper$1(fillSources),
+              _step19;
             try {
-              for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
-                var fillSource = _step21.value;
+              for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+                var fillSource = _step19.value;
                 parts.push({
                   source: fillSource,
                   target: tgt,
@@ -12943,21 +12955,21 @@
                 });
               }
             } catch (err) {
-              _iterator21.e(err);
+              _iterator19.e(err);
             } finally {
-              _iterator21.f();
+              _iterator19.f();
             }
           }
         } catch (err) {
-          _iterator20.e(err);
+          _iterator18.e(err);
         } finally {
-          _iterator20.f();
+          _iterator18.f();
         }
       }
     } catch (err) {
-      _iterator19.e(err);
+      _iterator17.e(err);
     } finally {
-      _iterator19.f();
+      _iterator17.f();
     }
     return parts;
   }
@@ -13409,11 +13421,11 @@
     var first = true;
     var lineLoop = false;
     ctx.beginPath();
-    var _iterator22 = _createForOfIteratorHelper$1(segments),
-      _step22;
+    var _iterator20 = _createForOfIteratorHelper$1(segments),
+      _step20;
     try {
-      for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
-        var segment = _step22.value;
+      for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
+        var segment = _step20.value;
         var start = segment.start,
           end = segment.end;
         var firstPoint = points[start];
@@ -13435,9 +13447,9 @@
         }
       }
     } catch (err) {
-      _iterator22.e(err);
+      _iterator20.e(err);
     } finally {
-      _iterator22.f();
+      _iterator20.f();
     }
     ctx.lineTo(target.first().x, clipY);
     ctx.closePath();
@@ -13449,11 +13461,11 @@
     var first = true;
     var lineLoop = false;
     ctx.beginPath();
-    var _iterator23 = _createForOfIteratorHelper$1(segments),
-      _step23;
+    var _iterator21 = _createForOfIteratorHelper$1(segments),
+      _step21;
     try {
-      for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
-        var segment = _step23.value;
+      for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
+        var segment = _step21.value;
         var start = segment.start,
           end = segment.end;
         var firstPoint = points[start];
@@ -13475,9 +13487,9 @@
         }
       }
     } catch (err) {
-      _iterator23.e(err);
+      _iterator21.e(err);
     } finally {
-      _iterator23.f();
+      _iterator21.f();
     }
     ctx.lineTo(clipX, target.first().y);
     ctx.closePath();
@@ -13491,15 +13503,15 @@
       scale = cfg.scale,
       clip = cfg.clip;
     var segments = _segments(line, target, property);
-    var _iterator24 = _createForOfIteratorHelper$1(segments),
-      _step24;
+    var _iterator22 = _createForOfIteratorHelper$1(segments),
+      _step22;
     try {
-      for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
-        var _step24$value = _step24.value,
-          src = _step24$value.source,
-          tgt = _step24$value.target,
-          start = _step24$value.start,
-          end = _step24$value.end;
+      for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
+        var _step22$value = _step22.value,
+          src = _step22$value.source,
+          tgt = _step22$value.target,
+          start = _step22$value.start,
+          end = _step22$value.end;
         var _src$style = src.style,
           _src$style2 = _src$style === void 0 ? {} : _src$style,
           _src$style2$backgroun = _src$style2.backgroundColor,
@@ -13531,17 +13543,17 @@
         ctx.restore();
       }
     } catch (err) {
-      _iterator24.e(err);
+      _iterator22.e(err);
     } finally {
-      _iterator24.f();
+      _iterator22.f();
     }
   }
   function clipBounds(ctx, scale, clip, bounds) {
     var chartArea = scale.chart.chartArea;
-    var _ref10 = bounds || {},
-      property = _ref10.property,
-      start = _ref10.start,
-      end = _ref10.end;
+    var _ref0 = bounds || {},
+      property = _ref0.property,
+      start = _ref0.start,
+      end = _ref0.end;
     if (property === 'x' || property === 'y') {
       var left, top, right, bottom;
       if (property === 'x') {
@@ -13663,32 +13675,32 @@
   };
   var Legend = /*#__PURE__*/function (_Element7) {
     function Legend(config) {
-      var _this27;
+      var _this25;
       _classCallCheck$1(this, Legend);
-      _this27 = _callSuper(this, Legend);
-      _this27._added = false;
-      _this27.legendHitBoxes = [];
-      _this27._hoveredItem = null;
-      _this27.doughnutMode = false;
-      _this27.chart = config.chart;
-      _this27.options = config.options;
-      _this27.ctx = config.ctx;
-      _this27.legendItems = undefined;
-      _this27.columnSizes = undefined;
-      _this27.lineWidths = undefined;
-      _this27.maxHeight = undefined;
-      _this27.maxWidth = undefined;
-      _this27.top = undefined;
-      _this27.bottom = undefined;
-      _this27.left = undefined;
-      _this27.right = undefined;
-      _this27.height = undefined;
-      _this27.width = undefined;
-      _this27._margins = undefined;
-      _this27.position = undefined;
-      _this27.weight = undefined;
-      _this27.fullSize = undefined;
-      return _this27;
+      _this25 = _callSuper(this, Legend);
+      _this25._added = false;
+      _this25.legendHitBoxes = [];
+      _this25._hoveredItem = null;
+      _this25.doughnutMode = false;
+      _this25.chart = config.chart;
+      _this25.options = config.options;
+      _this25.ctx = config.ctx;
+      _this25.legendItems = undefined;
+      _this25.columnSizes = undefined;
+      _this25.lineWidths = undefined;
+      _this25.maxHeight = undefined;
+      _this25.maxWidth = undefined;
+      _this25.top = undefined;
+      _this25.bottom = undefined;
+      _this25.left = undefined;
+      _this25.right = undefined;
+      _this25.height = undefined;
+      _this25.width = undefined;
+      _this25._margins = undefined;
+      _this25.position = undefined;
+      _this25.weight = undefined;
+      _this25.fullSize = undefined;
+      return _this25;
     }
     _inherits$1(Legend, _Element7);
     return _createClass$1(Legend, [{
@@ -13717,17 +13729,17 @@
     }, {
       key: "buildLabels",
       value: function buildLabels() {
-        var _this28 = this;
+        var _this26 = this;
         var labelOpts = this.options.labels || {};
         var legendItems = callback(labelOpts.generateLabels, [this.chart], this) || [];
         if (labelOpts.filter) {
           legendItems = legendItems.filter(function (item) {
-            return labelOpts.filter(item, _this28.chart.data);
+            return labelOpts.filter(item, _this26.chart.data);
           });
         }
         if (labelOpts.sort) {
           legendItems = legendItems.sort(function (a, b) {
-            return labelOpts.sort(a, b, _this28.chart.data);
+            return labelOpts.sort(a, b, _this26.chart.data);
           });
         }
         if (this.options.reverse) {
@@ -13849,19 +13861,19 @@
         }
         var titleHeight = this._computeTitleHeight();
         var hitboxes = this.legendHitBoxes,
-          _this$options15 = this.options,
-          align = _this$options15.align,
-          padding = _this$options15.labels.padding,
-          rtl = _this$options15.rtl;
+          _this$options13 = this.options,
+          align = _this$options13.align,
+          padding = _this$options13.labels.padding,
+          rtl = _this$options13.rtl;
         var rtlHelper = getRtlAdapter(rtl, this.left, this.width);
         if (this.isHorizontal()) {
           var row = 0;
           var left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
-          var _iterator25 = _createForOfIteratorHelper$1(hitboxes),
-            _step25;
+          var _iterator23 = _createForOfIteratorHelper$1(hitboxes),
+            _step23;
           try {
-            for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
-              var hitbox = _step25.value;
+            for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
+              var hitbox = _step23.value;
               if (row !== hitbox.row) {
                 row = hitbox.row;
                 left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
@@ -13871,18 +13883,18 @@
               left += hitbox.width + padding;
             }
           } catch (err) {
-            _iterator25.e(err);
+            _iterator23.e(err);
           } finally {
-            _iterator25.f();
+            _iterator23.f();
           }
         } else {
           var col = 0;
           var top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
-          var _iterator26 = _createForOfIteratorHelper$1(hitboxes),
-            _step26;
+          var _iterator24 = _createForOfIteratorHelper$1(hitboxes),
+            _step24;
           try {
-            for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
-              var _hitbox = _step26.value;
+            for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+              var _hitbox = _step24.value;
               if (_hitbox.col !== col) {
                 col = _hitbox.col;
                 top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
@@ -13893,9 +13905,9 @@
               top += _hitbox.height + padding;
             }
           } catch (err) {
-            _iterator26.e(err);
+            _iterator24.e(err);
           } finally {
-            _iterator26.f();
+            _iterator24.f();
           }
         }
       }
@@ -13917,7 +13929,7 @@
     }, {
       key: "_draw",
       value: function _draw() {
-        var _this29 = this;
+        var _this27 = this;
         var opts = this.options,
           columnSizes = this.columnSizes,
           lineWidths = this.lineWidths,
@@ -14019,21 +14031,21 @@
           var width = boxWidth + halfFontSize + textWidth;
           var x = cursor.x;
           var y = cursor.y;
-          rtlHelper.setWidth(_this29.width);
+          rtlHelper.setWidth(_this27.width);
           if (isHorizontal) {
-            if (i > 0 && x + width + padding > _this29.right) {
+            if (i > 0 && x + width + padding > _this27.right) {
               y = cursor.y += lineHeight;
               cursor.line++;
-              x = cursor.x = _alignStartEnd(align, _this29.left + padding, _this29.right - lineWidths[cursor.line]);
+              x = cursor.x = _alignStartEnd(align, _this27.left + padding, _this27.right - lineWidths[cursor.line]);
             }
-          } else if (i > 0 && y + lineHeight > _this29.bottom) {
+          } else if (i > 0 && y + lineHeight > _this27.bottom) {
             x = cursor.x = x + columnSizes[cursor.line].width + padding;
             cursor.line++;
-            y = cursor.y = _alignStartEnd(align, _this29.top + titleHeight + padding, _this29.bottom - columnSizes[cursor.line].height);
+            y = cursor.y = _alignStartEnd(align, _this27.top + titleHeight + padding, _this27.bottom - columnSizes[cursor.line].height);
           }
           var realX = rtlHelper.x(x);
           drawLegendBox(realX, y, legendItem);
-          x = _textX(textAlign, x + boxWidth + halfFontSize, isHorizontal ? x + width : _this29.right, opts.rtl);
+          x = _textX(textAlign, x + boxWidth + halfFontSize, isHorizontal ? x + width : _this27.right, opts.rtl);
           fillText(rtlHelper.x(x), y, legendItem);
           if (isHorizontal) {
             cursor.x += width + padding;
@@ -14277,23 +14289,23 @@
   };
   var Title = /*#__PURE__*/function (_Element8) {
     function Title(config) {
-      var _this30;
+      var _this28;
       _classCallCheck$1(this, Title);
-      _this30 = _callSuper(this, Title);
-      _this30.chart = config.chart;
-      _this30.options = config.options;
-      _this30.ctx = config.ctx;
-      _this30._padding = undefined;
-      _this30.top = undefined;
-      _this30.bottom = undefined;
-      _this30.left = undefined;
-      _this30.right = undefined;
-      _this30.width = undefined;
-      _this30.height = undefined;
-      _this30.position = undefined;
-      _this30.weight = undefined;
-      _this30.fullSize = undefined;
-      return _this30;
+      _this28 = _callSuper(this, Title);
+      _this28.chart = config.chart;
+      _this28.options = config.options;
+      _this28.ctx = config.ctx;
+      _this28._padding = undefined;
+      _this28.top = undefined;
+      _this28.bottom = undefined;
+      _this28.left = undefined;
+      _this28.right = undefined;
+      _this28.width = undefined;
+      _this28.height = undefined;
+      _this28.position = undefined;
+      _this28.weight = undefined;
+      _this28.fullSize = undefined;
+      return _this28;
     }
     _inherits$1(Title, _Element8);
     return _createClass$1(Title, [{
@@ -14812,37 +14824,37 @@
   }
   var Tooltip = /*#__PURE__*/function (_Element9) {
     function Tooltip(config) {
-      var _this31;
+      var _this29;
       _classCallCheck$1(this, Tooltip);
-      _this31 = _callSuper(this, Tooltip);
-      _this31.opacity = 0;
-      _this31._active = [];
-      _this31._eventPosition = undefined;
-      _this31._size = undefined;
-      _this31._cachedAnimations = undefined;
-      _this31._tooltipItems = [];
-      _this31.$animations = undefined;
-      _this31.$context = undefined;
-      _this31.chart = config.chart;
-      _this31.options = config.options;
-      _this31.dataPoints = undefined;
-      _this31.title = undefined;
-      _this31.beforeBody = undefined;
-      _this31.body = undefined;
-      _this31.afterBody = undefined;
-      _this31.footer = undefined;
-      _this31.xAlign = undefined;
-      _this31.yAlign = undefined;
-      _this31.x = undefined;
-      _this31.y = undefined;
-      _this31.height = undefined;
-      _this31.width = undefined;
-      _this31.caretX = undefined;
-      _this31.caretY = undefined;
-      _this31.labelColors = undefined;
-      _this31.labelPointStyles = undefined;
-      _this31.labelTextColors = undefined;
-      return _this31;
+      _this29 = _callSuper(this, Tooltip);
+      _this29.opacity = 0;
+      _this29._active = [];
+      _this29._eventPosition = undefined;
+      _this29._size = undefined;
+      _this29._cachedAnimations = undefined;
+      _this29._tooltipItems = [];
+      _this29.$animations = undefined;
+      _this29.$context = undefined;
+      _this29.chart = config.chart;
+      _this29.options = config.options;
+      _this29.dataPoints = undefined;
+      _this29.title = undefined;
+      _this29.beforeBody = undefined;
+      _this29.body = undefined;
+      _this29.afterBody = undefined;
+      _this29.footer = undefined;
+      _this29.xAlign = undefined;
+      _this29.yAlign = undefined;
+      _this29.x = undefined;
+      _this29.y = undefined;
+      _this29.height = undefined;
+      _this29.width = undefined;
+      _this29.caretX = undefined;
+      _this29.caretY = undefined;
+      _this29.labelColors = undefined;
+      _this29.labelPointStyles = undefined;
+      _this29.labelTextColors = undefined;
+      return _this29;
     }
     _inherits$1(Tooltip, _Element9);
     return _createClass$1(Tooltip, [{
@@ -14894,7 +14906,7 @@
     }, {
       key: "getBody",
       value: function getBody(tooltipItems, options) {
-        var _this32 = this;
+        var _this30 = this;
         var callbacks = options.callbacks;
         var bodyItems = [];
         each(tooltipItems, function (context) {
@@ -14904,9 +14916,9 @@
             after: []
           };
           var scoped = overrideCallbacks(callbacks, context);
-          pushOrConcat(bodyItem.before, splitNewlines(invokeCallbackWithFallback(scoped, 'beforeLabel', _this32, context)));
-          pushOrConcat(bodyItem.lines, invokeCallbackWithFallback(scoped, 'label', _this32, context));
-          pushOrConcat(bodyItem.after, splitNewlines(invokeCallbackWithFallback(scoped, 'afterLabel', _this32, context)));
+          pushOrConcat(bodyItem.before, splitNewlines(invokeCallbackWithFallback(scoped, 'beforeLabel', _this30, context)));
+          pushOrConcat(bodyItem.lines, invokeCallbackWithFallback(scoped, 'label', _this30, context));
+          pushOrConcat(bodyItem.after, splitNewlines(invokeCallbackWithFallback(scoped, 'afterLabel', _this30, context)));
           bodyItems.push(bodyItem);
         });
         return bodyItems;
@@ -14932,7 +14944,7 @@
     }, {
       key: "_createItems",
       value: function _createItems(options) {
-        var _this33 = this;
+        var _this31 = this;
         var active = this._active;
         var data = this.chart.data;
         var labelColors = [];
@@ -14955,9 +14967,9 @@
         }
         each(tooltipItems, function (context) {
           var scoped = overrideCallbacks(options.callbacks, context);
-          labelColors.push(invokeCallbackWithFallback(scoped, 'labelColor', _this33, context));
-          labelPointStyles.push(invokeCallbackWithFallback(scoped, 'labelPointStyle', _this33, context));
-          labelTextColors.push(invokeCallbackWithFallback(scoped, 'labelTextColor', _this33, context));
+          labelColors.push(invokeCallbackWithFallback(scoped, 'labelColor', _this31, context));
+          labelPointStyles.push(invokeCallbackWithFallback(scoped, 'labelPointStyle', _this31, context));
+          labelTextColors.push(invokeCallbackWithFallback(scoped, 'labelTextColor', _this31, context));
         });
         this.labelColors = labelColors;
         this.labelPointStyles = labelPointStyles;
@@ -15364,12 +15376,12 @@
     }, {
       key: "setActiveElements",
       value: function setActiveElements(activeElements, eventPosition) {
-        var _this34 = this;
+        var _this32 = this;
         var lastActive = this._active;
-        var active = activeElements.map(function (_ref11) {
-          var datasetIndex = _ref11.datasetIndex,
-            index = _ref11.index;
-          var meta = _this34.chart.getDatasetMeta(datasetIndex);
+        var active = activeElements.map(function (_ref1) {
+          var datasetIndex = _ref1.datasetIndex,
+            index = _ref1.index;
+          var meta = _this32.chart.getDatasetMeta(datasetIndex);
           if (!meta) {
             throw new Error('Cannot find a dataset at index ' + datasetIndex);
           }
@@ -15416,14 +15428,14 @@
     }, {
       key: "_getActiveElements",
       value: function _getActiveElements(e, lastActive, replay, inChartArea) {
-        var _this35 = this;
+        var _this33 = this;
         var options = this.options;
         if (e.type === 'mouseout') {
           return [];
         }
         if (!inChartArea) {
           return lastActive.filter(function (i) {
-            return _this35.chart.data.datasets[i.datasetIndex] && _this35.chart.getDatasetMeta(i.datasetIndex).controller.getParsed(i.index) !== undefined;
+            return _this33.chart.data.datasets[i.datasetIndex] && _this33.chart.getDatasetMeta(i.datasetIndex).controller.getParsed(i.index) !== undefined;
           });
         }
         var active = this.chart.getElementsAtEventForMode(e, options.mode, options, replay);
@@ -15608,13 +15620,13 @@
   }
   var CategoryScale = /*#__PURE__*/function (_Scale) {
     function CategoryScale(cfg) {
-      var _this36;
+      var _this34;
       _classCallCheck$1(this, CategoryScale);
-      _this36 = _callSuper(this, CategoryScale, [cfg]);
-      _this36._startValue = undefined;
-      _this36._valueRange = 0;
-      _this36._addedLabels = [];
-      return _this36;
+      _this34 = _callSuper(this, CategoryScale, [cfg]);
+      _this34._startValue = undefined;
+      _this34._valueRange = 0;
+      _this34._addedLabels = [];
+      return _this34;
     }
     _inherits$1(CategoryScale, _Scale);
     return _createClass$1(CategoryScale, [{
@@ -15623,21 +15635,21 @@
         var added = this._addedLabels;
         if (added.length) {
           var labels = this.getLabels();
-          var _iterator27 = _createForOfIteratorHelper$1(added),
-            _step27;
+          var _iterator25 = _createForOfIteratorHelper$1(added),
+            _step25;
           try {
-            for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
-              var _step27$value = _step27.value,
-                _index3 = _step27$value.index,
-                label = _step27$value.label;
+            for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+              var _step25$value = _step25.value,
+                _index3 = _step25$value.index,
+                label = _step25$value.label;
               if (labels[_index3] === label) {
                 labels.splice(_index3, 1);
               }
             }
           } catch (err) {
-            _iterator27.e(err);
+            _iterator25.e(err);
           } finally {
-            _iterator27.f();
+            _iterator25.f();
           }
           this._addedLabels = [];
         }
@@ -15845,9 +15857,9 @@
     }
     return ticks;
   }
-  function relativeLabelSize(value, minSpacing, _ref12) {
-    var horizontal = _ref12.horizontal,
-      minRotation = _ref12.minRotation;
+  function relativeLabelSize(value, minSpacing, _ref10) {
+    var horizontal = _ref10.horizontal,
+      minRotation = _ref10.minRotation;
     var rad = toRadians(minRotation);
     var ratio = (horizontal ? Math.sin(rad) : Math.cos(rad)) || 0.001;
     var length = 0.75 * minSpacing * ('' + value).length;
@@ -15855,15 +15867,15 @@
   }
   var LinearScaleBase = /*#__PURE__*/function (_Scale2) {
     function LinearScaleBase(cfg) {
-      var _this37;
+      var _this35;
       _classCallCheck$1(this, LinearScaleBase);
-      _this37 = _callSuper(this, LinearScaleBase, [cfg]);
-      _this37.start = undefined;
-      _this37.end = undefined;
-      _this37._startValue = undefined;
-      _this37._endValue = undefined;
-      _this37._valueRange = 0;
-      return _this37;
+      _this35 = _callSuper(this, LinearScaleBase, [cfg]);
+      _this35.start = undefined;
+      _this35.end = undefined;
+      _this35._startValue = undefined;
+      _this35._endValue = undefined;
+      _this35._valueRange = 0;
+      return _this35;
     }
     _inherits$1(LinearScaleBase, _Scale2);
     return _createClass$1(LinearScaleBase, [{
@@ -16067,9 +16079,9 @@
     }
     return Math.min(rangeExp, log10Floor(min));
   }
-  function generateTicks(generationOptions, _ref13) {
-    var min = _ref13.min,
-      max = _ref13.max;
+  function generateTicks(generationOptions, _ref11) {
+    var min = _ref11.min,
+      max = _ref11.max;
     min = finiteOrDefault(generationOptions.min, min);
     var ticks = [];
     var minExp = log10Floor(min);
@@ -16109,14 +16121,14 @@
   }
   var LogarithmicScale = /*#__PURE__*/function (_Scale3) {
     function LogarithmicScale(cfg) {
-      var _this38;
+      var _this36;
       _classCallCheck$1(this, LogarithmicScale);
-      _this38 = _callSuper(this, LogarithmicScale, [cfg]);
-      _this38.start = undefined;
-      _this38.end = undefined;
-      _this38._startValue = undefined;
-      _this38._valueRange = 0;
-      return _this38;
+      _this36 = _callSuper(this, LogarithmicScale, [cfg]);
+      _this36.start = undefined;
+      _this36.end = undefined;
+      _this36._startValue = undefined;
+      _this36._valueRange = 0;
+      return _this36;
     }
     _inherits$1(LogarithmicScale, _Scale3);
     return _createClass$1(LogarithmicScale, [{
@@ -16509,15 +16521,15 @@
   }
   var RadialLinearScale = /*#__PURE__*/function (_LinearScaleBase2) {
     function RadialLinearScale(cfg) {
-      var _this39;
+      var _this37;
       _classCallCheck$1(this, RadialLinearScale);
-      _this39 = _callSuper(this, RadialLinearScale, [cfg]);
-      _this39.xCenter = undefined;
-      _this39.yCenter = undefined;
-      _this39.drawingArea = undefined;
-      _this39._pointLabels = [];
-      _this39._pointLabelItems = [];
-      return _this39;
+      _this37 = _callSuper(this, RadialLinearScale, [cfg]);
+      _this37.xCenter = undefined;
+      _this37.yCenter = undefined;
+      _this37.drawingArea = undefined;
+      _this37._pointLabels = [];
+      _this37._pointLabelItems = [];
+      return _this37;
     }
     _inherits$1(RadialLinearScale, _LinearScaleBase2);
     return _createClass$1(RadialLinearScale, [{
@@ -16548,13 +16560,13 @@
     }, {
       key: "generateTickLabels",
       value: function generateTickLabels(ticks) {
-        var _this40 = this;
+        var _this38 = this;
         LinearScaleBase.prototype.generateTickLabels.call(this, ticks);
         this._pointLabels = this.getLabels().map(function (value, index) {
-          var label = callback(_this40.options.pointLabels.callback, [value, index], _this40);
+          var label = callback(_this38.options.pointLabels.callback, [value, index], _this38);
           return label || label === 0 ? label : '';
         }).filter(function (v, i) {
-          return _this40.chart.getDataVisibility(i);
+          return _this38.chart.getDataVisibility(i);
         });
       }
     }, {
@@ -16650,9 +16662,9 @@
     }, {
       key: "drawBackground",
       value: function drawBackground() {
-        var _this$options16 = this.options,
-          backgroundColor = _this$options16.backgroundColor,
-          circular = _this$options16.grid.circular;
+        var _this$options14 = this.options,
+          backgroundColor = _this$options14.backgroundColor,
+          circular = _this$options14.grid.circular;
         if (backgroundColor) {
           var ctx = this.ctx;
           ctx.save();
@@ -16667,7 +16679,7 @@
     }, {
       key: "drawGrid",
       value: function drawGrid() {
-        var _this41 = this;
+        var _this39 = this;
         var ctx = this.ctx;
         var opts = this.options;
         var angleLines = opts.angleLines,
@@ -16680,12 +16692,12 @@
         }
         if (grid.display) {
           this.ticks.forEach(function (tick, index) {
-            if (index !== 0 || index === 0 && _this41.min < 0) {
-              offset = _this41.getDistanceFromCenterForValue(tick.value);
-              var context = _this41.getContext(index);
+            if (index !== 0 || index === 0 && _this39.min < 0) {
+              offset = _this39.getDistanceFromCenterForValue(tick.value);
+              var context = _this39.getContext(index);
               var optsAtIndex = grid.setContext(context);
               var optsAtIndexBorder = border.setContext(context);
-              drawRadiusLine(_this41, optsAtIndex, offset, labelCount, optsAtIndexBorder);
+              drawRadiusLine(_this39, optsAtIndex, offset, labelCount, optsAtIndexBorder);
             }
           });
         }
@@ -16718,7 +16730,7 @@
     }, {
       key: "drawLabels",
       value: function drawLabels() {
-        var _this42 = this;
+        var _this40 = this;
         var ctx = this.ctx;
         var opts = this.options;
         var tickOpts = opts.ticks;
@@ -16733,12 +16745,12 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         this.ticks.forEach(function (tick, index) {
-          if (index === 0 && _this42.min >= 0 && !opts.reverse) {
+          if (index === 0 && _this40.min >= 0 && !opts.reverse) {
             return;
           }
-          var optsAtIndex = tickOpts.setContext(_this42.getContext(index));
+          var optsAtIndex = tickOpts.setContext(_this40.getContext(index));
           var tickFont = toFont(optsAtIndex.font);
-          offset = _this42.getDistanceFromCenterForValue(_this42.ticks[index].value);
+          offset = _this40.getDistanceFromCenterForValue(_this40.ticks[index].value);
           if (optsAtIndex.showLabelBackdrop) {
             ctx.font = tickFont.string;
             width = ctx.measureText(tick.label).width;
@@ -16944,20 +16956,20 @@
   }
   var TimeScale = /*#__PURE__*/function (_Scale4) {
     function TimeScale(props) {
-      var _this43;
+      var _this41;
       _classCallCheck$1(this, TimeScale);
-      _this43 = _callSuper(this, TimeScale, [props]);
-      _this43._cache = {
+      _this41 = _callSuper(this, TimeScale, [props]);
+      _this41._cache = {
         data: [],
         labels: [],
         all: []
       };
-      _this43._unit = 'day';
-      _this43._majorUnit = undefined;
-      _this43._offsets = {};
-      _this43._normalized = false;
-      _this43._parseOpts = undefined;
-      return _this43;
+      _this41._unit = 'day';
+      _this41._majorUnit = undefined;
+      _this41._offsets = {};
+      _this41._normalized = false;
+      _this41._parseOpts = undefined;
+      return _this41;
     }
     _inherits$1(TimeScale, _Scale4);
     return _createClass$1(TimeScale, [{
@@ -17314,13 +17326,13 @@
   }
   var TimeSeriesScale = /*#__PURE__*/function (_TimeScale2) {
     function TimeSeriesScale(props) {
-      var _this44;
+      var _this42;
       _classCallCheck$1(this, TimeSeriesScale);
-      _this44 = _callSuper(this, TimeSeriesScale, [props]);
-      _this44._table = [];
-      _this44._minPos = undefined;
-      _this44._tableRange = undefined;
-      return _this44;
+      _this42 = _callSuper(this, TimeSeriesScale, [props]);
+      _this42._table = [];
+      _this42._minPos = undefined;
+      _this42._tableRange = undefined;
+      return _this42;
     }
     _inherits$1(TimeSeriesScale, _TimeScale2);
     return _createClass$1(TimeSeriesScale, [{
