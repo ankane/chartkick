@@ -20,7 +20,7 @@ gem "chartkick"
 
 Then follow the instructions for your JavaScript setup:
 
-- [Importmap](#importmap) (Rails 7+ default)
+- [Importmap](#importmap) (Rails default)
 - [Bun, esbuild, rollup.js, or Webpack](#bun-esbuild-rollupjs-or-webpack)
 - [Sprockets](#sprockets)
 
@@ -437,7 +437,7 @@ In your layout or views, add:
 <%= javascript_include_tag "https://www.gstatic.com/charts/loader.js" %>
 ```
 
-For Importmap (Rails 7+ default), in `config/importmap.rb`, add:
+For Importmap (Rails default), in `config/importmap.rb`, add:
 
 ```ruby
 pin "chartkick", to: "chartkick.js"
@@ -479,7 +479,7 @@ before your charts.
 
 ### Highcharts
 
-For Importmap (Rails 7+ default), run:
+For Importmap (Rails default), run:
 
 ```sh
 bin/importmap pin highcharts --download
