@@ -1,4 +1,4 @@
-## 5.3.0 (unreleased)
+## 5.3.0 (2026-10-22)
 
 - Updated Chart.js to 4.6.0
 - Dropped support for Ruby < 3.3
