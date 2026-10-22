@@ -1,7 +1,7 @@
 /*!
- * Chart.js v4.5.1
+ * Chart.js v4.6.1
  * https://www.chartjs.org
- * (c) 2025 Chart.js Contributors
+ * (c) 2026 Chart.js Contributors
  * Released under the MIT License
  *
  * @kurkle/color v0.3.2
@@ -231,15 +231,15 @@
   function _toConsumableArray(r) {
     return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray$1(r) || _nonIterableSpread();
   }
-  function _toPrimitive(t, r) {
+  function _toPrimitive(t, e) {
     if ("object" != typeof t || !t) return t;
-    var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
-      var i = e.call(t, r || "default");
+    var r;
+    if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+      var i = r.call(t, e || "default");
       if ("object" != typeof i) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
-    return ("string" === r ? String : Number)(t);
+    return ("string" === e ? String : Number)(t);
   }
   function _toPropertyKey(t) {
     var i = _toPrimitive(t, "string");
@@ -3577,10 +3577,12 @@
       canvas.style.height = "".concat(chart.height, "px");
       canvas.style.width = "".concat(chart.width, "px");
     }
-    if (chart.currentDevicePixelRatio !== pixelRatio || canvas.height !== deviceHeight || canvas.width !== deviceWidth) {
+    var canvasHeight = Math.floor(deviceHeight);
+    var canvasWidth = Math.floor(deviceWidth);
+    if (chart.currentDevicePixelRatio !== pixelRatio || canvas.height !== canvasHeight || canvas.width !== canvasWidth) {
       chart.currentDevicePixelRatio = pixelRatio;
-      canvas.height = deviceHeight;
-      canvas.width = deviceWidth;
+      canvas.height = canvasHeight;
+      canvas.width = canvasWidth;
       chart.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       return true;
     }
@@ -4682,7 +4684,7 @@
         var parsed = _step2.value;
         var stacks = parsed._stacks;
         if (!stacks || stacks[axis] === undefined || stacks[axis][datasetIndex] === undefined) {
-          return;
+          continue;
         }
         delete stacks[axis][datasetIndex];
         if (stacks[axis]._visualValues !== undefined && stacks[axis]._visualValues[datasetIndex] !== undefined) {
@@ -6430,14 +6432,15 @@
     circumference: 360,
     radius: '100%',
     spacing: 0,
+    spacingMode: 'angular',
     indexAxis: 'r'
   });
   _defineProperty$1(DoughnutController, "descriptors", {
     _scriptable: function _scriptable(name) {
-      return name !== 'spacing';
+      return name !== 'spacing' && name !== 'spacingMode';
     },
     _indexable: function _indexable(name) {
-      return name !== 'spacing' && !name.startsWith('borderDash') && !name.startsWith('hoverBorderDash');
+      return name !== 'spacing' && name !== 'spacingMode' && !name.startsWith('borderDash') && !name.startsWith('hoverBorderDash');
     }
   });
   _defineProperty$1(DoughnutController, "overrides", {
@@ -6727,6 +6730,12 @@
             endAngle: endAngle,
             options: this.resolveDataElementOptions(i, arc.active ? 'active' : mode)
           };
+          if (properties.options.spacing === 0) {
+            properties.options.spacing = this.options.spacing;
+          }
+          if (properties.options.spacingMode === 'angular') {
+            properties.options.spacingMode = this.options.spacingMode;
+          }
           this.updateElement(arc, i, properties, mode);
         }
       }
@@ -6764,7 +6773,9 @@
       }
     },
     indexAxis: 'r',
-    startAngle: 0
+    startAngle: 0,
+    spacing: 0,
+    spacingMode: 'proportional'
   });
   _defineProperty$1(PolarAreaController, "overrides", {
     aspectRatio: 1,
@@ -9653,7 +9664,9 @@
           rotation: rotation,
           textAlign: titleAlign(align, position, reverse),
           textBaseline: 'middle',
-          translation: [titleX, titleY]
+          translation: [titleX, titleY],
+          strokeColor: title.strokeColor,
+          strokeWidth: title.strokeWidth
         });
       }
     }, {
@@ -10509,7 +10522,7 @@
     }
     return false;
   }
-  var version = "4.5.1";
+  var version = "4.6.1";
   var KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
   function positionIsHorizontal(position, axis) {
     return position === 'top' || position === 'bottom' || KNOWN_POSITIONS.indexOf(position) === -1 && axis === 'x';
@@ -11675,6 +11688,23 @@
       y: y + r * Math.sin(theta)
     };
   }
+  function pathFullCircle(ctx, element, offset, spacing) {
+    var x = element.x,
+      y = element.y,
+      start = element.startAngle,
+      pixelMargin = element.pixelMargin,
+      innerR = element.innerRadius;
+    var outerRadius = Math.max(element.outerRadius + spacing + offset - pixelMargin, 0);
+    var innerRadius = innerR > 0 ? innerR + spacing + offset + pixelMargin : 0;
+    ctx.beginPath();
+    ctx.arc(x, y, outerRadius, start, start + TAU);
+    if (innerRadius > 0) {
+      // Start the inner contour as a separate subpath to avoid a seam connector.
+      ctx.moveTo(x + Math.cos(start) * innerRadius, y + Math.sin(start) * innerRadius);
+      ctx.arc(x, y, innerRadius, start + TAU, start, true);
+    }
+    ctx.closePath();
+  }
   /**
    * Path the arc, respecting border radius by separating into left and right halves.
    *
@@ -11695,37 +11725,73 @@
       start = element.startAngle,
       pixelMargin = element.pixelMargin,
       innerR = element.innerRadius;
+    var _element$options$spac = element.options.spacingMode,
+      spacingMode = _element$options$spac === void 0 ? 'angular' : _element$options$spac;
+    var alpha = end - start;
+    if (circular && element.options.selfJoin && Math.abs(alpha) >= TAU - 1e-4) {
+      pathFullCircle(ctx, element, offset, spacing);
+      return;
+    }
     var outerRadius = Math.max(element.outerRadius + spacing + offset - pixelMargin, 0);
     var innerRadius = innerR > 0 ? innerR + spacing + offset + pixelMargin : 0;
-    var spacingOffset = 0;
-    var alpha = end - start;
+    var outerSpacingOffset = 0;
+    var innerSpacingOffset = 0;
+    var beta = outerRadius > 0 ? Math.max(0.001, alpha * outerRadius - offset / PI) / outerRadius : 0.001;
+    var angleOffset = (alpha - beta) / 2;
     if (spacing) {
       // When spacing is present, it is the same for all items
       // So we adjust the start and end angle of the arc such that
       // the distance is the same as it would be without the spacing
       var noSpacingInnerRadius = innerR > 0 ? innerR - spacing : 0;
       var noSpacingOuterRadius = outerRadius > 0 ? outerRadius - spacing : 0;
-      var avNogSpacingRadius = (noSpacingInnerRadius + noSpacingOuterRadius) / 2;
-      var adjustedAngle = avNogSpacingRadius !== 0 ? alpha * avNogSpacingRadius / (avNogSpacingRadius + spacing) : alpha;
-      spacingOffset = (alpha - adjustedAngle) / 2;
+      var avgNoSpacingRadius = (noSpacingInnerRadius + noSpacingOuterRadius) / 2;
+      var proportionalOffset = function () {
+        var adjustedAngle = avgNoSpacingRadius !== 0 ? alpha * avgNoSpacingRadius / (avgNoSpacingRadius + spacing) : alpha;
+        return (alpha - adjustedAngle) / 2;
+      }();
+      var angularOffset = avgNoSpacingRadius > 0 ? Math.asin(Math.min(1, spacing / avgNoSpacingRadius)) : 0;
+      // Keep spacing trims below half the available span after base offset trimming.
+      var maxOffset = Math.max(0, beta / 2 - 0.001);
+      var maxOffsetSin = Math.sin(maxOffset);
+      if (spacingMode === 'parallel') {
+        if (innerRadius === 0 && maxOffsetSin > 0) {
+          // A root radius of zero cannot realize a non-zero parallel separator width.
+          // Raise the root just enough for the available angular span.
+          var minInnerRadius = spacing / maxOffsetSin;
+          var maxInnerRadius = Math.max(0, outerRadius - 0.001);
+          innerRadius = Math.min(minInnerRadius, maxInnerRadius);
+        }
+        // Use one bounded spacing value for both radii so large spacing keeps stable geometry.
+        var maxParallelSpacing = Math.min(outerRadius > 0 ? outerRadius * maxOffsetSin : Number.POSITIVE_INFINITY, innerRadius > 0 ? innerRadius * maxOffsetSin : Number.POSITIVE_INFINITY);
+        var parallelSpacing = Math.min(spacing, maxParallelSpacing);
+        outerSpacingOffset = outerRadius > 0 ? Math.asin(Math.min(1, parallelSpacing / outerRadius)) : Math.min(maxOffset, angularOffset);
+        innerSpacingOffset = innerRadius > 0 ? Math.asin(Math.min(1, parallelSpacing / innerRadius)) : outerSpacingOffset;
+      } else if (spacingMode === 'proportional') {
+        outerSpacingOffset = Math.min(maxOffset, proportionalOffset);
+        innerSpacingOffset = Math.min(maxOffset, proportionalOffset);
+      } else {
+        outerSpacingOffset = Math.min(maxOffset, angularOffset);
+        innerSpacingOffset = Math.min(maxOffset, angularOffset);
+      }
     }
-    var beta = Math.max(0.001, alpha * outerRadius - offset / PI) / outerRadius;
-    var angleOffset = (alpha - beta) / 2;
-    var startAngle = start + angleOffset + spacingOffset;
-    var endAngle = end - angleOffset - spacingOffset;
-    var _parseBorderRadius$ = parseBorderRadius$1(element, innerRadius, outerRadius, endAngle - startAngle),
+    var outerStartAngle = start + angleOffset + outerSpacingOffset;
+    var outerEndAngle = end - angleOffset - outerSpacingOffset;
+    var innerStartAngle = start + angleOffset + innerSpacingOffset;
+    var innerEndAngle = end - angleOffset - innerSpacingOffset;
+    var angleDelta = Math.min(outerEndAngle - outerStartAngle, innerEndAngle - innerStartAngle);
+    var _parseBorderRadius$ = parseBorderRadius$1(element, innerRadius, outerRadius, angleDelta),
       outerStart = _parseBorderRadius$.outerStart,
       outerEnd = _parseBorderRadius$.outerEnd,
       innerStart = _parseBorderRadius$.innerStart,
       innerEnd = _parseBorderRadius$.innerEnd;
     var outerStartAdjustedRadius = outerRadius - outerStart;
     var outerEndAdjustedRadius = outerRadius - outerEnd;
-    var outerStartAdjustedAngle = startAngle + outerStart / outerStartAdjustedRadius;
-    var outerEndAdjustedAngle = endAngle - outerEnd / outerEndAdjustedRadius;
+    var outerStartAdjustedAngle = outerStartAngle + outerStart / outerStartAdjustedRadius;
+    var outerEndAdjustedAngle = outerEndAngle - outerEnd / outerEndAdjustedRadius;
     var innerStartAdjustedRadius = innerRadius + innerStart;
     var innerEndAdjustedRadius = innerRadius + innerEnd;
-    var innerStartAdjustedAngle = startAngle + innerStart / innerStartAdjustedRadius;
-    var innerEndAdjustedAngle = endAngle - innerEnd / innerEndAdjustedRadius;
+    var innerStartAdjustedAngle = innerStartAngle + innerStart / innerStartAdjustedRadius;
+    var innerEndAdjustedAngle = innerEndAngle - innerEnd / innerEndAdjustedRadius;
     ctx.beginPath();
     if (circular) {
       // The first arc segments from point 1 to point a to point 2
@@ -11735,32 +11801,32 @@
       // The corner segment from point 2 to point 3
       if (outerEnd > 0) {
         var pCenter = rThetaToXY(outerEndAdjustedRadius, outerEndAdjustedAngle, x, y);
-        ctx.arc(pCenter.x, pCenter.y, outerEnd, outerEndAdjustedAngle, endAngle + HALF_PI);
+        ctx.arc(pCenter.x, pCenter.y, outerEnd, outerEndAdjustedAngle, outerEndAngle + HALF_PI);
       }
       // The line from point 3 to point 4
-      var p4 = rThetaToXY(innerEndAdjustedRadius, endAngle, x, y);
+      var p4 = rThetaToXY(innerEndAdjustedRadius, innerEndAngle, x, y);
       ctx.lineTo(p4.x, p4.y);
       // The corner segment from point 4 to point 5
       if (innerEnd > 0) {
         var _pCenter = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x, y);
-        ctx.arc(_pCenter.x, _pCenter.y, innerEnd, endAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
+        ctx.arc(_pCenter.x, _pCenter.y, innerEnd, innerEndAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
       }
       // The inner arc from point 5 to point b to point 6
-      var innerMidAdjustedAngle = (endAngle - innerEnd / innerRadius + (startAngle + innerStart / innerRadius)) / 2;
-      ctx.arc(x, y, innerRadius, endAngle - innerEnd / innerRadius, innerMidAdjustedAngle, true);
-      ctx.arc(x, y, innerRadius, innerMidAdjustedAngle, startAngle + innerStart / innerRadius, true);
+      var innerMidAdjustedAngle = (innerEndAngle - innerEnd / innerRadius + (innerStartAngle + innerStart / innerRadius)) / 2;
+      ctx.arc(x, y, innerRadius, innerEndAngle - innerEnd / innerRadius, innerMidAdjustedAngle, true);
+      ctx.arc(x, y, innerRadius, innerMidAdjustedAngle, innerStartAngle + innerStart / innerRadius, true);
       // The corner segment from point 6 to point 7
       if (innerStart > 0) {
         var _pCenter2 = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x, y);
-        ctx.arc(_pCenter2.x, _pCenter2.y, innerStart, innerStartAdjustedAngle + Math.PI, startAngle - HALF_PI);
+        ctx.arc(_pCenter2.x, _pCenter2.y, innerStart, innerStartAdjustedAngle + Math.PI, innerStartAngle - HALF_PI);
       }
       // The line from point 7 to point 8
-      var p8 = rThetaToXY(outerStartAdjustedRadius, startAngle, x, y);
+      var p8 = rThetaToXY(outerStartAdjustedRadius, outerStartAngle, x, y);
       ctx.lineTo(p8.x, p8.y);
       // The corner segment from point 8 to point 1
       if (outerStart > 0) {
         var _pCenter3 = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x, y);
-        ctx.arc(_pCenter3.x, _pCenter3.y, outerStart, startAngle - HALF_PI, outerStartAdjustedAngle);
+        ctx.arc(_pCenter3.x, _pCenter3.y, outerStart, outerStartAngle - HALF_PI, outerStartAdjustedAngle);
       }
     } else {
       ctx.moveTo(x, y);
@@ -11815,6 +11881,7 @@
       ctx.lineJoin = borderJoinStyle || 'bevel';
     }
     var endAngle = element.endAngle;
+    var isFullCircle = Math.abs(endAngle - startAngle) >= TAU - 1e-4;
     if (fullCircles) {
       pathArc(ctx, element, offset, spacing, endAngle, circular);
       for (var i = 0; i < fullCircles; ++i) {
@@ -11827,7 +11894,8 @@
     if (inner) {
       clipArc(ctx, element, endAngle);
     }
-    if (options.selfJoin && endAngle - startAngle >= PI && borderRadius === 0 && borderJoinStyle !== 'miter') {
+    var skipSelfClip = isFullCircle && element.innerRadius > 0;
+    if (!skipSelfClip && options.selfJoin && endAngle - startAngle >= PI && borderRadius === 0 && borderJoinStyle !== 'miter') {
       clipSelf(ctx, element, endAngle);
     }
     if (!fullCircles) {
@@ -11847,6 +11915,7 @@
       _defineProperty$1(_this21, "outerRadius", void 0);
       _defineProperty$1(_this21, "pixelMargin", void 0);
       _defineProperty$1(_this21, "startAngle", void 0);
+      _defineProperty$1(_this21, "circular", void 0);
       _this21.options = undefined;
       _this21.circumference = undefined;
       _this21.startAngle = undefined;
@@ -11855,6 +11924,7 @@
       _this21.outerRadius = undefined;
       _this21.pixelMargin = 0;
       _this21.fullCircles = 0;
+      _this21.circular = false;
       if (cfg) {
         Object.assign(_this21, cfg);
       }
@@ -11946,6 +12016,7 @@
     borderWidth: 2,
     offset: 0,
     spacing: 0,
+    spacingMode: 'angular',
     angle: undefined,
     circular: true,
     selfJoin: false
@@ -13350,7 +13421,7 @@
     var meta = chart.getDatasetMeta(index);
     var clip = getDatasetClipArea(chart, meta);
     if (target && line.points.length) {
-      clipArea(ctx, area);
+      clipArea(ctx, clipToIndexBounds(area, meta.iScale));
       doFill(ctx, {
         line: line,
         target: target,
@@ -13363,6 +13434,22 @@
       });
       unclipArea(ctx);
     }
+  }
+  function clipToIndexBounds(area, iScale) {
+    if (!iScale || iScale.getPointPositionForValue) {
+      return area;
+    }
+    var p1 = iScale.getPixelForValue(iScale.min);
+    var p2 = iScale.getPixelForValue(iScale.max);
+    var lo = Math.min(p1, p2);
+    var hi = Math.max(p1, p2);
+    return iScale.isHorizontal() ? _objectSpread2(_objectSpread2({}, area), {}, {
+      left: Math.max(area.left, lo),
+      right: Math.min(area.right, hi)
+    }) : _objectSpread2(_objectSpread2({}, area), {}, {
+      top: Math.max(area.top, lo),
+      bottom: Math.min(area.bottom, hi)
+    });
   }
   function doFill(ctx, cfg) {
     var line = cfg.line,
@@ -21137,15 +21224,15 @@
     if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function");
   }
 
-  function toPrimitive(t, r) {
+  function toPrimitive(t, e) {
     if ("object" != _typeof(t) || !t) return t;
-    var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
-      var i = e.call(t, r || "default");
+    var r;
+    if ("undefined" != typeof Symbol && void 0 !== (r = t[Symbol.toPrimitive])) {
+      var i = r.call(t, e || "default");
       if ("object" != _typeof(i)) return i;
       throw new TypeError("@@toPrimitive must return a primitive value.");
     }
-    return ("string" === r ? String : Number)(t);
+    return ("string" === e ? String : Number)(t);
   }
 
   function toPropertyKey(t) {
