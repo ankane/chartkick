@@ -17,3 +17,5 @@ test/version_tmp
 tmp
 node_modules
 package-lock.json
+.pnpm-store
+pnpm-*.yaml
